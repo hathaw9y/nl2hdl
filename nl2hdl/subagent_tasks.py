@@ -3091,6 +3091,7 @@ def _execution_entry_for_task(wave: dict[str, Any], task: dict[str, Any]) -> dic
         "expected_evidence_dir": task["expected_evidence_dir"],
         "expected_kernel_report": task["expected_kernel_report"],
         "expected_module_ooc_synthesis_report": task.get("expected_module_ooc_synthesis_report"),
+        "requires_module_ooc_synthesis": bool(task.get("requires_module_ooc_synthesis")),
         "expected_subagent_result": f"{task['expected_evidence_dir']}/subagent_result.json",
         "current_regression_kernel": task["current_regression_kernel"],
         "source_replay": task.get("source_replay", {}),

@@ -22,6 +22,12 @@ role behavior in the role-specific skills listed below.
   routing, and Skill updates after reusable failures.
 - HDL, integration, board-wrapper, and verification work is delegated to
   sub-agents with narrow scopes and explicit evidence requirements.
+- The executable `nl2hdl parent-loop` runner may call bounded local sub-agent
+  backends and collect their evidence, but this still counts as delegated
+  sub-agent execution: the parent must not inline or hand-write HDL.
+- Codex-only verification, model signoff, board-wrapper route evidence, and
+  board signoff may be queued for external Codex/Vivado-capable sub-agents
+  when the package runtime cannot execute them directly.
 - A dependent wave cannot start until its implementation evidence and required
   verification gate pass.
 
@@ -89,6 +95,21 @@ The framework is parent-centered:
 6. On reusable failure, the parent updates the relevant Skill, syncs runtime
    skills, and then retries the responsible sub-agent.
 7. On pass, the parent advances to the next sub-agent wave.
+
+The local command form is:
+
+```bash
+python3 -m nl2hdl parent-loop \
+  --model <model> \
+  --spec <config.yaml> \
+  --out <out_dir>
+```
+
+This runner may execute deterministic HDL implementation backends, refresh
+parent artifacts after every iteration, and write `parent_loop_run_report.json`.
+It must queue work that requires a real Codex audit, model-level signoff,
+board-level signoff, or unavailable Vivado evidence in `parent_loop_queue.json`
+instead of claiming completion.
 
 Required parent-owned loop artifacts:
 

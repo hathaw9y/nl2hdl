@@ -76,6 +76,25 @@ board-wrapper, model-signoff, and board-signoff Sub-agents return evidence to
 the Parent instead of spawning other agents. Failed reusable patterns are
 captured as Skills before the Parent retries the responsible Sub-agent.
 
+The executable parent loop is:
+
+```bash
+python3 -m nl2hdl parent-loop \
+  --model meta-llama/Llama-3.2-1B \
+  --spec examples/zcu104_llama32_1b_gptq.yaml \
+  --out build/llama_parent_loop \
+  --max-iterations 8
+```
+
+`parent-loop` creates inspect artifacts, refreshes `parent_loop_state.json`,
+dispatches local deterministic sub-agent backends where possible, collects
+`kernel_report.json` and `subagent_result.json`, and writes
+`parent_loop_run_report.json`. Codex-only verification/signoff work is preserved
+in `status/parent_loop_queue.json` unless `--local-verification` is explicitly
+used for deterministic smoke coverage. With `--skip-synth`, real datapath
+modules still require later module-level OOC synthesis before integration can
+advance.
+
 Small kernel examples:
 
 ```bash

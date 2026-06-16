@@ -11,6 +11,7 @@ from .config import AgentConfig, load_config, validate_config
 from .llm_agent import run_llm_agent
 from .llm_kernels import run_zcu104_board_wrapper_axi_bridge_agent
 from .llm_plan import write_llm_accelerator_plan
+from .parent_loop import ParentLoopOptions, run_parent_loop
 from .subagent_tasks import (
     build_board_zcu104_signoff_evidence_agent_task,
     build_board_zcu104_signoff_evidence_template,
@@ -157,6 +158,60 @@ def build_parser() -> argparse.ArgumentParser:
         help="Optional provided/exported MLIR graph path; overrides model.mlir_graph in --spec for planning metadata.",
     )
     plan.add_argument("--out", required=True, help="Output directory")
+    parent_loop = subparsers.add_parser(
+        "parent-loop",
+        help="Run the Parent feedback loop over HDL sub-agent waves and evidence",
+    )
+    parent_loop.add_argument("--model", required=True, help="Hugging Face model name or local model id")
+    parent_loop.add_argument("--spec", help="Optional YAML/JSON hardware and optimization spec")
+    parent_loop.add_argument(
+        "--gptq-checkpoint",
+        help="Optional GPTQ metadata checkpoint source path or Hugging Face repo id; overrides model.gptq_checkpoint in --spec.",
+    )
+    parent_loop.add_argument(
+        "--mlir-graph",
+        help="Optional provided/exported MLIR graph path; overrides model.mlir_graph in --spec for inspect gating.",
+    )
+    parent_loop.add_argument("--out", required=True, help="Output directory")
+    parent_loop.add_argument(
+        "--partition",
+        choices=("gemm_non_gemm",),
+        default="gemm_non_gemm",
+        help="Operation partition strategy used by parent inspect artifacts.",
+    )
+    parent_loop.add_argument(
+        "--backend",
+        choices=("local", "queue"),
+        default="local",
+        help="local executes deterministic sub-agent backends where possible; queue only writes external Codex work.",
+    )
+    parent_loop.add_argument("--max-iterations", type=int, default=8, help="Maximum parent feedback iterations")
+    parent_loop.add_argument(
+        "--max-subagents-per-iteration",
+        type=int,
+        help="Limit selected ready sub-agents per iteration for smoke tests or staged runs",
+    )
+    parent_loop.add_argument(
+        "--skip-synth",
+        action="store_true",
+        help="Do not run Vivado synthesis in local HDL sub-agent backend",
+    )
+    parent_loop.add_argument(
+        "--skip-vivado-route",
+        action="store_true",
+        help="Do not run Vivado route/check in local board-wrapper backend",
+    )
+    parent_loop.add_argument(
+        "--vivado-executable",
+        default="vivado",
+        help="Vivado executable name/path used by local board-wrapper backend",
+    )
+    parent_loop.add_argument(
+        "--local-verification",
+        action="store_true",
+        help="Use deterministic verification smoke reports instead of queueing Codex verification sub-agents",
+    )
+    parent_loop.add_argument("--verbose", action="store_true", help="Print the full parent loop report")
     subagents = subparsers.add_parser("subagents", help="Inspect and refresh HDL sub-agent orchestration state")
     subagent_subparsers = subagents.add_subparsers(dest="subagent_command", required=True)
     status = subagent_subparsers.add_parser(
@@ -567,6 +622,39 @@ def main(argv: list[str] | None = None) -> int:
                 )
             )
             return 0
+        if args.command == "parent-loop":
+            report = run_parent_loop(
+                model_name=args.model,
+                config=config,
+                out_dir=Path(args.out),
+                partition=args.partition,
+                options=ParentLoopOptions(
+                    max_iterations=args.max_iterations,
+                    max_subagents_per_iteration=args.max_subagents_per_iteration,
+                    skip_synth=args.skip_synth,
+                    skip_vivado_route=args.skip_vivado_route,
+                    vivado_executable=args.vivado_executable,
+                    backend=args.backend,
+                    local_verification=args.local_verification,
+                    verbose=args.verbose,
+                ),
+            )
+            if args.verbose:
+                print(json.dumps(report, indent=2))
+            else:
+                print(
+                    json.dumps(
+                        {
+                            "status": report["status"],
+                            "out": str(Path(args.out)),
+                            "parent_loop_run_report": str(Path(args.out) / "parent_loop_run_report.json"),
+                            "parent_loop_state": str(Path(args.out) / "status" / "parent_loop_state.json"),
+                            "parent_loop_queue": str(Path(args.out) / "status" / "parent_loop_queue.json"),
+                        },
+                        indent=2,
+                    )
+                )
+            return 1 if str(report["status"]).startswith("failed") else 0
         report = run_agent(
             model_name=args.model,
             config=config,

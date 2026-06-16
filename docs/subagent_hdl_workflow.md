@@ -226,6 +226,43 @@ Read-only Codex verification results are collected from
 only marked `passed` after all implementation reports pass and the verification
 JSON has `status: "passed"` with no P0/P1/P2 findings.
 
+## Parent Loop Runner
+
+The executable Parent loop is available as:
+
+```bash
+python3 -m nl2hdl parent-loop \
+  --model meta-llama/Llama-3.2-1B \
+  --spec examples/zcu104_llama32_1b_gptq.yaml \
+  --out build/llama_parent_loop \
+  --max-iterations 8
+```
+
+It performs the parent-owned loop in one command:
+
+- create or reuse `inspect/hdl_subagent_dispatch_plan.json`;
+- refresh `status/hdl_subagent_wave_status.json`,
+  `status/hdl_subagent_execution_manifest.json`,
+  `status/parent_loop_state.json`, `status/feedback_packet.json`, and
+  `status/retry_plan.json`;
+- run local deterministic implementation sub-agent backends where available;
+- collect `kernel_report.json`, `subagent_result.json`, and, when synthesis is
+  enabled and passes, `module_ooc_synthesis_report.json`;
+- write `parent_loop_run_report.json`;
+- queue Codex-only verification/signoff work in `status/parent_loop_queue.json`.
+
+The runner still preserves the framework boundary: the Parent does not
+hand-write HDL. In package runtime, local implementation backends are used as
+bounded sub-agent executors. Codex read-only verification, model signoff, and
+board signoff remain queued unless an external Codex runner supplies their
+evidence. `--local-verification` writes deterministic smoke reports for CI
+coverage only and does not claim a Codex audit.
+
+When `--skip-synth` is used, a real datapath module can pass simulation and
+Verilator lint, but it cannot clear the module OOC synthesis gate. On the next
+iteration, the Parent records that OOC synthesis is still required instead of
+re-running the same simulation-only kernel forever.
+
 After sub-agents write evidence into a collection directory, refresh the parent
 view with:
 
