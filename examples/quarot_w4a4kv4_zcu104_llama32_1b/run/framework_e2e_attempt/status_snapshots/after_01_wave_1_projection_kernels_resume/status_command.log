@@ -1,0 +1,322 @@
+{
+  "status": "passed",
+  "out": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/status_snapshots/after_01_wave_1_projection_kernels_resume",
+  "evidence_root": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence",
+  "next_dispatchable_waves": [
+    "wave_1_non_gemm_kernels"
+  ],
+  "spawn_entry_count": 8,
+  "spawn_batch_count": 1,
+  "parallel_spawn_allowed": true,
+  "max_parallel_batch_size": 8,
+  "implementation_spawn_count": 8,
+  "verification_spawn_count": 0,
+  "target_evidence_spawn_count": 0,
+  "model_level_harness_spawn_count": 0,
+  "board_signoff_spawn_count": 0,
+  "board_wrapper_implementation_spawn_count": 0,
+  "skill_update_required": false,
+  "missing_skill_update_candidate": false,
+  "blocked_waves": [
+    {
+      "wave_id": "wave_2_decoder_block",
+      "status": "blocked_by_dependency",
+      "reason": "waiting for waves: wave_1_non_gemm_kernels",
+      "depends_on_waves": [
+        "wave_1_projection_kernels",
+        "wave_1_non_gemm_kernels"
+      ],
+      "next_action": "wait_for_dependency",
+      "verification": {
+        "status": "not_applicable_until_dependencies_pass"
+      },
+      "task_status_counts": {
+        "missing": 1
+      }
+    },
+    {
+      "wave_id": "wave_3_layer_fsm",
+      "status": "blocked_by_dependency",
+      "reason": "waiting for waves: wave_2_decoder_block",
+      "depends_on_waves": [
+        "wave_2_decoder_block"
+      ],
+      "next_action": "wait_for_dependency",
+      "verification": {
+        "status": "not_applicable_until_dependencies_pass"
+      },
+      "task_status_counts": {
+        "missing": 1
+      }
+    },
+    {
+      "wave_id": "wave_4_top_fsm",
+      "status": "blocked_by_dependency",
+      "reason": "waiting for waves: wave_3_layer_fsm",
+      "depends_on_waves": [
+        "wave_3_layer_fsm"
+      ],
+      "next_action": "wait_for_dependency",
+      "verification": {
+        "status": "not_applicable_until_dependencies_pass"
+      },
+      "task_status_counts": {
+        "missing": 1
+      }
+    },
+    {
+      "wave_id": "wave_5_token_loop",
+      "status": "blocked_by_dependency",
+      "reason": "waiting for waves: wave_4_top_fsm",
+      "depends_on_waves": [
+        "wave_4_top_fsm"
+      ],
+      "next_action": "wait_for_dependency",
+      "verification": {
+        "status": "not_applicable_until_dependencies_pass"
+      },
+      "task_status_counts": {
+        "missing": 1
+      }
+    },
+    {
+      "wave_id": "wave_6_projection_axi_read_command_adapter",
+      "status": "blocked_by_dependency",
+      "reason": "waiting for waves: wave_5_token_loop",
+      "depends_on_waves": [
+        "wave_5_token_loop"
+      ],
+      "next_action": "wait_for_dependency",
+      "verification": {
+        "status": "not_applicable_until_dependencies_pass"
+      },
+      "task_status_counts": {
+        "missing": 7
+      }
+    },
+    {
+      "wave_id": "wave_7_projection_axi_read_data_channel_adapter",
+      "status": "blocked_by_dependency",
+      "reason": "waiting for waves: wave_6_projection_axi_read_command_adapter",
+      "depends_on_waves": [
+        "wave_6_projection_axi_read_command_adapter"
+      ],
+      "next_action": "wait_for_dependency",
+      "verification": {
+        "status": "not_applicable_until_dependencies_pass"
+      },
+      "task_status_counts": {
+        "missing": 7
+      }
+    },
+    {
+      "wave_id": "wave_8_projection_axi_read_transaction_adapter",
+      "status": "blocked_by_dependency",
+      "reason": "waiting for waves: wave_7_projection_axi_read_data_channel_adapter",
+      "depends_on_waves": [
+        "wave_7_projection_axi_read_data_channel_adapter"
+      ],
+      "next_action": "wait_for_dependency",
+      "verification": {
+        "status": "not_applicable_until_dependencies_pass"
+      },
+      "task_status_counts": {
+        "missing": 7
+      }
+    },
+    {
+      "wave_id": "wave_9_projection_axi_stream_integration",
+      "status": "blocked_by_dependency",
+      "reason": "waiting for waves: wave_8_projection_axi_read_transaction_adapter",
+      "depends_on_waves": [
+        "wave_8_projection_axi_read_transaction_adapter"
+      ],
+      "next_action": "wait_for_dependency",
+      "verification": {
+        "status": "not_applicable_until_dependencies_pass"
+      },
+      "task_status_counts": {
+        "missing": 7
+      }
+    },
+    {
+      "wave_id": "wave_10_decoder_child_axi_attention_datapath",
+      "status": "blocked_by_dependency",
+      "reason": "waiting for waves: wave_9_projection_axi_stream_integration",
+      "depends_on_waves": [
+        "wave_9_projection_axi_stream_integration"
+      ],
+      "next_action": "wait_for_dependency",
+      "verification": {
+        "status": "not_applicable_until_dependencies_pass"
+      },
+      "task_status_counts": {
+        "missing": 1
+      }
+    },
+    {
+      "wave_id": "wave_11_layer_fsm_axi_attention_fixture",
+      "status": "blocked_by_dependency",
+      "reason": "waiting for waves: wave_10_decoder_child_axi_attention_datapath",
+      "depends_on_waves": [
+        "wave_10_decoder_child_axi_attention_datapath"
+      ],
+      "next_action": "wait_for_dependency",
+      "verification": {
+        "status": "not_applicable_until_dependencies_pass"
+      },
+      "task_status_counts": {
+        "missing": 1
+      }
+    },
+    {
+      "wave_id": "wave_12_top_fsm_axi_attention_fixture",
+      "status": "blocked_by_dependency",
+      "reason": "waiting for waves: wave_11_layer_fsm_axi_attention_fixture",
+      "depends_on_waves": [
+        "wave_11_layer_fsm_axi_attention_fixture"
+      ],
+      "next_action": "wait_for_dependency",
+      "verification": {
+        "status": "not_applicable_until_dependencies_pass"
+      },
+      "task_status_counts": {
+        "missing": 1
+      }
+    },
+    {
+      "wave_id": "wave_13_token_loop_axi_attention_fixture",
+      "status": "blocked_by_dependency",
+      "reason": "waiting for waves: wave_12_top_fsm_axi_attention_fixture",
+      "depends_on_waves": [
+        "wave_12_top_fsm_axi_attention_fixture"
+      ],
+      "next_action": "wait_for_dependency",
+      "verification": {
+        "status": "not_applicable_until_dependencies_pass"
+      },
+      "task_status_counts": {
+        "missing": 1
+      }
+    },
+    {
+      "wave_id": "wave_14_decoder_block_axi_attention_mlp_fixture",
+      "status": "blocked_by_dependency",
+      "reason": "waiting for waves: wave_13_token_loop_axi_attention_fixture",
+      "depends_on_waves": [
+        "wave_13_token_loop_axi_attention_fixture"
+      ],
+      "next_action": "wait_for_dependency",
+      "verification": {
+        "status": "not_applicable_until_dependencies_pass"
+      },
+      "task_status_counts": {
+        "missing": 1
+      }
+    },
+    {
+      "wave_id": "wave_15_layer_fsm_axi_decoder_block_fixture",
+      "status": "blocked_by_dependency",
+      "reason": "waiting for waves: wave_14_decoder_block_axi_attention_mlp_fixture",
+      "depends_on_waves": [
+        "wave_14_decoder_block_axi_attention_mlp_fixture"
+      ],
+      "next_action": "wait_for_dependency",
+      "verification": {
+        "status": "not_applicable_until_dependencies_pass"
+      },
+      "task_status_counts": {
+        "missing": 1
+      }
+    },
+    {
+      "wave_id": "wave_16_top_fsm_axi_decoder_block_fixture",
+      "status": "blocked_by_dependency",
+      "reason": "waiting for waves: wave_15_layer_fsm_axi_decoder_block_fixture",
+      "depends_on_waves": [
+        "wave_15_layer_fsm_axi_decoder_block_fixture"
+      ],
+      "next_action": "wait_for_dependency",
+      "verification": {
+        "status": "not_applicable_until_dependencies_pass"
+      },
+      "task_status_counts": {
+        "missing": 1
+      }
+    },
+    {
+      "wave_id": "wave_17_token_loop_axi_decoder_block_fixture",
+      "status": "blocked_by_dependency",
+      "reason": "waiting for waves: wave_16_top_fsm_axi_decoder_block_fixture",
+      "depends_on_waves": [
+        "wave_16_top_fsm_axi_decoder_block_fixture"
+      ],
+      "next_action": "wait_for_dependency",
+      "verification": {
+        "status": "not_applicable_until_dependencies_pass"
+      },
+      "task_status_counts": {
+        "missing": 1
+      }
+    },
+    {
+      "wave_id": "wave_18_model_fsm_axi_decoder_block_fixture",
+      "status": "blocked_by_dependency",
+      "reason": "waiting for waves: wave_17_token_loop_axi_decoder_block_fixture",
+      "depends_on_waves": [
+        "wave_17_token_loop_axi_decoder_block_fixture"
+      ],
+      "next_action": "wait_for_dependency",
+      "verification": {
+        "status": "not_applicable_until_dependencies_pass"
+      },
+      "task_status_counts": {
+        "missing": 1
+      }
+    },
+    {
+      "wave_id": "wave_19_ddr_axi_board_shell_fixture",
+      "status": "blocked_by_dependency",
+      "reason": "waiting for waves: wave_18_model_fsm_axi_decoder_block_fixture",
+      "depends_on_waves": [
+        "wave_18_model_fsm_axi_decoder_block_fixture"
+      ],
+      "next_action": "wait_for_dependency",
+      "verification": {
+        "status": "not_applicable_until_dependencies_pass"
+      },
+      "task_status_counts": {
+        "missing": 1
+      }
+    }
+  ],
+  "full_llama_execution_readiness": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/status_snapshots/after_01_wave_1_projection_kernels_resume/full_llama_execution_readiness.json",
+  "full_llama_execution_readiness_status": "blocked_by_target_preflight",
+  "safe_to_clear_full_llama_model_execution_blocker": false,
+  "full_llama_execution_evidence_template": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/status_snapshots/after_01_wave_1_projection_kernels_resume/full_llama_execution_evidence_template.json",
+  "model_level_execution_harness_agent_task": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/status_snapshots/after_01_wave_1_projection_kernels_resume/model_level_execution_harness_agent_task.json",
+  "model_level_execution_harness_agent_prompt": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/status_snapshots/after_01_wave_1_projection_kernels_resume/target_evidence_prompts/model_level_execution_harness_agent.md",
+  "model_level_execution_harness_agent_ready": false,
+  "model_level_execution_harness_manifest": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/status_snapshots/after_01_wave_1_projection_kernels_resume/model_level_execution_harness_manifest.json",
+  "model_level_execution_harness_spawn_instructions": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/status_snapshots/after_01_wave_1_projection_kernels_resume/model_level_execution_harness_spawn_instructions.md",
+  "full_llama_execution_evidence_agent_task": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/status_snapshots/after_01_wave_1_projection_kernels_resume/full_llama_execution_evidence_agent_task.json",
+  "full_llama_execution_evidence_agent_prompt": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/status_snapshots/after_01_wave_1_projection_kernels_resume/target_evidence_prompts/full_llama_execution_evidence_agent.md",
+  "full_llama_execution_evidence_agent_ready": false,
+  "target_evidence_execution_manifest": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/status_snapshots/after_01_wave_1_projection_kernels_resume/target_evidence_execution_manifest.json",
+  "target_evidence_spawn_instructions": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/status_snapshots/after_01_wave_1_projection_kernels_resume/target_evidence_spawn_instructions.md",
+  "board_zcu104_signoff_readiness": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/status_snapshots/after_01_wave_1_projection_kernels_resume/board_zcu104_signoff_readiness.json",
+  "board_zcu104_signoff_readiness_status": "blocked_by_full_llama_execution",
+  "safe_to_clear_board_level_zcu104_signoff_blocker": false,
+  "board_zcu104_signoff_evidence_template": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/status_snapshots/after_01_wave_1_projection_kernels_resume/board_zcu104_signoff_evidence_template.json",
+  "board_zcu104_signoff_evidence_agent_task": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/status_snapshots/after_01_wave_1_projection_kernels_resume/board_zcu104_signoff_evidence_agent_task.json",
+  "board_zcu104_signoff_evidence_agent_prompt": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/status_snapshots/after_01_wave_1_projection_kernels_resume/target_evidence_prompts/board_zcu104_signoff_evidence_agent.md",
+  "board_zcu104_signoff_evidence_agent_ready": false,
+  "board_zcu104_signoff_execution_manifest": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/status_snapshots/after_01_wave_1_projection_kernels_resume/board_zcu104_signoff_execution_manifest.json",
+  "board_zcu104_signoff_spawn_instructions": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/status_snapshots/after_01_wave_1_projection_kernels_resume/board_zcu104_signoff_spawn_instructions.md",
+  "zcu104_board_wrapper_axi_bridge_agent_task": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/status_snapshots/after_01_wave_1_projection_kernels_resume/zcu104_board_wrapper_axi_bridge_agent_task.json",
+  "zcu104_board_wrapper_axi_bridge_agent_prompt": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/status_snapshots/after_01_wave_1_projection_kernels_resume/board_implementation_prompts/zcu104_board_wrapper_axi_bridge_agent.md",
+  "zcu104_board_wrapper_axi_bridge_agent_ready": false,
+  "zcu104_board_wrapper_axi_bridge_execution_manifest": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/status_snapshots/after_01_wave_1_projection_kernels_resume/zcu104_board_wrapper_axi_bridge_execution_manifest.json",
+  "zcu104_board_wrapper_axi_bridge_spawn_instructions": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/status_snapshots/after_01_wave_1_projection_kernels_resume/zcu104_board_wrapper_axi_bridge_spawn_instructions.md",
+  "codex_spawn_instructions": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/status_snapshots/after_01_wave_1_projection_kernels_resume/codex_spawn_instructions.md"
+}

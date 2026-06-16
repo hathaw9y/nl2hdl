@@ -1,0 +1,86 @@
+{
+  "artifact": "module_ooc_synthesis_report",
+  "task_id": "non_gemm_rope_qk",
+  "kernel": "rmsnorm_rope_source_path",
+  "status": "passed",
+  "hardware_spec": {
+    "fpga_part": "xczu7ev-ffvc1156-2-e",
+    "target_clock_mhz": 200,
+    "memory_data_width_bits": 128,
+    "memory_data_width": 128,
+    "max_lut": 207360,
+    "max_dsp": 1536,
+    "max_bram": 280,
+    "max_ff": 414720,
+    "max_uram": 80,
+    "max_io": 420,
+    "device_logic_cells": 504000,
+    "device_lut": 230400,
+    "device_ff": 460800,
+    "device_dsp": 1728,
+    "device_bram_36k": 312,
+    "device_uram": 96,
+    "device_io": 464,
+    "device_distributed_ram_mb": 6.2,
+    "device_bram_mb": 11.0,
+    "device_uram_mb": 27.0,
+    "device_ps_gtr": 4,
+    "device_gth": 20,
+    "resource_reference": "AMD ZCU104 UG1267 v1.1 and XCZU7EV resource tables"
+  },
+  "vivado": {
+    "part": "xczu7ev-ffvc1156-2-e",
+    "target_clock_mhz": 200,
+    "target_clock_period_ns": 5.0,
+    "command": [
+      "vivado",
+      "-mode",
+      "batch",
+      "-source",
+      "vivado_synth.tcl"
+    ],
+    "implementation_stage": "post-route",
+    "timing_report": "timing_summary.rpt",
+    "utilization_report": "utilization.rpt"
+  },
+  "timing": {
+    "constraints_met": true,
+    "setup_worst_slack_ns": 1.66,
+    "hold_worst_slack_ns": 0.057,
+    "pulse_width_worst_slack_ns": 2.225
+  },
+  "utilization": {
+    "lut": 0,
+    "ff": {
+      "used": 205,
+      "available": 460800,
+      "utilization_percent": 0.04
+    },
+    "dsp": {
+      "used": 4,
+      "available": 1728,
+      "utilization_percent": 0.23
+    },
+    "bram": {
+      "used": 0,
+      "available": 312,
+      "utilization_percent": 0.0
+    },
+    "uram": 0,
+    "io": {
+      "used": 234,
+      "available": 360,
+      "utilization_percent": 65.0
+    }
+  },
+  "selected_tuning_knobs": {
+    "kernel": "rmsnorm_rope_source_path",
+    "pe_count": null,
+    "memory_data_width": 128
+  },
+  "resource_assessment": "fixture_control_scaffold",
+  "throughput_target_met": true,
+  "source_kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/non_gemm_rope_qk_gate/kernel_report.json",
+  "source_timing_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/non_gemm_rope_qk_gate/timing_summary.rpt",
+  "source_utilization_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/non_gemm_rope_qk_gate/utilization.rpt"
+}

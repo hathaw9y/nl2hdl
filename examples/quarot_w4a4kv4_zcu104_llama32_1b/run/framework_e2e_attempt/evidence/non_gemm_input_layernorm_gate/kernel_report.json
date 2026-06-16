@@ -1,0 +1,341 @@
+{
+  "status": "passed",
+  "out": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/rmsnorm_rope_source_path",
+  "files": [
+    "rmsnorm_rope_source_path.sv",
+    "tb_rmsnorm_rope_source_path.sv"
+  ],
+  "coverage_level": "rmsnorm_rope_source_path_fixture",
+  "implementation_stage": "post-route",
+  "simulation": {
+    "passed": true,
+    "stage": "run",
+    "output": "RMS_LOOKUP_TRACE rmsnorm_rope_source_path selector=0 valid=1 inv_rms=7024 sumsq=5568\nROPE_LOOKUP_TRACE rmsnorm_rope_source_path position=7 pair=0 valid=1 cos=13 sin=9\nROPE_LOOKUP_TRACE rmsnorm_rope_source_path position=7 pair=1 valid=1 cos=7 sin=-14\nRMS_OUTPUT_TRACE rmsnorm_rope_source_path 658 -1372 1152 -659\nROPE_OUTPUT_TRACE rmsnorm_rope_source_path 37 -13 3 -42\nPASS rmsnorm_rope_source_path\n",
+    "cmd": [
+      "iverilog",
+      "-g2012",
+      "-o",
+      "kernel_sim",
+      "rmsnorm_rope_source_path.sv",
+      "tb_rmsnorm_rope_source_path.sv"
+    ]
+  },
+  "verilator": {
+    "passed": true,
+    "stage": "lint_only",
+    "cmd": [
+      "verilator",
+      "--lint-only",
+      "-sv",
+      "-Wno-STMTDLY",
+      "-Wno-INFINITELOOP",
+      "rmsnorm_rope_source_path.sv",
+      "tb_rmsnorm_rope_source_path.sv"
+    ],
+    "output": "",
+    "policy": "DUT lint must be warning-clean. Testbench-only Verilator 4.x timing-delay warnings STMTDLY and INFINITELOOP are allowed for lint-only checks because iverilog executes the timed behavioral testbench.",
+    "requested_timing_policy": null,
+    "timing_policy_supported": null,
+    "effective_timing_policy": null,
+    "allowed_warning_classes": [
+      "STMTDLY",
+      "INFINITELOOP"
+    ]
+  },
+  "synthesis": {
+    "passed": true,
+    "cmd": [
+      "vivado",
+      "-mode",
+      "batch",
+      "-source",
+      "vivado_synth.tcl"
+    ],
+    "output": "ion  = 0 %\n  Routable Net Status*\n  *Does not include unroutable nets such as driverless and loadless.\n  Run report_route_status for detailed report.\n  Number of Failed Nets               = 376\n    (Failed Nets is the sum of unrouted and partially routed nets)\n  Number of Unrouted Nets             = 372\n  Number of Partially Routed Nets     = 4\n  Number of Node Overlaps             = 0\n\nPhase 2 Router Initialization | Checksum: 1f91b62f1\n\nTime (s): cpu = 00:00:04 ; elapsed = 00:00:03 . Memory (MB): peak = 4777.898 ; gain = 0.000 ; free physical = 44716 ; free virtual = 53761\n\nPhase 3 Global Routing\nPhase 3 Global Routing | Checksum: 1f91b62f1\n\nTime (s): cpu = 00:00:04 ; elapsed = 00:00:03 . Memory (MB): peak = 4777.898 ; gain = 0.000 ; free physical = 44716 ; free virtual = 53761\n\nPhase 4 Initial Routing\n\nPhase 4.1 Initial Net Routing Pass\nPhase 4.1 Initial Net Routing Pass | Checksum: 21f9c1f97\n\nTime (s): cpu = 00:00:04 ; elapsed = 00:00:03 . Memory (MB): peak = 4777.898 ; gain = 0.000 ; free physical = 44716 ; free virtual = 53761\nPhase 4 Initial Routing | Checksum: 1970fda25\n\nTime (s): cpu = 00:00:04 ; elapsed = 00:00:03 . Memory (MB): peak = 4777.898 ; gain = 0.000 ; free physical = 44716 ; free virtual = 53761\n\nPhase 5 Rip-up And Reroute\n\nPhase 5.1 Global Iteration 0\n Number of Nodes with overlaps = 1\n Number of Nodes with overlaps = 0\nINFO: [Route 35-416] Intermediate Timing Summary | WNS=1.649  | TNS=0.000  | WHS=0.057  | THS=0.000  |\n\nPhase 5.1 Global Iteration 0 | Checksum: 1f35bdc13\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4777.898 ; gain = 0.000 ; free physical = 44716 ; free virtual = 53761\n\nPhase 5.2 Additional Iteration for Hold\nPhase 5.2 Additional Iteration for Hold | Checksum: 1ebd67d59\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4777.898 ; gain = 0.000 ; free physical = 44716 ; free virtual = 53761\nPhase 5 Rip-up And Reroute | Checksum: 1ebd67d59\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4777.898 ; gain = 0.000 ; free physical = 44716 ; free virtual = 53761\n\nPhase 6 Delay and Skew Optimization\n\nPhase 6.1 Delay CleanUp\nPhase 6.1 Delay CleanUp | Checksum: 2313d870e\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4777.898 ; gain = 0.000 ; free physical = 44716 ; free virtual = 53761\n\nPhase 6.2 Clock Skew Optimization\nPhase 6.2 Clock Skew Optimization | Checksum: 2313d870e\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4777.898 ; gain = 0.000 ; free physical = 44716 ; free virtual = 53761\nPhase 6 Delay and Skew Optimization | Checksum: 2313d870e\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4777.898 ; gain = 0.000 ; free physical = 44716 ; free virtual = 53761\n\nPhase 7 Post Hold Fix\n\nPhase 7.1 Hold Fix Iter\nINFO: [Route 35-416] Intermediate Timing Summary | WNS=1.649  | TNS=0.000  | WHS=0.057  | THS=0.000  |\n\nPhase 7.1 Hold Fix Iter | Checksum: 2313d870e\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4777.898 ; gain = 0.000 ; free physical = 44716 ; free virtual = 53761\nPhase 7 Post Hold Fix | Checksum: 2313d870e\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4777.898 ; gain = 0.000 ; free physical = 44716 ; free virtual = 53761\n\nPhase 8 Route finalize\n\nRouter Utilization Summary\n  Global Vertical Routing Utilization    = 0.177636 %\n  Global Horizontal Routing Utilization  = 0.0189513 %\n  Routable Net Status*\n  *Does not include unroutable nets such as driverless and loadless.\n  Run report_route_status for detailed report.\n  Number of Failed Nets               = 0\n    (Failed Nets is the sum of unrouted and partially routed nets)\n  Number of Unrouted Nets             = 0\n  Number of Partially Routed Nets     = 0\n  Number of Node Overlaps             = 0\n\nPhase 8 Route finalize | Checksum: 2313d870e\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4777.898 ; gain = 0.000 ; free physical = 44716 ; free virtual = 53761\n\nPhase 9 Verifying routed nets\n\n Verification completed successfully\nPhase 9 Verifying routed nets | Checksum: 2313d870e\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4777.898 ; gain = 0.000 ; free physical = 44716 ; free virtual = 53761\n\nPhase 10 Depositing Routes\nPhase 10 Depositing Routes | Checksum: 2313d870e\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4777.898 ; gain = 0.000 ; free physical = 44716 ; free virtual = 53761\n\nPhase 11 Resolve XTalk\nPhase 11 Resolve XTalk | Checksum: 2313d870e\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4777.898 ; gain = 0.000 ; free physical = 44716 ; free virtual = 53761\n\nPhase 12 Post Process Routing\nPhase 12 Post Process Routing | Checksum: 2313d870e\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4777.898 ; gain = 0.000 ; free physical = 44716 ; free virtual = 53761\n\nPhase 13 Post Router Timing\nINFO: [Route 35-57] Estimated Timing Summary | WNS=1.649  | TNS=0.000  | WHS=0.057  | THS=0.000  |\n\nINFO: [Route 35-327] The final timing numbers are based on the router estimated timing analysis. For a complete and accurate timing signoff, please run report_timing_summary.\nPhase 13 Post Router Timing | Checksum: 2313d870e\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4777.898 ; gain = 0.000 ; free physical = 44716 ; free virtual = 53761\nTotal Elapsed time in route_design: 3.04 secs\n\nPhase 14 Post-Route Event Processing\nPhase 14 Post-Route Event Processing | Checksum: 17288479f\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4777.898 ; gain = 0.000 ; free physical = 44716 ; free virtual = 53761\nINFO: [Route 35-16] Router Completed Successfully\nEnding Routing Task | Checksum: 17288479f\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4777.898 ; gain = 0.000 ; free physical = 44716 ; free virtual = 53761\n\nRouting Is Done.\nINFO: [Common 17-83] Releasing license: Implementation\n12 Infos, 0 Warnings, 0 Critical Warnings and 0 Errors encountered.\nroute_design completed successfully\n# report_utilization -file utilization.rpt\n# report_timing_summary -file timing_summary.rpt\nINFO: [Timing 38-91] UpdateTimingParams: Speed grade: -2, Temperature grade: E, Delay Type: min_max.\nINFO: [Timing 38-191] Multithreading enabled for timing update using a maximum of 8 CPUs\n# write_checkpoint -force post_route.dcp\nINFO: [Timing 38-480] Writing timing data to binary archive.\nWrite ShapeDB Complete: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 4777.898 ; gain = 0.000 ; free physical = 44682 ; free virtual = 53726\nWrote PlaceDB: Time (s): cpu = 00:00:00.04 ; elapsed = 00:00:00.01 . Memory (MB): peak = 4777.898 ; gain = 0.000 ; free physical = 44682 ; free virtual = 53727\nWrote PulsedLatchDB: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 4777.898 ; gain = 0.000 ; free physical = 44682 ; free virtual = 53727\nWriting XDEF routing.\nWriting XDEF routing logical nets.\nWriting XDEF routing special nets.\nWrote RouteStorage: Time (s): cpu = 00:00:00.05 ; elapsed = 00:00:00.04 . Memory (MB): peak = 4777.898 ; gain = 0.000 ; free physical = 44682 ; free virtual = 53728\nWrote Netlist Cache: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 4777.898 ; gain = 0.000 ; free physical = 44682 ; free virtual = 53728\nWrote Device Cache: Time (s): cpu = 00:00:00.01 ; elapsed = 00:00:00.01 . Memory (MB): peak = 4777.898 ; gain = 0.000 ; free physical = 44682 ; free virtual = 53731\nWrite Physdb Complete: Time (s): cpu = 00:00:00.1 ; elapsed = 00:00:00.06 . Memory (MB): peak = 4777.898 ; gain = 0.000 ; free physical = 44682 ; free virtual = 53731\nINFO: [Common 17-1381] The checkpoint '/home/iamjames77/Nlp2Verilog/examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/rmsnorm_rope_source_path/post_route.dcp' has been generated.\nINFO: [Common 17-206] Exiting Vivado at Tue Jun 16 09:40:17 2026...\n",
+    "timing": {
+      "setup_worst_slack_ns": 1.66,
+      "hold_worst_slack_ns": 0.057,
+      "pulse_width_worst_slack_ns": 2.225,
+      "constraints_met": true,
+      "worst_slack_ns": 1.66,
+      "parse_status": "parsed"
+    },
+    "implementation_stage": "post-route",
+    "timing_report": "timing_summary.rpt",
+    "timing_report_available": true,
+    "utilization_report": "utilization.rpt",
+    "utilization_report_available": true,
+    "resource_status": "available",
+    "resource_utilization": {
+      "lut_as_logic": {
+        "used": 106,
+        "available": 230400,
+        "utilization_percent": 0.05
+      },
+      "clb_registers": {
+        "used": 205,
+        "available": 460800,
+        "utilization_percent": 0.04
+      },
+      "block_ram_tile": {
+        "used": 0,
+        "available": 312,
+        "utilization_percent": 0.0
+      },
+      "dsps": {
+        "used": 4,
+        "available": 1728,
+        "utilization_percent": 0.23
+      },
+      "bonded_iob": {
+        "used": 234,
+        "available": 360,
+        "utilization_percent": 65.0
+      }
+    }
+  },
+  "contract_gate": {
+    "verilator_enforced": true,
+    "synthesis_enforced": true
+  },
+  "numeric_policy": {
+    "fixture_kind": "rmsnorm_rope_source_path_fixture",
+    "schedule": "rmsnorm_lookup_apply_then_rope_lookup_apply",
+    "rmsnorm": {
+      "formula": "y_i = (x_i * gamma_i * inv_rms_lookup_value) >>> output_shift",
+      "input_format": "signed_q4_4",
+      "gamma_format": "signed_q4_4",
+      "inv_rms_format": "unsigned_q2_14",
+      "output_format": "signed_q8_10",
+      "output_shift": 12,
+      "rounding_mode": "arithmetic_shift_truncates_toward_negative_infinity",
+      "saturation_policy": "none_fixture_vectors_chosen_to_avoid_overflow"
+    },
+    "rope": {
+      "formula": "out_even = (even * cos - odd * sin) >>> fractional_bits; out_odd = (even * sin + odd * cos) >>> fractional_bits",
+      "input_format": "signed_q4_4",
+      "cos_sin_format": "signed_q4_4",
+      "output_format": "signed_q13_4",
+      "fractional_bits": 4,
+      "rounding_mode": "arithmetic_shift_truncates_toward_negative_infinity",
+      "saturation_policy": "none_fixture_vectors_chosen_to_avoid_overflow"
+    }
+  },
+  "kernel": "rmsnorm_rope_source_path",
+  "selected_non_gemm": "input_layernorm",
+  "selected_non_gemm_op_type": "RMSNorm",
+  "selected_non_gemm_shape": {
+    "hidden_size": 2048
+  },
+  "target_source_path": "rmsnorm_source_path",
+  "target_fixture_distinction": {
+    "selected_non_gemm": "input_layernorm",
+    "selected_non_gemm_op_type": "RMSNorm",
+    "selected_non_gemm_shape": {
+      "hidden_size": 2048
+    },
+    "target_source_path": "rmsnorm_source_path",
+    "fixture_kind": "bounded_4_element_rmsnorm_rope_source_path_fixture",
+    "fixture_rmsnorm_element_count": 4,
+    "fixture_rope_element_count": 4,
+    "fixture_rope_pair_count": 2,
+    "full_target_non_gemm_execution": false,
+    "distinction": "selected non-GEMM op is input_layernorm; report includes target semantic metadata plus bounded 4-element RMSNorm/RoPE source-path fixture evidence"
+  },
+  "full_target_non_gemm_execution": false,
+  "target_model": "meta-llama/Llama-3.2-1B",
+  "target_design_style": "llm_decoder_streaming",
+  "target_quantization": "int4_gptq",
+  "schedule": "rmsnorm_lookup_apply_then_rope_lookup_apply",
+  "top_level_interface": {
+    "common_handshake": [
+      "aclk",
+      "aresetn",
+      "start_i",
+      "done_o"
+    ],
+    "selector_inputs": [
+      "norm_token_i",
+      "rope_position_i"
+    ],
+    "registered_outputs": [
+      "rms_output_o",
+      "rope_output_o",
+      "status_o"
+    ],
+    "forbidden_direct_metadata_ports_absent": true,
+    "absent_ports": [
+      "inv_rms_i",
+      "cos_i",
+      "sin_i"
+    ],
+    "full_target_hidden_vectors_exposed": false,
+    "full_sequence_tables_exposed": false
+  },
+  "rmsnorm_source_path": {
+    "coverage": "rtl_internal_inv_rms_lookup_fixture",
+    "element_count": 4,
+    "has_positive_and_negative_inputs": true,
+    "gamma_is_non_uniform": true,
+    "inv_rms_source": "rtl_lookup_fixture",
+    "reciprocal_sqrt_in_rtl": false,
+    "sumsq_expected": 5568,
+    "sumsq_path": "checked_against_fixture_lookup_metadata_not_computed_by_reciprocal_sqrt_datapath",
+    "lookup_trace": {
+      "selector": 0,
+      "valid": true,
+      "inv_rms_lookup_value": 7024,
+      "sumsq_expected": 5568
+    },
+    "expected_output_vector": [
+      658,
+      -1372,
+      1152,
+      -659
+    ],
+    "observed_output_vector": [
+      658,
+      -1372,
+      1152,
+      -659
+    ],
+    "observed_output_vector_evidence_source": "parsed_from_iverilog_output_trace"
+  },
+  "rope_source_path": {
+    "coverage": "rtl_internal_cos_sin_lookup_fixture",
+    "element_count": 4,
+    "pair_count": 2,
+    "has_positive_and_negative_inputs": true,
+    "distinct_cos_sin_pairs": true,
+    "nonzero_sine_values": true,
+    "cos_sin_source": "rtl_lookup_fixture",
+    "lookup_table_in_rtl": true,
+    "frequency_generation_in_rtl": false,
+    "position": 7,
+    "lookup_trace": [
+      {
+        "position": 7,
+        "pair_index": 0,
+        "valid": true,
+        "cos": 13,
+        "sin": 9
+      },
+      {
+        "position": 7,
+        "pair_index": 1,
+        "valid": true,
+        "cos": 7,
+        "sin": -14
+      }
+    ],
+    "expected_output_vector": [
+      37,
+      -13,
+      3,
+      -42
+    ],
+    "observed_output_vector": [
+      37,
+      -13,
+      3,
+      -42
+    ],
+    "observed_output_vector_evidence_source": "parsed_from_iverilog_output_trace"
+  },
+  "inv_rms_source": "rtl_lookup_fixture",
+  "cos_sin_source": "rtl_lookup_fixture",
+  "reciprocal_sqrt_in_rtl": false,
+  "lookup_table_in_rtl": true,
+  "frequency_generation_in_rtl": false,
+  "sumsq_expected": 5568,
+  "rmsnorm_expected_output_vector": [
+    658,
+    -1372,
+    1152,
+    -659
+  ],
+  "rmsnorm_observed_output_vector": [
+    658,
+    -1372,
+    1152,
+    -659
+  ],
+  "rope_expected_output_vector": [
+    37,
+    -13,
+    3,
+    -42
+  ],
+  "rope_observed_output_vector": [
+    37,
+    -13,
+    3,
+    -42
+  ],
+  "golden_reference": "rmsnorm_rope_source_path_golden.json",
+  "does_not_claim": [
+    "full_RMSNorm_reciprocal_sqrt_datapath",
+    "RoPE_frequency_generation",
+    "full_sequence_length_table_coverage",
+    "softmax",
+    "KV_cache_movement",
+    "full_decoder_block",
+    "full_model_execution",
+    "board_level_signoff"
+  ],
+  "rmsnorm_source_path_observed_trace": {
+    "selector": 0,
+    "valid": true,
+    "inv_rms_lookup_value": 7024,
+    "sumsq_expected": 5568,
+    "evidence_source": "parsed_from_iverilog_status_trace"
+  },
+  "rope_source_path_observed_trace": [
+    {
+      "position": 7,
+      "pair_index": 0,
+      "valid": true,
+      "cos": 13,
+      "sin": 9,
+      "evidence_source": "parsed_from_iverilog_status_trace"
+    },
+    {
+      "position": 7,
+      "pair_index": 1,
+      "valid": true,
+      "cos": 7,
+      "sin": -14,
+      "evidence_source": "parsed_from_iverilog_status_trace"
+    }
+  ],
+  "rmsnorm_source_path_observed_output_vector": [
+    658,
+    -1372,
+    1152,
+    -659
+  ],
+  "rmsnorm_source_path_output_trace": {
+    "observed_output_vector": [
+      658,
+      -1372,
+      1152,
+      -659
+    ],
+    "evidence_source": "parsed_from_iverilog_output_trace"
+  },
+  "rope_source_path_observed_output_vector": [
+    37,
+    -13,
+    3,
+    -42
+  ],
+  "rope_source_path_output_trace": {
+    "observed_output_vector": [
+      37,
+      -13,
+      3,
+      -42
+    ],
+    "evidence_source": "parsed_from_iverilog_output_trace"
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "artifact": "module_packet_manifest",
+  "example": "quarot_w4a4kv4_zcu104_llama32_1b",
+  "target": {
+    "board": "AMD ZCU104",
+    "fpga_part": "xczu7ev-ffvc1156-2-e",
+    "model": "meta-llama/Llama-3.2-1B",
+    "optimization": "QuaRot W4A4KV4 with GPTQ INT4 weights",
+    "compute_style": "systolic_array",
+    "dataflow": "weight_stationary",
+    "memory_style": "external_ddr_streaming"
+  },
+  "packets": [
+    {
+      "task_id": "w4a4_ws_systolic_tile",
+      "packet": "w4a4_ws_systolic_tile.packet.json",
+      "markdown": "w4a4_ws_systolic_tile.packet.md",
+      "rtl": "../rtl/projection_systolic/w4a4_ws_systolic_tile.sv",
+      "coverage_level": "projection_systolic_w4a4_weight_stationary_tile_fixture"
+    },
+    {
+      "task_id": "quarot_w4a4kv4_support",
+      "packet": "quarot_w4a4kv4_support.packet.json",
+      "markdown": "quarot_w4a4kv4_support.packet.md",
+      "rtl": "../rtl/quarot_support/quarot_w4a4kv4_support.sv",
+      "coverage_level": "bounded_quarot_support_fixture"
+    }
+  ],
+  "parent_review_status": "packets_defined_for_bounded_fixtures",
+  "integration_gate": "requires_pre_integration_boundary_review_before_child_consumption",
+  "does_not_claim": [
+    "full_LLaMA_execution",
+    "target_scale_QuaRot_numeric_signoff",
+    "real_GPTQ_checkpoint_numeric_correctness",
+    "DDR_or_AXI_integration",
+    "ZCU104_board_level_signoff"
+  ]
+}
+

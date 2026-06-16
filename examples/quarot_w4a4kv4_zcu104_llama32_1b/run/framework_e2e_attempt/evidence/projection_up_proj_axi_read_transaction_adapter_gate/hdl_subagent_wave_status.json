@@ -1,0 +1,1736 @@
+{
+  "artifact": "hdl_subagent_wave_status_context_only",
+  "coverage_level": "kernel_or_block_context_snapshot_not_parent_collection_gate",
+  "collection_root": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter",
+  "parent_must_not_write_hdl": true,
+  "failure_to_skill_required_before_retry": true,
+  "next_dispatchable_waves": [
+    "wave_1_projection_kernels",
+    "wave_1_non_gemm_kernels"
+  ],
+  "wave_count": 20,
+  "waves": [
+    {
+      "wave_id": "wave_1_projection_kernels",
+      "status": "ready_to_dispatch",
+      "reason": "one or more implementation task results are missing",
+      "target_scope": "bounded_fixture_only",
+      "depends_on_waves": [],
+      "blocked_target_dependencies": [
+        "real_mlir_model_analysis"
+      ],
+      "task_count": 7,
+      "task_status_counts": {
+        "missing": 7
+      },
+      "passed_task_count": 0,
+      "missing_task_count": 7,
+      "task_results": [
+        {
+          "task_id": "projection_q_proj",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_q_proj_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_q_proj_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_q_proj_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "projection_k_proj",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_k_proj_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_k_proj_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_k_proj_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "projection_v_proj",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_v_proj_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_v_proj_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_v_proj_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "projection_o_proj",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_o_proj_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_o_proj_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_o_proj_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "projection_gate_proj",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_gate_proj_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_gate_proj_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_gate_proj_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "projection_up_proj",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_up_proj_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_up_proj_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_up_proj_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "projection_down_proj",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_down_proj_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_down_proj_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_down_proj_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        }
+      ],
+      "verification": {
+        "status": "not_started"
+      }
+    },
+    {
+      "wave_id": "wave_1_non_gemm_kernels",
+      "status": "ready_to_dispatch",
+      "reason": "one or more implementation task results are missing",
+      "target_scope": "bounded_fixture_only",
+      "depends_on_waves": [],
+      "blocked_target_dependencies": [
+        "real_mlir_model_analysis"
+      ],
+      "task_count": 8,
+      "task_status_counts": {
+        "missing": 8
+      },
+      "passed_task_count": 0,
+      "missing_task_count": 8,
+      "task_results": [
+        {
+          "task_id": "non_gemm_input_layernorm",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/non_gemm_input_layernorm_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/non_gemm_input_layernorm_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/non_gemm_input_layernorm_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "non_gemm_rope_qk",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/non_gemm_rope_qk_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/non_gemm_rope_qk_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/non_gemm_rope_qk_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "non_gemm_attention_scores_softmax_kv",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/non_gemm_attention_scores_softmax_kv_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/non_gemm_attention_scores_softmax_kv_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/non_gemm_attention_scores_softmax_kv_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "non_gemm_attention_residual",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/non_gemm_attention_residual_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/non_gemm_attention_residual_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/non_gemm_attention_residual_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "non_gemm_post_attention_layernorm",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/non_gemm_post_attention_layernorm_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/non_gemm_post_attention_layernorm_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/non_gemm_post_attention_layernorm_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "non_gemm_silu_gate",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/non_gemm_silu_gate_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/non_gemm_silu_gate_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/non_gemm_silu_gate_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "non_gemm_swiglu_multiply",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/non_gemm_swiglu_multiply_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/non_gemm_swiglu_multiply_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/non_gemm_swiglu_multiply_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "non_gemm_mlp_residual",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/non_gemm_mlp_residual_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/non_gemm_mlp_residual_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/non_gemm_mlp_residual_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        }
+      ],
+      "verification": {
+        "status": "not_started"
+      }
+    },
+    {
+      "wave_id": "wave_2_decoder_block",
+      "status": "blocked_by_dependency",
+      "reason": "waiting for waves: wave_1_projection_kernels, wave_1_non_gemm_kernels",
+      "target_scope": "bounded_fixture_only",
+      "depends_on_waves": [
+        "wave_1_projection_kernels",
+        "wave_1_non_gemm_kernels"
+      ],
+      "blocked_target_dependencies": [
+        "real_mlir_model_analysis"
+      ],
+      "task_count": 1,
+      "task_status_counts": {
+        "missing": 1
+      },
+      "passed_task_count": 0,
+      "missing_task_count": 1,
+      "task_results": [
+        {
+          "task_id": "decoder_block_attention_mlp_fixture",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/decoder_block_attention_mlp_fixture_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/decoder_block_attention_mlp_fixture_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/decoder_block_attention_mlp_fixture_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        }
+      ],
+      "verification": {
+        "status": "not_applicable_until_dependencies_pass"
+      }
+    },
+    {
+      "wave_id": "wave_3_layer_fsm",
+      "status": "blocked_by_dependency",
+      "reason": "waiting for waves: wave_2_decoder_block",
+      "target_scope": "bounded_fixture_only",
+      "depends_on_waves": [
+        "wave_2_decoder_block"
+      ],
+      "blocked_target_dependencies": [
+        "real_mlir_model_analysis"
+      ],
+      "task_count": 1,
+      "task_status_counts": {
+        "missing": 1
+      },
+      "passed_task_count": 0,
+      "missing_task_count": 1,
+      "task_results": [
+        {
+          "task_id": "layer_fsm_decoder_block_fixture",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/layer_fsm_decoder_block_fixture_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/layer_fsm_decoder_block_fixture_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/layer_fsm_decoder_block_fixture_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        }
+      ],
+      "verification": {
+        "status": "not_applicable_until_dependencies_pass"
+      }
+    },
+    {
+      "wave_id": "wave_4_top_fsm",
+      "status": "blocked_by_dependency",
+      "reason": "waiting for waves: wave_3_layer_fsm",
+      "target_scope": "bounded_fixture_only",
+      "depends_on_waves": [
+        "wave_3_layer_fsm"
+      ],
+      "blocked_target_dependencies": [
+        "real_mlir_model_analysis"
+      ],
+      "task_count": 1,
+      "task_status_counts": {
+        "missing": 1
+      },
+      "passed_task_count": 0,
+      "missing_task_count": 1,
+      "task_results": [
+        {
+          "task_id": "top_fsm_decoder_block_fixture",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/top_fsm_decoder_block_fixture_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/top_fsm_decoder_block_fixture_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/top_fsm_decoder_block_fixture_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        }
+      ],
+      "verification": {
+        "status": "not_applicable_until_dependencies_pass"
+      }
+    },
+    {
+      "wave_id": "wave_5_token_loop",
+      "status": "blocked_by_dependency",
+      "reason": "waiting for waves: wave_4_top_fsm",
+      "target_scope": "bounded_fixture_only",
+      "depends_on_waves": [
+        "wave_4_top_fsm"
+      ],
+      "blocked_target_dependencies": [
+        "real_mlir_model_analysis"
+      ],
+      "task_count": 1,
+      "task_status_counts": {
+        "missing": 1
+      },
+      "passed_task_count": 0,
+      "missing_task_count": 1,
+      "task_results": [
+        {
+          "task_id": "token_loop_decoder_block_fixture",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/token_loop_decoder_block_fixture_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/token_loop_decoder_block_fixture_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/token_loop_decoder_block_fixture_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        }
+      ],
+      "verification": {
+        "status": "not_applicable_until_dependencies_pass"
+      }
+    },
+    {
+      "wave_id": "wave_6_projection_axi_read_command_adapter",
+      "status": "blocked_by_dependency",
+      "reason": "waiting for waves: wave_5_token_loop",
+      "target_scope": "bounded_fixture_only",
+      "depends_on_waves": [
+        "wave_5_token_loop"
+      ],
+      "blocked_target_dependencies": [
+        "real_mlir_model_analysis"
+      ],
+      "task_count": 7,
+      "task_status_counts": {
+        "missing": 7
+      },
+      "passed_task_count": 0,
+      "missing_task_count": 7,
+      "task_results": [
+        {
+          "task_id": "projection_axi_read_command_adapter",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_axi_read_command_adapter_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_axi_read_command_adapter_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_axi_read_command_adapter_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "projection_k_proj_axi_read_command_adapter",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_k_proj_axi_read_command_adapter_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_k_proj_axi_read_command_adapter_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_k_proj_axi_read_command_adapter_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "projection_v_proj_axi_read_command_adapter",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_v_proj_axi_read_command_adapter_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_v_proj_axi_read_command_adapter_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_v_proj_axi_read_command_adapter_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "projection_o_proj_axi_read_command_adapter",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_o_proj_axi_read_command_adapter_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_o_proj_axi_read_command_adapter_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_o_proj_axi_read_command_adapter_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "projection_gate_proj_axi_read_command_adapter",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_gate_proj_axi_read_command_adapter_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_gate_proj_axi_read_command_adapter_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_gate_proj_axi_read_command_adapter_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "projection_up_proj_axi_read_command_adapter",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_up_proj_axi_read_command_adapter_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_up_proj_axi_read_command_adapter_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_up_proj_axi_read_command_adapter_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "projection_down_proj_axi_read_command_adapter",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_down_proj_axi_read_command_adapter_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_down_proj_axi_read_command_adapter_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_down_proj_axi_read_command_adapter_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        }
+      ],
+      "verification": {
+        "status": "not_applicable_until_dependencies_pass"
+      }
+    },
+    {
+      "wave_id": "wave_7_projection_axi_read_data_channel_adapter",
+      "status": "blocked_by_dependency",
+      "reason": "waiting for waves: wave_6_projection_axi_read_command_adapter",
+      "target_scope": "bounded_fixture_only",
+      "depends_on_waves": [
+        "wave_6_projection_axi_read_command_adapter"
+      ],
+      "blocked_target_dependencies": [
+        "real_mlir_model_analysis"
+      ],
+      "task_count": 7,
+      "task_status_counts": {
+        "missing": 7
+      },
+      "passed_task_count": 0,
+      "missing_task_count": 7,
+      "task_results": [
+        {
+          "task_id": "projection_axi_read_data_channel_adapter",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_axi_read_data_channel_adapter_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_axi_read_data_channel_adapter_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_axi_read_data_channel_adapter_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "projection_k_proj_axi_read_data_channel_adapter",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_k_proj_axi_read_data_channel_adapter_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_k_proj_axi_read_data_channel_adapter_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_k_proj_axi_read_data_channel_adapter_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "projection_v_proj_axi_read_data_channel_adapter",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_v_proj_axi_read_data_channel_adapter_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_v_proj_axi_read_data_channel_adapter_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_v_proj_axi_read_data_channel_adapter_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "projection_o_proj_axi_read_data_channel_adapter",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_o_proj_axi_read_data_channel_adapter_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_o_proj_axi_read_data_channel_adapter_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_o_proj_axi_read_data_channel_adapter_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "projection_gate_proj_axi_read_data_channel_adapter",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_gate_proj_axi_read_data_channel_adapter_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_gate_proj_axi_read_data_channel_adapter_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_gate_proj_axi_read_data_channel_adapter_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "projection_up_proj_axi_read_data_channel_adapter",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_up_proj_axi_read_data_channel_adapter_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_up_proj_axi_read_data_channel_adapter_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_up_proj_axi_read_data_channel_adapter_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "projection_down_proj_axi_read_data_channel_adapter",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_down_proj_axi_read_data_channel_adapter_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_down_proj_axi_read_data_channel_adapter_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_down_proj_axi_read_data_channel_adapter_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        }
+      ],
+      "verification": {
+        "status": "not_applicable_until_dependencies_pass"
+      }
+    },
+    {
+      "wave_id": "wave_8_projection_axi_read_transaction_adapter",
+      "status": "blocked_by_dependency",
+      "reason": "waiting for waves: wave_7_projection_axi_read_data_channel_adapter",
+      "target_scope": "bounded_fixture_only",
+      "depends_on_waves": [
+        "wave_7_projection_axi_read_data_channel_adapter"
+      ],
+      "blocked_target_dependencies": [
+        "real_mlir_model_analysis"
+      ],
+      "task_count": 7,
+      "task_status_counts": {
+        "missing": 7
+      },
+      "passed_task_count": 0,
+      "missing_task_count": 7,
+      "task_results": [
+        {
+          "task_id": "projection_axi_read_transaction_adapter",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_axi_read_transaction_adapter_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_axi_read_transaction_adapter_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_axi_read_transaction_adapter_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "projection_k_proj_axi_read_transaction_adapter",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_k_proj_axi_read_transaction_adapter_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_k_proj_axi_read_transaction_adapter_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_k_proj_axi_read_transaction_adapter_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "projection_v_proj_axi_read_transaction_adapter",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_v_proj_axi_read_transaction_adapter_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_v_proj_axi_read_transaction_adapter_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_v_proj_axi_read_transaction_adapter_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "projection_o_proj_axi_read_transaction_adapter",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_o_proj_axi_read_transaction_adapter_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_o_proj_axi_read_transaction_adapter_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_o_proj_axi_read_transaction_adapter_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "projection_gate_proj_axi_read_transaction_adapter",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_gate_proj_axi_read_transaction_adapter_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_gate_proj_axi_read_transaction_adapter_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_gate_proj_axi_read_transaction_adapter_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "projection_up_proj_axi_read_transaction_adapter",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_up_proj_axi_read_transaction_adapter_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_up_proj_axi_read_transaction_adapter_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_up_proj_axi_read_transaction_adapter_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "projection_down_proj_axi_read_transaction_adapter",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_down_proj_axi_read_transaction_adapter_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_down_proj_axi_read_transaction_adapter_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_down_proj_axi_read_transaction_adapter_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        }
+      ],
+      "verification": {
+        "status": "not_applicable_until_dependencies_pass"
+      }
+    },
+    {
+      "wave_id": "wave_9_projection_axi_stream_integration",
+      "status": "blocked_by_dependency",
+      "reason": "waiting for waves: wave_8_projection_axi_read_transaction_adapter",
+      "target_scope": "bounded_fixture_only",
+      "depends_on_waves": [
+        "wave_8_projection_axi_read_transaction_adapter"
+      ],
+      "blocked_target_dependencies": [
+        "real_mlir_model_analysis"
+      ],
+      "task_count": 7,
+      "task_status_counts": {
+        "missing": 7
+      },
+      "passed_task_count": 0,
+      "missing_task_count": 7,
+      "task_results": [
+        {
+          "task_id": "projection_axi_stream_integration",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_axi_stream_integration_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_axi_stream_integration_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_axi_stream_integration_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "projection_k_proj_axi_stream_integration",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_k_proj_axi_stream_integration_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_k_proj_axi_stream_integration_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_k_proj_axi_stream_integration_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "projection_v_proj_axi_stream_integration",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_v_proj_axi_stream_integration_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_v_proj_axi_stream_integration_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_v_proj_axi_stream_integration_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "projection_o_proj_axi_stream_integration",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_o_proj_axi_stream_integration_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_o_proj_axi_stream_integration_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_o_proj_axi_stream_integration_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "projection_gate_proj_axi_stream_integration",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_gate_proj_axi_stream_integration_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_gate_proj_axi_stream_integration_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_gate_proj_axi_stream_integration_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "projection_up_proj_axi_stream_integration",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_up_proj_axi_stream_integration_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_up_proj_axi_stream_integration_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_up_proj_axi_stream_integration_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "projection_down_proj_axi_stream_integration",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_down_proj_axi_stream_integration_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_down_proj_axi_stream_integration_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/projection_down_proj_axi_stream_integration_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        }
+      ],
+      "verification": {
+        "status": "not_applicable_until_dependencies_pass"
+      }
+    },
+    {
+      "wave_id": "wave_10_decoder_child_axi_attention_datapath",
+      "status": "blocked_by_dependency",
+      "reason": "waiting for waves: wave_9_projection_axi_stream_integration",
+      "target_scope": "bounded_fixture_only",
+      "depends_on_waves": [
+        "wave_9_projection_axi_stream_integration"
+      ],
+      "blocked_target_dependencies": [
+        "real_mlir_model_analysis"
+      ],
+      "task_count": 1,
+      "task_status_counts": {
+        "missing": 1
+      },
+      "passed_task_count": 0,
+      "missing_task_count": 1,
+      "task_results": [
+        {
+          "task_id": "decoder_child_axi_attention_datapath",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/decoder_child_axi_attention_datapath_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/decoder_child_axi_attention_datapath_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/decoder_child_axi_attention_datapath_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        }
+      ],
+      "verification": {
+        "status": "not_applicable_until_dependencies_pass"
+      }
+    },
+    {
+      "wave_id": "wave_11_layer_fsm_axi_attention_fixture",
+      "status": "blocked_by_dependency",
+      "reason": "waiting for waves: wave_10_decoder_child_axi_attention_datapath",
+      "target_scope": "bounded_fixture_only",
+      "depends_on_waves": [
+        "wave_10_decoder_child_axi_attention_datapath"
+      ],
+      "blocked_target_dependencies": [
+        "real_mlir_model_analysis"
+      ],
+      "task_count": 1,
+      "task_status_counts": {
+        "missing": 1
+      },
+      "passed_task_count": 0,
+      "missing_task_count": 1,
+      "task_results": [
+        {
+          "task_id": "layer_fsm_axi_attention_fixture",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/layer_fsm_axi_attention_fixture_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/layer_fsm_axi_attention_fixture_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/layer_fsm_axi_attention_fixture_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        }
+      ],
+      "verification": {
+        "status": "not_applicable_until_dependencies_pass"
+      }
+    },
+    {
+      "wave_id": "wave_12_top_fsm_axi_attention_fixture",
+      "status": "blocked_by_dependency",
+      "reason": "waiting for waves: wave_11_layer_fsm_axi_attention_fixture",
+      "target_scope": "bounded_fixture_only",
+      "depends_on_waves": [
+        "wave_11_layer_fsm_axi_attention_fixture"
+      ],
+      "blocked_target_dependencies": [
+        "real_mlir_model_analysis"
+      ],
+      "task_count": 1,
+      "task_status_counts": {
+        "missing": 1
+      },
+      "passed_task_count": 0,
+      "missing_task_count": 1,
+      "task_results": [
+        {
+          "task_id": "top_fsm_axi_attention_fixture",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/top_fsm_axi_attention_fixture_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/top_fsm_axi_attention_fixture_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/top_fsm_axi_attention_fixture_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        }
+      ],
+      "verification": {
+        "status": "not_applicable_until_dependencies_pass"
+      }
+    },
+    {
+      "wave_id": "wave_13_token_loop_axi_attention_fixture",
+      "status": "blocked_by_dependency",
+      "reason": "waiting for waves: wave_12_top_fsm_axi_attention_fixture",
+      "target_scope": "bounded_fixture_only",
+      "depends_on_waves": [
+        "wave_12_top_fsm_axi_attention_fixture"
+      ],
+      "blocked_target_dependencies": [
+        "real_mlir_model_analysis"
+      ],
+      "task_count": 1,
+      "task_status_counts": {
+        "missing": 1
+      },
+      "passed_task_count": 0,
+      "missing_task_count": 1,
+      "task_results": [
+        {
+          "task_id": "token_loop_axi_attention_fixture",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/token_loop_axi_attention_fixture_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/token_loop_axi_attention_fixture_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/token_loop_axi_attention_fixture_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        }
+      ],
+      "verification": {
+        "status": "not_applicable_until_dependencies_pass"
+      }
+    },
+    {
+      "wave_id": "wave_14_decoder_block_axi_attention_mlp_fixture",
+      "status": "blocked_by_dependency",
+      "reason": "waiting for waves: wave_13_token_loop_axi_attention_fixture",
+      "target_scope": "bounded_fixture_only",
+      "depends_on_waves": [
+        "wave_13_token_loop_axi_attention_fixture"
+      ],
+      "blocked_target_dependencies": [
+        "real_mlir_model_analysis"
+      ],
+      "task_count": 1,
+      "task_status_counts": {
+        "missing": 1
+      },
+      "passed_task_count": 0,
+      "missing_task_count": 1,
+      "task_results": [
+        {
+          "task_id": "decoder_block_axi_attention_mlp_fixture",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/decoder_block_axi_attention_mlp_fixture_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/decoder_block_axi_attention_mlp_fixture_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/decoder_block_axi_attention_mlp_fixture_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        }
+      ],
+      "verification": {
+        "status": "not_applicable_until_dependencies_pass"
+      }
+    },
+    {
+      "wave_id": "wave_15_layer_fsm_axi_decoder_block_fixture",
+      "status": "blocked_by_dependency",
+      "reason": "waiting for waves: wave_14_decoder_block_axi_attention_mlp_fixture",
+      "target_scope": "bounded_fixture_only",
+      "depends_on_waves": [
+        "wave_14_decoder_block_axi_attention_mlp_fixture"
+      ],
+      "blocked_target_dependencies": [
+        "real_mlir_model_analysis"
+      ],
+      "task_count": 1,
+      "task_status_counts": {
+        "missing": 1
+      },
+      "passed_task_count": 0,
+      "missing_task_count": 1,
+      "task_results": [
+        {
+          "task_id": "layer_fsm_axi_decoder_block_fixture",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/layer_fsm_axi_decoder_block_fixture_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/layer_fsm_axi_decoder_block_fixture_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/layer_fsm_axi_decoder_block_fixture_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        }
+      ],
+      "verification": {
+        "status": "not_applicable_until_dependencies_pass"
+      }
+    },
+    {
+      "wave_id": "wave_16_top_fsm_axi_decoder_block_fixture",
+      "status": "blocked_by_dependency",
+      "reason": "waiting for waves: wave_15_layer_fsm_axi_decoder_block_fixture",
+      "target_scope": "bounded_fixture_only",
+      "depends_on_waves": [
+        "wave_15_layer_fsm_axi_decoder_block_fixture"
+      ],
+      "blocked_target_dependencies": [
+        "real_mlir_model_analysis"
+      ],
+      "task_count": 1,
+      "task_status_counts": {
+        "missing": 1
+      },
+      "passed_task_count": 0,
+      "missing_task_count": 1,
+      "task_results": [
+        {
+          "task_id": "top_fsm_axi_decoder_block_fixture",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/top_fsm_axi_decoder_block_fixture_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/top_fsm_axi_decoder_block_fixture_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/top_fsm_axi_decoder_block_fixture_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        }
+      ],
+      "verification": {
+        "status": "not_applicable_until_dependencies_pass"
+      }
+    },
+    {
+      "wave_id": "wave_17_token_loop_axi_decoder_block_fixture",
+      "status": "blocked_by_dependency",
+      "reason": "waiting for waves: wave_16_top_fsm_axi_decoder_block_fixture",
+      "target_scope": "bounded_fixture_only",
+      "depends_on_waves": [
+        "wave_16_top_fsm_axi_decoder_block_fixture"
+      ],
+      "blocked_target_dependencies": [
+        "real_mlir_model_analysis"
+      ],
+      "task_count": 1,
+      "task_status_counts": {
+        "missing": 1
+      },
+      "passed_task_count": 0,
+      "missing_task_count": 1,
+      "task_results": [
+        {
+          "task_id": "token_loop_axi_decoder_block_fixture",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/token_loop_axi_decoder_block_fixture_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/token_loop_axi_decoder_block_fixture_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/token_loop_axi_decoder_block_fixture_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        }
+      ],
+      "verification": {
+        "status": "not_applicable_until_dependencies_pass"
+      }
+    },
+    {
+      "wave_id": "wave_18_model_fsm_axi_decoder_block_fixture",
+      "status": "blocked_by_dependency",
+      "reason": "waiting for waves: wave_17_token_loop_axi_decoder_block_fixture",
+      "target_scope": "bounded_fixture_only",
+      "depends_on_waves": [
+        "wave_17_token_loop_axi_decoder_block_fixture"
+      ],
+      "blocked_target_dependencies": [
+        "real_mlir_model_analysis"
+      ],
+      "task_count": 1,
+      "task_status_counts": {
+        "missing": 1
+      },
+      "passed_task_count": 0,
+      "missing_task_count": 1,
+      "task_results": [
+        {
+          "task_id": "model_fsm_axi_decoder_block_fixture",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/model_fsm_axi_decoder_block_fixture_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/model_fsm_axi_decoder_block_fixture_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/model_fsm_axi_decoder_block_fixture_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        }
+      ],
+      "verification": {
+        "status": "not_applicable_until_dependencies_pass"
+      }
+    },
+    {
+      "wave_id": "wave_19_ddr_axi_board_shell_fixture",
+      "status": "blocked_by_dependency",
+      "reason": "waiting for waves: wave_18_model_fsm_axi_decoder_block_fixture",
+      "target_scope": "bounded_fixture_only",
+      "depends_on_waves": [
+        "wave_18_model_fsm_axi_decoder_block_fixture"
+      ],
+      "blocked_target_dependencies": [
+        "real_mlir_model_analysis"
+      ],
+      "task_count": 1,
+      "task_status_counts": {
+        "missing": 1
+      },
+      "passed_task_count": 0,
+      "missing_task_count": 1,
+      "task_results": [
+        {
+          "task_id": "ddr_axi_board_shell_fixture",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/ddr_axi_board_shell_fixture_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/ddr_axi_board_shell_fixture_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/ddr_axi_board_shell_fixture_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        }
+      ],
+      "verification": {
+        "status": "not_applicable_until_dependencies_pass"
+      }
+    }
+  ],
+  "does_not_claim": [
+    "automatic sub-agent spawning",
+    "sub-agent execution occurred",
+    "generated RTL completeness",
+    "full LLaMA execution",
+    "board-level ZCU104 signoff",
+    "current parent collection wave status",
+    "permission to advance dependent waves"
+  ],
+  "context_only": true,
+  "context_reason": "`kernel` mode emits inspect artifacts beside kernel evidence for traceability; use the parent collection root's hdl_subagent_wave_status.json for wave advancement."
+}

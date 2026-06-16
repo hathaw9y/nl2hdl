@@ -1,0 +1,84 @@
+{
+  "artifact": "board_zcu104_signoff_evidence_agent_task",
+  "task_id": "board_zcu104_signoff_evidence",
+  "spawn_kind": "target_evidence_agent",
+  "agent": "Codex",
+  "mode": "read_write_target_evidence",
+  "ready_to_spawn": false,
+  "spawn_precondition_failures": [
+    "full_llama_execution_readiness must be passed before board signoff"
+  ],
+  "prompt_file": "target_evidence_prompts/board_zcu104_signoff_evidence_agent.md",
+  "expected_evidence_file": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/ddr_axi_board_shell_fixture_gate/board_zcu104_signoff_evidence.json",
+  "expected_subagent_result": "build/board_zcu104_signoff_gate/subagent_result.json",
+  "source_readiness_status": "blocked_by_full_llama_execution",
+  "required_commands": [
+    "python3 -m pytest -q tests/test_llm_kernels.py",
+    "python3 -m nl2hdl subagents status --dispatch-plan examples/quarot_w4a4kv4_zcu104_llama32_1b/run/ddr_axi_board_shell_fixture_gate/hdl_subagent_dispatch_plan.json --evidence-root examples/quarot_w4a4kv4_zcu104_llama32_1b/run/ddr_axi_board_shell_fixture_gate --out build/board_zcu104_signoff_gate/status_after"
+  ],
+  "parent_must_not_write_hdl": true,
+  "failure_to_skill_required": true,
+  "evidence_template": {
+    "artifact": "board_zcu104_signoff_evidence_template",
+    "write_to": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/ddr_axi_board_shell_fixture_gate/board_zcu104_signoff_evidence.json",
+    "purpose": "Evidence required before clearing board_level_zcu104_signoff.",
+    "requires_full_llama_execution_readiness_status": "passed",
+    "current_full_llama_execution_readiness_status": "blocked_by_target_preflight",
+    "required_fields": [
+      "artifact",
+      "status",
+      "board",
+      "fpga_part",
+      "full_llama_execution_status",
+      "constraints",
+      "timing",
+      "resource_utilization",
+      "reports",
+      "fixture_only"
+    ],
+    "template": {
+      "artifact": "board_zcu104_signoff_evidence",
+      "status": "<passed>",
+      "board": "ZCU104",
+      "fpga_part": "xczu7ev-ffvc1156-2-e",
+      "full_llama_execution_status": "<passed>",
+      "constraints": {
+        "clock": "<true>",
+        "reset": "<true>",
+        "board_io": "<true>",
+        "ps_pl_interface": "<true>",
+        "ddr_interface": "<true>"
+      },
+      "timing": {
+        "constraints_met": "<true>",
+        "setup_worst_slack_ns": "<non-negative number>",
+        "hold_worst_slack_ns": "<non-negative number>",
+        "pulse_width_worst_slack_ns": "<non-negative number>"
+      },
+      "resource_utilization": {
+        "lut": "<number <= 207360>",
+        "dsp": "<number <= 1536>",
+        "bram": "<number <= 280>",
+        "ff": "<number <= 414720>",
+        "uram": "<number <= 80>",
+        "io": "<number <= 420>"
+      },
+      "reports": {
+        "timing_summary": "<path to timing_summary.rpt>",
+        "utilization": "<path to utilization.rpt>",
+        "constraints": "<path to ZCU104 XDC/TCL constraints>",
+        "vivado_log": "<path to Vivado log>"
+      },
+      "fixture_only": false
+    },
+    "does_not_claim": [
+      "real_time_LLaMA_inference_performance",
+      "hardware_lab_runtime_validation"
+    ]
+  },
+  "does_not_claim": [
+    "real_time_LLaMA_inference_performance",
+    "hardware_lab_runtime_validation_without_hardware_evidence",
+    "board_level_signoff_from_fixture_only_synthesis"
+  ]
+}

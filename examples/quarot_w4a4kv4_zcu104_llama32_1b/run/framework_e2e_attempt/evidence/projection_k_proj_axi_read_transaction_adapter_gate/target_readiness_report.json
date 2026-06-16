@@ -1,0 +1,188 @@
+{
+  "artifact": "target_readiness_report",
+  "coverage_level": "parent_gate_summary_for_subagent_dispatch_not_target_completion",
+  "model": {
+    "name": "meta-llama/Llama-3.2-1B",
+    "decoder_layers": 16,
+    "hidden_size": 2048,
+    "intermediate_size": 8192
+  },
+  "target": {
+    "board": "ZCU104",
+    "fpga_part": "xczu7ev-ffvc1156-2-e",
+    "quantization": "quarot_w4a4kv4_gptq_weights",
+    "design_style": "systolic_weight_stationary_llm_streaming"
+  },
+  "status": "target_blocked",
+  "safe_to_spawn_bounded_subagents": true,
+  "safe_to_claim_target_accelerator": false,
+  "target_preflight": {
+    "status": "blocked",
+    "preflight_blockers": [
+      "real_mlir_model_analysis"
+    ],
+    "dispatch_wave_count": 20,
+    "target_preflight_ready_wave_count": 0,
+    "bounded_fixture_wave_count": 20,
+    "projection_weight_stream_ready": true,
+    "safe_to_dispatch_target_preflight_subagents": false,
+    "does_not_claim": [
+      "full_multi_layer_LLaMA_execution",
+      "board_level_ZCU104_signoff"
+    ]
+  },
+  "blocked_target_task_count": 3,
+  "blocked_target_tasks": [
+    {
+      "task_id": "real_mlir_model_analysis",
+      "reason": "current inspect MLIR does not prove every target LLaMA GEMM/non-GEMM operation from a provided or exported model graph",
+      "analysis_source": "synthetic_llama_block_mlir",
+      "coverage_level": "synthetic_decoder_block_mlir_not_exported_target_model",
+      "missing_semantic_gemm_ops": [
+        "v_proj",
+        "gate_proj"
+      ],
+      "missing_semantic_non_gemm_ops": [
+        "attention_residual",
+        "swiglu_multiply",
+        "mlp_residual"
+      ],
+      "mlir_unsupported_ops": []
+    },
+    {
+      "task_id": "full_llama_model_execution",
+      "reason": "current gates are bounded fixtures and target planning; full multi-layer/token/DDR/AXI execution is not implemented"
+    },
+    {
+      "task_id": "board_level_zcu104_signoff",
+      "reason": "current Vivado evidence is fixture post-route timing without board I/O, DDR/AXI, or PS/PL constraints"
+    }
+  ],
+  "gates": [
+    {
+      "gate": "mlir_model_analysis",
+      "status": "blocked",
+      "analysis_source": "synthetic_llama_block_mlir",
+      "coverage_level": "synthetic_decoder_block_mlir_not_exported_target_model",
+      "semantic_gemm_coverage": {
+        "covered_count": 5,
+        "required_count": 7,
+        "covered": [
+          "q_proj",
+          "k_proj",
+          "o_proj",
+          "up_proj",
+          "down_proj"
+        ]
+      },
+      "semantic_non_gemm_coverage": {
+        "covered_count": 5,
+        "required_count": 8,
+        "covered": [
+          "input_layernorm",
+          "rope_qk",
+          "attention_scores_softmax_kv",
+          "post_attention_layernorm",
+          "silu_gate"
+        ]
+      },
+      "missing_semantic_gemm_ops": [
+        "v_proj",
+        "gate_proj"
+      ],
+      "missing_semantic_non_gemm_ops": [
+        "attention_residual",
+        "swiglu_multiply",
+        "mlp_residual"
+      ]
+    },
+    {
+      "gate": "checkpoint_source",
+      "status": "passed",
+      "classification": "candidate_gptq_int4_checkpoint",
+      "dependency": "satisfied_by_gptq_quant_metadata",
+      "next_action": "run target layout and payload probes for all required LLaMA projections"
+    },
+    {
+      "gate": "checkpoint_metadata",
+      "status": "passed",
+      "metadata_status": "parsed",
+      "quantized_projection_metadata_count": 7,
+      "complete_gptq_projection_metadata_count": 7,
+      "required_projection_count": 7
+    },
+    {
+      "gate": "gptq_weight_layout",
+      "status": "passed",
+      "target_compatible_projection_count": 7,
+      "required_projection_count": 7,
+      "blocking_reason": null
+    },
+    {
+      "gate": "gptq_payload_probe",
+      "status": "passed",
+      "payload_probe_status": "sampled",
+      "sampled_projection_payload_probe_count": 7,
+      "required_projection_payload_probe_count": 7,
+      "all_projection_payload_dependency": "satisfied_by_payload_probe"
+    },
+    {
+      "gate": "projection_weight_stream_plan",
+      "status": "passed",
+      "projection_count": 7,
+      "target_stream_plan_valid_count": 7,
+      "payload_satisfied_projection_count": 7,
+      "all_projection_layout_dependency": "satisfied_by_header_preflight",
+      "all_projection_payload_dependency": "satisfied_by_payload_probe"
+    },
+    {
+      "gate": "subagent_dispatch",
+      "status": "ready_for_bounded_subagents",
+      "wave_count": 20,
+      "bounded_fixture_wave_count": 20,
+      "target_preflight_ready_wave_count": 0,
+      "global_checkpoint_blocked_target_dependencies": [],
+      "global_blocked_target_dependencies": [
+        "real_mlir_model_analysis"
+      ]
+    },
+    {
+      "gate": "full_llama_model_execution",
+      "status": "blocked"
+    },
+    {
+      "gate": "board_level_zcu104_signoff",
+      "status": "blocked"
+    }
+  ],
+  "next_actions": [
+    {
+      "task_id": "real_mlir_model_analysis",
+      "reason": "current inspect MLIR does not prove every target LLaMA GEMM/non-GEMM operation from a provided or exported model graph"
+    },
+    {
+      "task_id": "full_llama_model_execution",
+      "reason": "current gates are bounded fixtures and target planning; full multi-layer/token/DDR/AXI execution is not implemented"
+    },
+    {
+      "task_id": "board_level_zcu104_signoff",
+      "reason": "current Vivado evidence is fixture post-route timing without board I/O, DDR/AXI, or PS/PL constraints"
+    }
+  ],
+  "dispatch": {
+    "wave_count": 20,
+    "bounded_fixture_wave_count": 20,
+    "target_preflight_ready_wave_count": 0,
+    "global_checkpoint_blocked_target_dependencies": [],
+    "global_blocked_target_dependencies": [
+      "real_mlir_model_analysis"
+    ]
+  },
+  "does_not_claim": [
+    "exported_model_MLIR_full_operation_coverage",
+    "full_LLaMA_execution",
+    "target_GPTQ_INT4_checkpoint_loaded",
+    "full_GPTQ_tensor_value_loading",
+    "board_level_ZCU104_signoff"
+  ]
+}

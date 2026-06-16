@@ -1,0 +1,2705 @@
+{
+  "artifact": "hdl_subagent_wave_status",
+  "coverage_level": "parent_result_collection_no_hdl_generation",
+  "collection_root": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence",
+  "parent_must_not_write_hdl": true,
+  "failure_to_skill_required_before_retry": true,
+  "next_dispatchable_waves": [
+    "wave_1_projection_kernels",
+    "wave_1_non_gemm_kernels"
+  ],
+  "wave_count": 20,
+  "waves": [
+    {
+      "wave_id": "wave_1_projection_kernels",
+      "status": "ready_to_dispatch",
+      "reason": "at least one real datapath module is missing module-level OOC synthesis evidence",
+      "target_scope": "bounded_fixture_only",
+      "depends_on_waves": [],
+      "blocked_target_dependencies": [
+        "real_mlir_model_analysis"
+      ],
+      "task_count": 7,
+      "task_status_counts": {
+        "module_ooc_synthesis_missing": 7
+      },
+      "passed_task_count": 0,
+      "missing_task_count": 0,
+      "task_results": [
+        {
+          "task_id": "projection_q_proj",
+          "status": "module_ooc_synthesis_missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_q_proj_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_q_proj_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "passed",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_q_proj_gate/subagent_result.json",
+            "final_response_complete": true,
+            "missing_fields": [],
+            "changed_files": [
+              "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_q_proj_gate/projection_target_stream_plan.sv",
+              "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_q_proj_gate/tb_projection_target_stream_plan.sv"
+            ],
+            "commands_run": [
+              {
+                "cmd": [
+                  "python3",
+                  "-m",
+                  "nl2hdl",
+                  "agent",
+                  "--model",
+                  "meta-llama/Llama-3.2-1B",
+                  "--spec",
+                  "examples/quarot_w4a4kv4_zcu104_llama32_1b/input.yaml",
+                  "--mode",
+                  "kernel",
+                  "--kernel",
+                  "projection_target_stream_plan",
+                  "--out",
+                  "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_target_stream_plan"
+                ],
+                "returncode": 0,
+                "elapsed_sec": 54.377,
+                "log": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_target_stream_plan/runner_command.log"
+              },
+              {
+                "cmd": [
+                  "iverilog",
+                  "-g2012",
+                  "-o",
+                  "kernel_sim",
+                  "projection_target_stream_plan.sv",
+                  "tb_projection_target_stream_plan.sv"
+                ],
+                "source": "kernel_report.simulation"
+              },
+              {
+                "cmd": [
+                  "verilator",
+                  "--lint-only",
+                  "-sv",
+                  "-Wno-STMTDLY",
+                  "-Wno-INFINITELOOP",
+                  "projection_target_stream_plan.sv",
+                  "tb_projection_target_stream_plan.sv"
+                ],
+                "source": "kernel_report.verilator"
+              },
+              {
+                "cmd": [
+                  "vivado",
+                  "-mode",
+                  "batch",
+                  "-source",
+                  "vivado_synth.tcl"
+                ],
+                "source": "kernel_report.synthesis"
+              }
+            ],
+            "simulation_evidence": {
+              "passed": true,
+              "stage": "run",
+              "output": "OBSERVED_ADAPTER_PAYLOADS projection_target_stream_plan 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83\nOBSERVED_CONSUMED_PAYLOADS projection_target_stream_plan 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83\nINPUT_HANDSHAKE_TRACE projection_target_stream_plan accepted=0xf last=0x8 words=4\nBACKPRESSURE_TRACE projection_target_stream_plan ready_low_payload_idx=0,3,4 trace=0x19\nPAYLOAD_LINK_TRACE projection_target_stream_plan payloads=16\nPARALLEL_TRACE projection_target_stream_plan true_lanes=2 pair_count=64\nPASS projection_target_stream_plan\n",
+              "cmd": [
+                "iverilog",
+                "-g2012",
+                "-o",
+                "kernel_sim",
+                "projection_target_stream_plan.sv",
+                "tb_projection_target_stream_plan.sv"
+              ]
+            },
+            "verilator_evidence": {
+              "passed": true,
+              "stage": "lint_only",
+              "cmd": [
+                "verilator",
+                "--lint-only",
+                "-sv",
+                "-Wno-STMTDLY",
+                "-Wno-INFINITELOOP",
+                "projection_target_stream_plan.sv",
+                "tb_projection_target_stream_plan.sv"
+              ],
+              "output": "",
+              "policy": "DUT lint must be warning-clean. Testbench-only Verilator 4.x timing-delay warnings STMTDLY and INFINITELOOP are allowed for lint-only checks because iverilog executes the timed behavioral testbench.",
+              "requested_timing_policy": null,
+              "timing_policy_supported": null,
+              "effective_timing_policy": null,
+              "allowed_warning_classes": [
+                "STMTDLY",
+                "INFINITELOOP"
+              ]
+            },
+            "vivado_timing_resource_evidence": {
+              "passed": true,
+              "cmd": [
+                "vivado",
+                "-mode",
+                "batch",
+                "-source",
+                "vivado_synth.tcl"
+              ],
+              "output": "ss and loadless.\n  Run report_route_status for detailed report.\n  Number of Failed Nets               = 1837\n    (Failed Nets is the sum of unrouted and partially routed nets)\n  Number of Unrouted Nets             = 1712\n  Number of Partially Routed Nets     = 125\n  Number of Node Overlaps             = 0\n\nPhase 2 Router Initialization | Checksum: fc86fef4\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44769 ; free virtual = 53771\n\nPhase 3 Global Routing\nPhase 3 Global Routing | Checksum: fc86fef4\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44769 ; free virtual = 53771\n\nPhase 4 Initial Routing\n\nPhase 4.1 Initial Net Routing Pass\nPhase 4.1 Initial Net Routing Pass | Checksum: 183908807\n\nTime (s): cpu = 00:00:06 ; elapsed = 00:00:03 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44769 ; free virtual = 53770\nPhase 4 Initial Routing | Checksum: 1b92c13d5\n\nTime (s): cpu = 00:00:06 ; elapsed = 00:00:03 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44769 ; free virtual = 53770\n\nPhase 5 Rip-up And Reroute\n\nPhase 5.1 Global Iteration 0\n Number of Nodes with overlaps = 418\n Number of Nodes with overlaps = 17\n Number of Nodes with overlaps = 5\n Number of Nodes with overlaps = 0\nINFO: [Route 35-416] Intermediate Timing Summary | WNS=0.502  | TNS=0.000  | WHS=0.041  | THS=0.000  |\n\nPhase 5.1 Global Iteration 0 | Checksum: 2caf7c74a\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\n\nPhase 5.2 Additional Iteration for Hold\nPhase 5.2 Additional Iteration for Hold | Checksum: 30136c056\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\nPhase 5 Rip-up And Reroute | Checksum: 30136c056\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\n\nPhase 6 Delay and Skew Optimization\n\nPhase 6.1 Delay CleanUp\nPhase 6.1 Delay CleanUp | Checksum: 27e03a2c2\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\n\nPhase 6.2 Clock Skew Optimization\nPhase 6.2 Clock Skew Optimization | Checksum: 27e03a2c2\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\nPhase 6 Delay and Skew Optimization | Checksum: 27e03a2c2\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\n\nPhase 7 Post Hold Fix\n\nPhase 7.1 Hold Fix Iter\nINFO: [Route 35-416] Intermediate Timing Summary | WNS=0.502  | TNS=0.000  | WHS=0.041  | THS=0.000  |\n\nPhase 7.1 Hold Fix Iter | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\nPhase 7 Post Hold Fix | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\n\nPhase 8 Route finalize\n\nRouter Utilization Summary\n  Global Vertical Routing Utilization    = 0.270317 %\n  Global Horizontal Routing Utilization  = 0.161968 %\n  Routable Net Status*\n  *Does not include unroutable nets such as driverless and loadless.\n  Run report_route_status for detailed report.\n  Number of Failed Nets               = 0\n    (Failed Nets is the sum of unrouted and partially routed nets)\n  Number of Unrouted Nets             = 0\n  Number of Partially Routed Nets     = 0\n  Number of Node Overlaps             = 0\n\nPhase 8 Route finalize | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\n\nPhase 9 Verifying routed nets\n\n Verification completed successfully\nPhase 9 Verifying routed nets | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44767 ; free virtual = 53769\n\nPhase 10 Depositing Routes\nPhase 10 Depositing Routes | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44767 ; free virtual = 53769\n\nPhase 11 Resolve XTalk\nPhase 11 Resolve XTalk | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44767 ; free virtual = 53769\n\nPhase 12 Post Process Routing\nPhase 12 Post Process Routing | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44767 ; free virtual = 53769\n\nPhase 13 Post Router Timing\nINFO: [Route 35-57] Estimated Timing Summary | WNS=0.502  | TNS=0.000  | WHS=0.041  | THS=0.000  |\n\nINFO: [Route 35-327] The final timing numbers are based on the router estimated timing analysis. For a complete and accurate timing signoff, please run report_timing_summary.\nPhase 13 Post Router Timing | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44767 ; free virtual = 53769\nTotal Elapsed time in route_design: 4.48 secs\n\nPhase 14 Post-Route Event Processing\nPhase 14 Post-Route Event Processing | Checksum: 1c8b03def\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:05 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44767 ; free virtual = 53769\nINFO: [Route 35-16] Router Completed Successfully\nEnding Routing Task | Checksum: 1c8b03def\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:05 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44767 ; free virtual = 53769\n\nRouting Is Done.\nINFO: [Common 17-83] Releasing license: Implementation\n12 Infos, 0 Warnings, 0 Critical Warnings and 0 Errors encountered.\nroute_design completed successfully\n# report_utilization -file utilization.rpt\n# report_timing_summary -file timing_summary.rpt\nINFO: [Timing 38-91] UpdateTimingParams: Speed grade: -2, Temperature grade: E, Delay Type: min_max.\nINFO: [Timing 38-191] Multithreading enabled for timing update using a maximum of 8 CPUs\n# write_checkpoint -force post_route.dcp\nINFO: [Timing 38-480] Writing timing data to binary archive.\nWrite ShapeDB Complete: Time (s): cpu = 00:00:00.01 ; elapsed = 00:00:00.01 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44729 ; free virtual = 53730\nWrote PlaceDB: Time (s): cpu = 00:00:00.12 ; elapsed = 00:00:00.05 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44729 ; free virtual = 53733\nWrote PulsedLatchDB: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44729 ; free virtual = 53733\nWriting XDEF routing.\nWriting XDEF routing logical nets.\nWriting XDEF routing special nets.\nWrote RouteStorage: Time (s): cpu = 00:00:00.05 ; elapsed = 00:00:00.04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44728 ; free virtual = 53733\nWrote Netlist Cache: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.01 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44728 ; free virtual = 53733\nWrote Device Cache: Time (s): cpu = 00:00:00.01 ; elapsed = 00:00:00 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44725 ; free virtual = 53733\nWrite Physdb Complete: Time (s): cpu = 00:00:00.18 ; elapsed = 00:00:00.11 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44725 ; free virtual = 53733\nINFO: [Common 17-1381] The checkpoint '/home/iamjames77/Nlp2Verilog/examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_target_stream_plan/post_route.dcp' has been generated.\nINFO: [Common 17-206] Exiting Vivado at Tue Jun 16 09:37:14 2026...\n",
+              "timing": {
+                "setup_worst_slack_ns": 0.508,
+                "hold_worst_slack_ns": 0.042,
+                "pulse_width_worst_slack_ns": 2.225,
+                "constraints_met": true,
+                "worst_slack_ns": 0.508,
+                "parse_status": "parsed"
+              },
+              "implementation_stage": "post-route",
+              "timing_report": "timing_summary.rpt",
+              "timing_report_available": true,
+              "utilization_report": "utilization.rpt",
+              "utilization_report_available": true,
+              "resource_status": "available",
+              "resource_utilization": {
+                "lut_as_logic": {
+                  "used": 1183,
+                  "available": 230400,
+                  "utilization_percent": 0.51
+                },
+                "clb_registers": {
+                  "used": 992,
+                  "available": 460800,
+                  "utilization_percent": 0.22
+                },
+                "block_ram_tile": {
+                  "used": 0,
+                  "available": 312,
+                  "utilization_percent": 0.0
+                },
+                "dsps": {
+                  "used": 6,
+                  "available": 1728,
+                  "utilization_percent": 0.35
+                },
+                "bonded_iob": {
+                  "used": 282,
+                  "available": 360,
+                  "utilization_percent": 78.33
+                }
+              }
+            },
+            "module_ooc_synthesis_evidence": {
+              "status": "not_produced_by_kernel_report"
+            },
+            "remaining_risks": [
+              "AXI_interface",
+              "DDR_controller_integration",
+              "real_checkpoint_layout_compatibility",
+              "full_target_projection_execution",
+              "full_model_execution",
+              "board_level_signoff"
+            ],
+            "skill_update_candidate_complete": false
+          },
+          "module_ooc_synthesis": {
+            "status": "missing",
+            "module_ooc_synthesis_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_q_proj_gate/module_ooc_synthesis_report.json",
+            "required": true,
+            "reason": "module_ooc_synthesis_report.json not found"
+          },
+          "reason": "module_ooc_synthesis_report.json not found",
+          "skill_update_candidate_complete": false
+        },
+        {
+          "task_id": "projection_k_proj",
+          "status": "module_ooc_synthesis_missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_k_proj_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_k_proj_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "passed",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_k_proj_gate/subagent_result.json",
+            "final_response_complete": true,
+            "missing_fields": [],
+            "changed_files": [
+              "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_k_proj_gate/projection_target_stream_plan.sv",
+              "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_k_proj_gate/tb_projection_target_stream_plan.sv"
+            ],
+            "commands_run": [
+              {
+                "cmd": [
+                  "iverilog",
+                  "-g2012",
+                  "-o",
+                  "kernel_sim",
+                  "projection_target_stream_plan.sv",
+                  "tb_projection_target_stream_plan.sv"
+                ],
+                "source": "kernel_report.simulation"
+              },
+              {
+                "cmd": [
+                  "verilator",
+                  "--lint-only",
+                  "-sv",
+                  "-Wno-STMTDLY",
+                  "-Wno-INFINITELOOP",
+                  "projection_target_stream_plan.sv",
+                  "tb_projection_target_stream_plan.sv"
+                ],
+                "source": "kernel_report.verilator"
+              },
+              {
+                "cmd": [
+                  "vivado",
+                  "-mode",
+                  "batch",
+                  "-source",
+                  "vivado_synth.tcl"
+                ],
+                "source": "kernel_report.synthesis"
+              }
+            ],
+            "simulation_evidence": {
+              "passed": true,
+              "stage": "run",
+              "output": "OBSERVED_ADAPTER_PAYLOADS projection_target_stream_plan 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83\nOBSERVED_CONSUMED_PAYLOADS projection_target_stream_plan 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83\nINPUT_HANDSHAKE_TRACE projection_target_stream_plan accepted=0xf last=0x8 words=4\nBACKPRESSURE_TRACE projection_target_stream_plan ready_low_payload_idx=0,3,4 trace=0x19\nPAYLOAD_LINK_TRACE projection_target_stream_plan payloads=16\nPARALLEL_TRACE projection_target_stream_plan true_lanes=2 pair_count=64\nPASS projection_target_stream_plan\n",
+              "cmd": [
+                "iverilog",
+                "-g2012",
+                "-o",
+                "kernel_sim",
+                "projection_target_stream_plan.sv",
+                "tb_projection_target_stream_plan.sv"
+              ]
+            },
+            "verilator_evidence": {
+              "passed": true,
+              "stage": "lint_only",
+              "cmd": [
+                "verilator",
+                "--lint-only",
+                "-sv",
+                "-Wno-STMTDLY",
+                "-Wno-INFINITELOOP",
+                "projection_target_stream_plan.sv",
+                "tb_projection_target_stream_plan.sv"
+              ],
+              "output": "",
+              "policy": "DUT lint must be warning-clean. Testbench-only Verilator 4.x timing-delay warnings STMTDLY and INFINITELOOP are allowed for lint-only checks because iverilog executes the timed behavioral testbench.",
+              "requested_timing_policy": null,
+              "timing_policy_supported": null,
+              "effective_timing_policy": null,
+              "allowed_warning_classes": [
+                "STMTDLY",
+                "INFINITELOOP"
+              ]
+            },
+            "vivado_timing_resource_evidence": {
+              "passed": true,
+              "cmd": [
+                "vivado",
+                "-mode",
+                "batch",
+                "-source",
+                "vivado_synth.tcl"
+              ],
+              "output": "ss and loadless.\n  Run report_route_status for detailed report.\n  Number of Failed Nets               = 1837\n    (Failed Nets is the sum of unrouted and partially routed nets)\n  Number of Unrouted Nets             = 1712\n  Number of Partially Routed Nets     = 125\n  Number of Node Overlaps             = 0\n\nPhase 2 Router Initialization | Checksum: fc86fef4\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44769 ; free virtual = 53771\n\nPhase 3 Global Routing\nPhase 3 Global Routing | Checksum: fc86fef4\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44769 ; free virtual = 53771\n\nPhase 4 Initial Routing\n\nPhase 4.1 Initial Net Routing Pass\nPhase 4.1 Initial Net Routing Pass | Checksum: 183908807\n\nTime (s): cpu = 00:00:06 ; elapsed = 00:00:03 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44769 ; free virtual = 53770\nPhase 4 Initial Routing | Checksum: 1b92c13d5\n\nTime (s): cpu = 00:00:06 ; elapsed = 00:00:03 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44769 ; free virtual = 53770\n\nPhase 5 Rip-up And Reroute\n\nPhase 5.1 Global Iteration 0\n Number of Nodes with overlaps = 418\n Number of Nodes with overlaps = 17\n Number of Nodes with overlaps = 5\n Number of Nodes with overlaps = 0\nINFO: [Route 35-416] Intermediate Timing Summary | WNS=0.502  | TNS=0.000  | WHS=0.041  | THS=0.000  |\n\nPhase 5.1 Global Iteration 0 | Checksum: 2caf7c74a\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\n\nPhase 5.2 Additional Iteration for Hold\nPhase 5.2 Additional Iteration for Hold | Checksum: 30136c056\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\nPhase 5 Rip-up And Reroute | Checksum: 30136c056\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\n\nPhase 6 Delay and Skew Optimization\n\nPhase 6.1 Delay CleanUp\nPhase 6.1 Delay CleanUp | Checksum: 27e03a2c2\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\n\nPhase 6.2 Clock Skew Optimization\nPhase 6.2 Clock Skew Optimization | Checksum: 27e03a2c2\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\nPhase 6 Delay and Skew Optimization | Checksum: 27e03a2c2\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\n\nPhase 7 Post Hold Fix\n\nPhase 7.1 Hold Fix Iter\nINFO: [Route 35-416] Intermediate Timing Summary | WNS=0.502  | TNS=0.000  | WHS=0.041  | THS=0.000  |\n\nPhase 7.1 Hold Fix Iter | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\nPhase 7 Post Hold Fix | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\n\nPhase 8 Route finalize\n\nRouter Utilization Summary\n  Global Vertical Routing Utilization    = 0.270317 %\n  Global Horizontal Routing Utilization  = 0.161968 %\n  Routable Net Status*\n  *Does not include unroutable nets such as driverless and loadless.\n  Run report_route_status for detailed report.\n  Number of Failed Nets               = 0\n    (Failed Nets is the sum of unrouted and partially routed nets)\n  Number of Unrouted Nets             = 0\n  Number of Partially Routed Nets     = 0\n  Number of Node Overlaps             = 0\n\nPhase 8 Route finalize | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\n\nPhase 9 Verifying routed nets\n\n Verification completed successfully\nPhase 9 Verifying routed nets | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44767 ; free virtual = 53769\n\nPhase 10 Depositing Routes\nPhase 10 Depositing Routes | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44767 ; free virtual = 53769\n\nPhase 11 Resolve XTalk\nPhase 11 Resolve XTalk | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44767 ; free virtual = 53769\n\nPhase 12 Post Process Routing\nPhase 12 Post Process Routing | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44767 ; free virtual = 53769\n\nPhase 13 Post Router Timing\nINFO: [Route 35-57] Estimated Timing Summary | WNS=0.502  | TNS=0.000  | WHS=0.041  | THS=0.000  |\n\nINFO: [Route 35-327] The final timing numbers are based on the router estimated timing analysis. For a complete and accurate timing signoff, please run report_timing_summary.\nPhase 13 Post Router Timing | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44767 ; free virtual = 53769\nTotal Elapsed time in route_design: 4.48 secs\n\nPhase 14 Post-Route Event Processing\nPhase 14 Post-Route Event Processing | Checksum: 1c8b03def\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:05 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44767 ; free virtual = 53769\nINFO: [Route 35-16] Router Completed Successfully\nEnding Routing Task | Checksum: 1c8b03def\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:05 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44767 ; free virtual = 53769\n\nRouting Is Done.\nINFO: [Common 17-83] Releasing license: Implementation\n12 Infos, 0 Warnings, 0 Critical Warnings and 0 Errors encountered.\nroute_design completed successfully\n# report_utilization -file utilization.rpt\n# report_timing_summary -file timing_summary.rpt\nINFO: [Timing 38-91] UpdateTimingParams: Speed grade: -2, Temperature grade: E, Delay Type: min_max.\nINFO: [Timing 38-191] Multithreading enabled for timing update using a maximum of 8 CPUs\n# write_checkpoint -force post_route.dcp\nINFO: [Timing 38-480] Writing timing data to binary archive.\nWrite ShapeDB Complete: Time (s): cpu = 00:00:00.01 ; elapsed = 00:00:00.01 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44729 ; free virtual = 53730\nWrote PlaceDB: Time (s): cpu = 00:00:00.12 ; elapsed = 00:00:00.05 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44729 ; free virtual = 53733\nWrote PulsedLatchDB: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44729 ; free virtual = 53733\nWriting XDEF routing.\nWriting XDEF routing logical nets.\nWriting XDEF routing special nets.\nWrote RouteStorage: Time (s): cpu = 00:00:00.05 ; elapsed = 00:00:00.04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44728 ; free virtual = 53733\nWrote Netlist Cache: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.01 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44728 ; free virtual = 53733\nWrote Device Cache: Time (s): cpu = 00:00:00.01 ; elapsed = 00:00:00 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44725 ; free virtual = 53733\nWrite Physdb Complete: Time (s): cpu = 00:00:00.18 ; elapsed = 00:00:00.11 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44725 ; free virtual = 53733\nINFO: [Common 17-1381] The checkpoint '/home/iamjames77/Nlp2Verilog/examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_target_stream_plan/post_route.dcp' has been generated.\nINFO: [Common 17-206] Exiting Vivado at Tue Jun 16 09:37:14 2026...\n",
+              "timing": {
+                "setup_worst_slack_ns": 0.508,
+                "hold_worst_slack_ns": 0.042,
+                "pulse_width_worst_slack_ns": 2.225,
+                "constraints_met": true,
+                "worst_slack_ns": 0.508,
+                "parse_status": "parsed"
+              },
+              "implementation_stage": "post-route",
+              "timing_report": "timing_summary.rpt",
+              "timing_report_available": true,
+              "utilization_report": "utilization.rpt",
+              "utilization_report_available": true,
+              "resource_status": "available",
+              "resource_utilization": {
+                "lut_as_logic": {
+                  "used": 1183,
+                  "available": 230400,
+                  "utilization_percent": 0.51
+                },
+                "clb_registers": {
+                  "used": 992,
+                  "available": 460800,
+                  "utilization_percent": 0.22
+                },
+                "block_ram_tile": {
+                  "used": 0,
+                  "available": 312,
+                  "utilization_percent": 0.0
+                },
+                "dsps": {
+                  "used": 6,
+                  "available": 1728,
+                  "utilization_percent": 0.35
+                },
+                "bonded_iob": {
+                  "used": 282,
+                  "available": 360,
+                  "utilization_percent": 78.33
+                }
+              }
+            },
+            "module_ooc_synthesis_evidence": {
+              "status": "not_produced_by_kernel_report"
+            },
+            "remaining_risks": [
+              "AXI_interface",
+              "DDR_controller_integration",
+              "real_checkpoint_layout_compatibility",
+              "full_target_projection_execution",
+              "full_model_execution",
+              "board_level_signoff"
+            ],
+            "skill_update_candidate_complete": false
+          },
+          "module_ooc_synthesis": {
+            "status": "missing",
+            "module_ooc_synthesis_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_k_proj_gate/module_ooc_synthesis_report.json",
+            "required": true,
+            "reason": "module_ooc_synthesis_report.json not found"
+          },
+          "reason": "module_ooc_synthesis_report.json not found",
+          "skill_update_candidate_complete": false
+        },
+        {
+          "task_id": "projection_v_proj",
+          "status": "module_ooc_synthesis_missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_v_proj_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_v_proj_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "passed",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_v_proj_gate/subagent_result.json",
+            "final_response_complete": true,
+            "missing_fields": [],
+            "changed_files": [
+              "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_v_proj_gate/projection_target_stream_plan.sv",
+              "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_v_proj_gate/tb_projection_target_stream_plan.sv"
+            ],
+            "commands_run": [
+              {
+                "cmd": [
+                  "iverilog",
+                  "-g2012",
+                  "-o",
+                  "kernel_sim",
+                  "projection_target_stream_plan.sv",
+                  "tb_projection_target_stream_plan.sv"
+                ],
+                "source": "kernel_report.simulation"
+              },
+              {
+                "cmd": [
+                  "verilator",
+                  "--lint-only",
+                  "-sv",
+                  "-Wno-STMTDLY",
+                  "-Wno-INFINITELOOP",
+                  "projection_target_stream_plan.sv",
+                  "tb_projection_target_stream_plan.sv"
+                ],
+                "source": "kernel_report.verilator"
+              },
+              {
+                "cmd": [
+                  "vivado",
+                  "-mode",
+                  "batch",
+                  "-source",
+                  "vivado_synth.tcl"
+                ],
+                "source": "kernel_report.synthesis"
+              }
+            ],
+            "simulation_evidence": {
+              "passed": true,
+              "stage": "run",
+              "output": "OBSERVED_ADAPTER_PAYLOADS projection_target_stream_plan 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83\nOBSERVED_CONSUMED_PAYLOADS projection_target_stream_plan 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83\nINPUT_HANDSHAKE_TRACE projection_target_stream_plan accepted=0xf last=0x8 words=4\nBACKPRESSURE_TRACE projection_target_stream_plan ready_low_payload_idx=0,3,4 trace=0x19\nPAYLOAD_LINK_TRACE projection_target_stream_plan payloads=16\nPARALLEL_TRACE projection_target_stream_plan true_lanes=2 pair_count=64\nPASS projection_target_stream_plan\n",
+              "cmd": [
+                "iverilog",
+                "-g2012",
+                "-o",
+                "kernel_sim",
+                "projection_target_stream_plan.sv",
+                "tb_projection_target_stream_plan.sv"
+              ]
+            },
+            "verilator_evidence": {
+              "passed": true,
+              "stage": "lint_only",
+              "cmd": [
+                "verilator",
+                "--lint-only",
+                "-sv",
+                "-Wno-STMTDLY",
+                "-Wno-INFINITELOOP",
+                "projection_target_stream_plan.sv",
+                "tb_projection_target_stream_plan.sv"
+              ],
+              "output": "",
+              "policy": "DUT lint must be warning-clean. Testbench-only Verilator 4.x timing-delay warnings STMTDLY and INFINITELOOP are allowed for lint-only checks because iverilog executes the timed behavioral testbench.",
+              "requested_timing_policy": null,
+              "timing_policy_supported": null,
+              "effective_timing_policy": null,
+              "allowed_warning_classes": [
+                "STMTDLY",
+                "INFINITELOOP"
+              ]
+            },
+            "vivado_timing_resource_evidence": {
+              "passed": true,
+              "cmd": [
+                "vivado",
+                "-mode",
+                "batch",
+                "-source",
+                "vivado_synth.tcl"
+              ],
+              "output": "ss and loadless.\n  Run report_route_status for detailed report.\n  Number of Failed Nets               = 1837\n    (Failed Nets is the sum of unrouted and partially routed nets)\n  Number of Unrouted Nets             = 1712\n  Number of Partially Routed Nets     = 125\n  Number of Node Overlaps             = 0\n\nPhase 2 Router Initialization | Checksum: fc86fef4\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44769 ; free virtual = 53771\n\nPhase 3 Global Routing\nPhase 3 Global Routing | Checksum: fc86fef4\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44769 ; free virtual = 53771\n\nPhase 4 Initial Routing\n\nPhase 4.1 Initial Net Routing Pass\nPhase 4.1 Initial Net Routing Pass | Checksum: 183908807\n\nTime (s): cpu = 00:00:06 ; elapsed = 00:00:03 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44769 ; free virtual = 53770\nPhase 4 Initial Routing | Checksum: 1b92c13d5\n\nTime (s): cpu = 00:00:06 ; elapsed = 00:00:03 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44769 ; free virtual = 53770\n\nPhase 5 Rip-up And Reroute\n\nPhase 5.1 Global Iteration 0\n Number of Nodes with overlaps = 418\n Number of Nodes with overlaps = 17\n Number of Nodes with overlaps = 5\n Number of Nodes with overlaps = 0\nINFO: [Route 35-416] Intermediate Timing Summary | WNS=0.502  | TNS=0.000  | WHS=0.041  | THS=0.000  |\n\nPhase 5.1 Global Iteration 0 | Checksum: 2caf7c74a\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\n\nPhase 5.2 Additional Iteration for Hold\nPhase 5.2 Additional Iteration for Hold | Checksum: 30136c056\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\nPhase 5 Rip-up And Reroute | Checksum: 30136c056\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\n\nPhase 6 Delay and Skew Optimization\n\nPhase 6.1 Delay CleanUp\nPhase 6.1 Delay CleanUp | Checksum: 27e03a2c2\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\n\nPhase 6.2 Clock Skew Optimization\nPhase 6.2 Clock Skew Optimization | Checksum: 27e03a2c2\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\nPhase 6 Delay and Skew Optimization | Checksum: 27e03a2c2\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\n\nPhase 7 Post Hold Fix\n\nPhase 7.1 Hold Fix Iter\nINFO: [Route 35-416] Intermediate Timing Summary | WNS=0.502  | TNS=0.000  | WHS=0.041  | THS=0.000  |\n\nPhase 7.1 Hold Fix Iter | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\nPhase 7 Post Hold Fix | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\n\nPhase 8 Route finalize\n\nRouter Utilization Summary\n  Global Vertical Routing Utilization    = 0.270317 %\n  Global Horizontal Routing Utilization  = 0.161968 %\n  Routable Net Status*\n  *Does not include unroutable nets such as driverless and loadless.\n  Run report_route_status for detailed report.\n  Number of Failed Nets               = 0\n    (Failed Nets is the sum of unrouted and partially routed nets)\n  Number of Unrouted Nets             = 0\n  Number of Partially Routed Nets     = 0\n  Number of Node Overlaps             = 0\n\nPhase 8 Route finalize | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\n\nPhase 9 Verifying routed nets\n\n Verification completed successfully\nPhase 9 Verifying routed nets | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44767 ; free virtual = 53769\n\nPhase 10 Depositing Routes\nPhase 10 Depositing Routes | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44767 ; free virtual = 53769\n\nPhase 11 Resolve XTalk\nPhase 11 Resolve XTalk | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44767 ; free virtual = 53769\n\nPhase 12 Post Process Routing\nPhase 12 Post Process Routing | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44767 ; free virtual = 53769\n\nPhase 13 Post Router Timing\nINFO: [Route 35-57] Estimated Timing Summary | WNS=0.502  | TNS=0.000  | WHS=0.041  | THS=0.000  |\n\nINFO: [Route 35-327] The final timing numbers are based on the router estimated timing analysis. For a complete and accurate timing signoff, please run report_timing_summary.\nPhase 13 Post Router Timing | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44767 ; free virtual = 53769\nTotal Elapsed time in route_design: 4.48 secs\n\nPhase 14 Post-Route Event Processing\nPhase 14 Post-Route Event Processing | Checksum: 1c8b03def\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:05 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44767 ; free virtual = 53769\nINFO: [Route 35-16] Router Completed Successfully\nEnding Routing Task | Checksum: 1c8b03def\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:05 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44767 ; free virtual = 53769\n\nRouting Is Done.\nINFO: [Common 17-83] Releasing license: Implementation\n12 Infos, 0 Warnings, 0 Critical Warnings and 0 Errors encountered.\nroute_design completed successfully\n# report_utilization -file utilization.rpt\n# report_timing_summary -file timing_summary.rpt\nINFO: [Timing 38-91] UpdateTimingParams: Speed grade: -2, Temperature grade: E, Delay Type: min_max.\nINFO: [Timing 38-191] Multithreading enabled for timing update using a maximum of 8 CPUs\n# write_checkpoint -force post_route.dcp\nINFO: [Timing 38-480] Writing timing data to binary archive.\nWrite ShapeDB Complete: Time (s): cpu = 00:00:00.01 ; elapsed = 00:00:00.01 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44729 ; free virtual = 53730\nWrote PlaceDB: Time (s): cpu = 00:00:00.12 ; elapsed = 00:00:00.05 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44729 ; free virtual = 53733\nWrote PulsedLatchDB: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44729 ; free virtual = 53733\nWriting XDEF routing.\nWriting XDEF routing logical nets.\nWriting XDEF routing special nets.\nWrote RouteStorage: Time (s): cpu = 00:00:00.05 ; elapsed = 00:00:00.04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44728 ; free virtual = 53733\nWrote Netlist Cache: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.01 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44728 ; free virtual = 53733\nWrote Device Cache: Time (s): cpu = 00:00:00.01 ; elapsed = 00:00:00 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44725 ; free virtual = 53733\nWrite Physdb Complete: Time (s): cpu = 00:00:00.18 ; elapsed = 00:00:00.11 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44725 ; free virtual = 53733\nINFO: [Common 17-1381] The checkpoint '/home/iamjames77/Nlp2Verilog/examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_target_stream_plan/post_route.dcp' has been generated.\nINFO: [Common 17-206] Exiting Vivado at Tue Jun 16 09:37:14 2026...\n",
+              "timing": {
+                "setup_worst_slack_ns": 0.508,
+                "hold_worst_slack_ns": 0.042,
+                "pulse_width_worst_slack_ns": 2.225,
+                "constraints_met": true,
+                "worst_slack_ns": 0.508,
+                "parse_status": "parsed"
+              },
+              "implementation_stage": "post-route",
+              "timing_report": "timing_summary.rpt",
+              "timing_report_available": true,
+              "utilization_report": "utilization.rpt",
+              "utilization_report_available": true,
+              "resource_status": "available",
+              "resource_utilization": {
+                "lut_as_logic": {
+                  "used": 1183,
+                  "available": 230400,
+                  "utilization_percent": 0.51
+                },
+                "clb_registers": {
+                  "used": 992,
+                  "available": 460800,
+                  "utilization_percent": 0.22
+                },
+                "block_ram_tile": {
+                  "used": 0,
+                  "available": 312,
+                  "utilization_percent": 0.0
+                },
+                "dsps": {
+                  "used": 6,
+                  "available": 1728,
+                  "utilization_percent": 0.35
+                },
+                "bonded_iob": {
+                  "used": 282,
+                  "available": 360,
+                  "utilization_percent": 78.33
+                }
+              }
+            },
+            "module_ooc_synthesis_evidence": {
+              "status": "not_produced_by_kernel_report"
+            },
+            "remaining_risks": [
+              "AXI_interface",
+              "DDR_controller_integration",
+              "real_checkpoint_layout_compatibility",
+              "full_target_projection_execution",
+              "full_model_execution",
+              "board_level_signoff"
+            ],
+            "skill_update_candidate_complete": false
+          },
+          "module_ooc_synthesis": {
+            "status": "missing",
+            "module_ooc_synthesis_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_v_proj_gate/module_ooc_synthesis_report.json",
+            "required": true,
+            "reason": "module_ooc_synthesis_report.json not found"
+          },
+          "reason": "module_ooc_synthesis_report.json not found",
+          "skill_update_candidate_complete": false
+        },
+        {
+          "task_id": "projection_o_proj",
+          "status": "module_ooc_synthesis_missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_o_proj_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_o_proj_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "passed",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_o_proj_gate/subagent_result.json",
+            "final_response_complete": true,
+            "missing_fields": [],
+            "changed_files": [
+              "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_o_proj_gate/projection_target_stream_plan.sv",
+              "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_o_proj_gate/tb_projection_target_stream_plan.sv"
+            ],
+            "commands_run": [
+              {
+                "cmd": [
+                  "iverilog",
+                  "-g2012",
+                  "-o",
+                  "kernel_sim",
+                  "projection_target_stream_plan.sv",
+                  "tb_projection_target_stream_plan.sv"
+                ],
+                "source": "kernel_report.simulation"
+              },
+              {
+                "cmd": [
+                  "verilator",
+                  "--lint-only",
+                  "-sv",
+                  "-Wno-STMTDLY",
+                  "-Wno-INFINITELOOP",
+                  "projection_target_stream_plan.sv",
+                  "tb_projection_target_stream_plan.sv"
+                ],
+                "source": "kernel_report.verilator"
+              },
+              {
+                "cmd": [
+                  "vivado",
+                  "-mode",
+                  "batch",
+                  "-source",
+                  "vivado_synth.tcl"
+                ],
+                "source": "kernel_report.synthesis"
+              }
+            ],
+            "simulation_evidence": {
+              "passed": true,
+              "stage": "run",
+              "output": "OBSERVED_ADAPTER_PAYLOADS projection_target_stream_plan 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83\nOBSERVED_CONSUMED_PAYLOADS projection_target_stream_plan 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83\nINPUT_HANDSHAKE_TRACE projection_target_stream_plan accepted=0xf last=0x8 words=4\nBACKPRESSURE_TRACE projection_target_stream_plan ready_low_payload_idx=0,3,4 trace=0x19\nPAYLOAD_LINK_TRACE projection_target_stream_plan payloads=16\nPARALLEL_TRACE projection_target_stream_plan true_lanes=2 pair_count=64\nPASS projection_target_stream_plan\n",
+              "cmd": [
+                "iverilog",
+                "-g2012",
+                "-o",
+                "kernel_sim",
+                "projection_target_stream_plan.sv",
+                "tb_projection_target_stream_plan.sv"
+              ]
+            },
+            "verilator_evidence": {
+              "passed": true,
+              "stage": "lint_only",
+              "cmd": [
+                "verilator",
+                "--lint-only",
+                "-sv",
+                "-Wno-STMTDLY",
+                "-Wno-INFINITELOOP",
+                "projection_target_stream_plan.sv",
+                "tb_projection_target_stream_plan.sv"
+              ],
+              "output": "",
+              "policy": "DUT lint must be warning-clean. Testbench-only Verilator 4.x timing-delay warnings STMTDLY and INFINITELOOP are allowed for lint-only checks because iverilog executes the timed behavioral testbench.",
+              "requested_timing_policy": null,
+              "timing_policy_supported": null,
+              "effective_timing_policy": null,
+              "allowed_warning_classes": [
+                "STMTDLY",
+                "INFINITELOOP"
+              ]
+            },
+            "vivado_timing_resource_evidence": {
+              "passed": true,
+              "cmd": [
+                "vivado",
+                "-mode",
+                "batch",
+                "-source",
+                "vivado_synth.tcl"
+              ],
+              "output": "ss and loadless.\n  Run report_route_status for detailed report.\n  Number of Failed Nets               = 1837\n    (Failed Nets is the sum of unrouted and partially routed nets)\n  Number of Unrouted Nets             = 1712\n  Number of Partially Routed Nets     = 125\n  Number of Node Overlaps             = 0\n\nPhase 2 Router Initialization | Checksum: fc86fef4\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44769 ; free virtual = 53771\n\nPhase 3 Global Routing\nPhase 3 Global Routing | Checksum: fc86fef4\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44769 ; free virtual = 53771\n\nPhase 4 Initial Routing\n\nPhase 4.1 Initial Net Routing Pass\nPhase 4.1 Initial Net Routing Pass | Checksum: 183908807\n\nTime (s): cpu = 00:00:06 ; elapsed = 00:00:03 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44769 ; free virtual = 53770\nPhase 4 Initial Routing | Checksum: 1b92c13d5\n\nTime (s): cpu = 00:00:06 ; elapsed = 00:00:03 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44769 ; free virtual = 53770\n\nPhase 5 Rip-up And Reroute\n\nPhase 5.1 Global Iteration 0\n Number of Nodes with overlaps = 418\n Number of Nodes with overlaps = 17\n Number of Nodes with overlaps = 5\n Number of Nodes with overlaps = 0\nINFO: [Route 35-416] Intermediate Timing Summary | WNS=0.502  | TNS=0.000  | WHS=0.041  | THS=0.000  |\n\nPhase 5.1 Global Iteration 0 | Checksum: 2caf7c74a\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\n\nPhase 5.2 Additional Iteration for Hold\nPhase 5.2 Additional Iteration for Hold | Checksum: 30136c056\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\nPhase 5 Rip-up And Reroute | Checksum: 30136c056\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\n\nPhase 6 Delay and Skew Optimization\n\nPhase 6.1 Delay CleanUp\nPhase 6.1 Delay CleanUp | Checksum: 27e03a2c2\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\n\nPhase 6.2 Clock Skew Optimization\nPhase 6.2 Clock Skew Optimization | Checksum: 27e03a2c2\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\nPhase 6 Delay and Skew Optimization | Checksum: 27e03a2c2\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\n\nPhase 7 Post Hold Fix\n\nPhase 7.1 Hold Fix Iter\nINFO: [Route 35-416] Intermediate Timing Summary | WNS=0.502  | TNS=0.000  | WHS=0.041  | THS=0.000  |\n\nPhase 7.1 Hold Fix Iter | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\nPhase 7 Post Hold Fix | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\n\nPhase 8 Route finalize\n\nRouter Utilization Summary\n  Global Vertical Routing Utilization    = 0.270317 %\n  Global Horizontal Routing Utilization  = 0.161968 %\n  Routable Net Status*\n  *Does not include unroutable nets such as driverless and loadless.\n  Run report_route_status for detailed report.\n  Number of Failed Nets               = 0\n    (Failed Nets is the sum of unrouted and partially routed nets)\n  Number of Unrouted Nets             = 0\n  Number of Partially Routed Nets     = 0\n  Number of Node Overlaps             = 0\n\nPhase 8 Route finalize | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\n\nPhase 9 Verifying routed nets\n\n Verification completed successfully\nPhase 9 Verifying routed nets | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44767 ; free virtual = 53769\n\nPhase 10 Depositing Routes\nPhase 10 Depositing Routes | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44767 ; free virtual = 53769\n\nPhase 11 Resolve XTalk\nPhase 11 Resolve XTalk | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44767 ; free virtual = 53769\n\nPhase 12 Post Process Routing\nPhase 12 Post Process Routing | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44767 ; free virtual = 53769\n\nPhase 13 Post Router Timing\nINFO: [Route 35-57] Estimated Timing Summary | WNS=0.502  | TNS=0.000  | WHS=0.041  | THS=0.000  |\n\nINFO: [Route 35-327] The final timing numbers are based on the router estimated timing analysis. For a complete and accurate timing signoff, please run report_timing_summary.\nPhase 13 Post Router Timing | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44767 ; free virtual = 53769\nTotal Elapsed time in route_design: 4.48 secs\n\nPhase 14 Post-Route Event Processing\nPhase 14 Post-Route Event Processing | Checksum: 1c8b03def\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:05 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44767 ; free virtual = 53769\nINFO: [Route 35-16] Router Completed Successfully\nEnding Routing Task | Checksum: 1c8b03def\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:05 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44767 ; free virtual = 53769\n\nRouting Is Done.\nINFO: [Common 17-83] Releasing license: Implementation\n12 Infos, 0 Warnings, 0 Critical Warnings and 0 Errors encountered.\nroute_design completed successfully\n# report_utilization -file utilization.rpt\n# report_timing_summary -file timing_summary.rpt\nINFO: [Timing 38-91] UpdateTimingParams: Speed grade: -2, Temperature grade: E, Delay Type: min_max.\nINFO: [Timing 38-191] Multithreading enabled for timing update using a maximum of 8 CPUs\n# write_checkpoint -force post_route.dcp\nINFO: [Timing 38-480] Writing timing data to binary archive.\nWrite ShapeDB Complete: Time (s): cpu = 00:00:00.01 ; elapsed = 00:00:00.01 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44729 ; free virtual = 53730\nWrote PlaceDB: Time (s): cpu = 00:00:00.12 ; elapsed = 00:00:00.05 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44729 ; free virtual = 53733\nWrote PulsedLatchDB: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44729 ; free virtual = 53733\nWriting XDEF routing.\nWriting XDEF routing logical nets.\nWriting XDEF routing special nets.\nWrote RouteStorage: Time (s): cpu = 00:00:00.05 ; elapsed = 00:00:00.04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44728 ; free virtual = 53733\nWrote Netlist Cache: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.01 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44728 ; free virtual = 53733\nWrote Device Cache: Time (s): cpu = 00:00:00.01 ; elapsed = 00:00:00 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44725 ; free virtual = 53733\nWrite Physdb Complete: Time (s): cpu = 00:00:00.18 ; elapsed = 00:00:00.11 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44725 ; free virtual = 53733\nINFO: [Common 17-1381] The checkpoint '/home/iamjames77/Nlp2Verilog/examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_target_stream_plan/post_route.dcp' has been generated.\nINFO: [Common 17-206] Exiting Vivado at Tue Jun 16 09:37:14 2026...\n",
+              "timing": {
+                "setup_worst_slack_ns": 0.508,
+                "hold_worst_slack_ns": 0.042,
+                "pulse_width_worst_slack_ns": 2.225,
+                "constraints_met": true,
+                "worst_slack_ns": 0.508,
+                "parse_status": "parsed"
+              },
+              "implementation_stage": "post-route",
+              "timing_report": "timing_summary.rpt",
+              "timing_report_available": true,
+              "utilization_report": "utilization.rpt",
+              "utilization_report_available": true,
+              "resource_status": "available",
+              "resource_utilization": {
+                "lut_as_logic": {
+                  "used": 1183,
+                  "available": 230400,
+                  "utilization_percent": 0.51
+                },
+                "clb_registers": {
+                  "used": 992,
+                  "available": 460800,
+                  "utilization_percent": 0.22
+                },
+                "block_ram_tile": {
+                  "used": 0,
+                  "available": 312,
+                  "utilization_percent": 0.0
+                },
+                "dsps": {
+                  "used": 6,
+                  "available": 1728,
+                  "utilization_percent": 0.35
+                },
+                "bonded_iob": {
+                  "used": 282,
+                  "available": 360,
+                  "utilization_percent": 78.33
+                }
+              }
+            },
+            "module_ooc_synthesis_evidence": {
+              "status": "not_produced_by_kernel_report"
+            },
+            "remaining_risks": [
+              "AXI_interface",
+              "DDR_controller_integration",
+              "real_checkpoint_layout_compatibility",
+              "full_target_projection_execution",
+              "full_model_execution",
+              "board_level_signoff"
+            ],
+            "skill_update_candidate_complete": false
+          },
+          "module_ooc_synthesis": {
+            "status": "missing",
+            "module_ooc_synthesis_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_o_proj_gate/module_ooc_synthesis_report.json",
+            "required": true,
+            "reason": "module_ooc_synthesis_report.json not found"
+          },
+          "reason": "module_ooc_synthesis_report.json not found",
+          "skill_update_candidate_complete": false
+        },
+        {
+          "task_id": "projection_gate_proj",
+          "status": "module_ooc_synthesis_missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_gate_proj_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_gate_proj_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "passed",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_gate_proj_gate/subagent_result.json",
+            "final_response_complete": true,
+            "missing_fields": [],
+            "changed_files": [
+              "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_gate_proj_gate/projection_target_stream_plan.sv",
+              "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_gate_proj_gate/tb_projection_target_stream_plan.sv"
+            ],
+            "commands_run": [
+              {
+                "cmd": [
+                  "iverilog",
+                  "-g2012",
+                  "-o",
+                  "kernel_sim",
+                  "projection_target_stream_plan.sv",
+                  "tb_projection_target_stream_plan.sv"
+                ],
+                "source": "kernel_report.simulation"
+              },
+              {
+                "cmd": [
+                  "verilator",
+                  "--lint-only",
+                  "-sv",
+                  "-Wno-STMTDLY",
+                  "-Wno-INFINITELOOP",
+                  "projection_target_stream_plan.sv",
+                  "tb_projection_target_stream_plan.sv"
+                ],
+                "source": "kernel_report.verilator"
+              },
+              {
+                "cmd": [
+                  "vivado",
+                  "-mode",
+                  "batch",
+                  "-source",
+                  "vivado_synth.tcl"
+                ],
+                "source": "kernel_report.synthesis"
+              }
+            ],
+            "simulation_evidence": {
+              "passed": true,
+              "stage": "run",
+              "output": "OBSERVED_ADAPTER_PAYLOADS projection_target_stream_plan 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83\nOBSERVED_CONSUMED_PAYLOADS projection_target_stream_plan 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83\nINPUT_HANDSHAKE_TRACE projection_target_stream_plan accepted=0xf last=0x8 words=4\nBACKPRESSURE_TRACE projection_target_stream_plan ready_low_payload_idx=0,3,4 trace=0x19\nPAYLOAD_LINK_TRACE projection_target_stream_plan payloads=16\nPARALLEL_TRACE projection_target_stream_plan true_lanes=2 pair_count=64\nPASS projection_target_stream_plan\n",
+              "cmd": [
+                "iverilog",
+                "-g2012",
+                "-o",
+                "kernel_sim",
+                "projection_target_stream_plan.sv",
+                "tb_projection_target_stream_plan.sv"
+              ]
+            },
+            "verilator_evidence": {
+              "passed": true,
+              "stage": "lint_only",
+              "cmd": [
+                "verilator",
+                "--lint-only",
+                "-sv",
+                "-Wno-STMTDLY",
+                "-Wno-INFINITELOOP",
+                "projection_target_stream_plan.sv",
+                "tb_projection_target_stream_plan.sv"
+              ],
+              "output": "",
+              "policy": "DUT lint must be warning-clean. Testbench-only Verilator 4.x timing-delay warnings STMTDLY and INFINITELOOP are allowed for lint-only checks because iverilog executes the timed behavioral testbench.",
+              "requested_timing_policy": null,
+              "timing_policy_supported": null,
+              "effective_timing_policy": null,
+              "allowed_warning_classes": [
+                "STMTDLY",
+                "INFINITELOOP"
+              ]
+            },
+            "vivado_timing_resource_evidence": {
+              "passed": true,
+              "cmd": [
+                "vivado",
+                "-mode",
+                "batch",
+                "-source",
+                "vivado_synth.tcl"
+              ],
+              "output": "ss and loadless.\n  Run report_route_status for detailed report.\n  Number of Failed Nets               = 1837\n    (Failed Nets is the sum of unrouted and partially routed nets)\n  Number of Unrouted Nets             = 1712\n  Number of Partially Routed Nets     = 125\n  Number of Node Overlaps             = 0\n\nPhase 2 Router Initialization | Checksum: fc86fef4\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44769 ; free virtual = 53771\n\nPhase 3 Global Routing\nPhase 3 Global Routing | Checksum: fc86fef4\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44769 ; free virtual = 53771\n\nPhase 4 Initial Routing\n\nPhase 4.1 Initial Net Routing Pass\nPhase 4.1 Initial Net Routing Pass | Checksum: 183908807\n\nTime (s): cpu = 00:00:06 ; elapsed = 00:00:03 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44769 ; free virtual = 53770\nPhase 4 Initial Routing | Checksum: 1b92c13d5\n\nTime (s): cpu = 00:00:06 ; elapsed = 00:00:03 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44769 ; free virtual = 53770\n\nPhase 5 Rip-up And Reroute\n\nPhase 5.1 Global Iteration 0\n Number of Nodes with overlaps = 418\n Number of Nodes with overlaps = 17\n Number of Nodes with overlaps = 5\n Number of Nodes with overlaps = 0\nINFO: [Route 35-416] Intermediate Timing Summary | WNS=0.502  | TNS=0.000  | WHS=0.041  | THS=0.000  |\n\nPhase 5.1 Global Iteration 0 | Checksum: 2caf7c74a\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\n\nPhase 5.2 Additional Iteration for Hold\nPhase 5.2 Additional Iteration for Hold | Checksum: 30136c056\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\nPhase 5 Rip-up And Reroute | Checksum: 30136c056\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\n\nPhase 6 Delay and Skew Optimization\n\nPhase 6.1 Delay CleanUp\nPhase 6.1 Delay CleanUp | Checksum: 27e03a2c2\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\n\nPhase 6.2 Clock Skew Optimization\nPhase 6.2 Clock Skew Optimization | Checksum: 27e03a2c2\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\nPhase 6 Delay and Skew Optimization | Checksum: 27e03a2c2\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\n\nPhase 7 Post Hold Fix\n\nPhase 7.1 Hold Fix Iter\nINFO: [Route 35-416] Intermediate Timing Summary | WNS=0.502  | TNS=0.000  | WHS=0.041  | THS=0.000  |\n\nPhase 7.1 Hold Fix Iter | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\nPhase 7 Post Hold Fix | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\n\nPhase 8 Route finalize\n\nRouter Utilization Summary\n  Global Vertical Routing Utilization    = 0.270317 %\n  Global Horizontal Routing Utilization  = 0.161968 %\n  Routable Net Status*\n  *Does not include unroutable nets such as driverless and loadless.\n  Run report_route_status for detailed report.\n  Number of Failed Nets               = 0\n    (Failed Nets is the sum of unrouted and partially routed nets)\n  Number of Unrouted Nets             = 0\n  Number of Partially Routed Nets     = 0\n  Number of Node Overlaps             = 0\n\nPhase 8 Route finalize | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\n\nPhase 9 Verifying routed nets\n\n Verification completed successfully\nPhase 9 Verifying routed nets | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44767 ; free virtual = 53769\n\nPhase 10 Depositing Routes\nPhase 10 Depositing Routes | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44767 ; free virtual = 53769\n\nPhase 11 Resolve XTalk\nPhase 11 Resolve XTalk | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44767 ; free virtual = 53769\n\nPhase 12 Post Process Routing\nPhase 12 Post Process Routing | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44767 ; free virtual = 53769\n\nPhase 13 Post Router Timing\nINFO: [Route 35-57] Estimated Timing Summary | WNS=0.502  | TNS=0.000  | WHS=0.041  | THS=0.000  |\n\nINFO: [Route 35-327] The final timing numbers are based on the router estimated timing analysis. For a complete and accurate timing signoff, please run report_timing_summary.\nPhase 13 Post Router Timing | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44767 ; free virtual = 53769\nTotal Elapsed time in route_design: 4.48 secs\n\nPhase 14 Post-Route Event Processing\nPhase 14 Post-Route Event Processing | Checksum: 1c8b03def\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:05 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44767 ; free virtual = 53769\nINFO: [Route 35-16] Router Completed Successfully\nEnding Routing Task | Checksum: 1c8b03def\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:05 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44767 ; free virtual = 53769\n\nRouting Is Done.\nINFO: [Common 17-83] Releasing license: Implementation\n12 Infos, 0 Warnings, 0 Critical Warnings and 0 Errors encountered.\nroute_design completed successfully\n# report_utilization -file utilization.rpt\n# report_timing_summary -file timing_summary.rpt\nINFO: [Timing 38-91] UpdateTimingParams: Speed grade: -2, Temperature grade: E, Delay Type: min_max.\nINFO: [Timing 38-191] Multithreading enabled for timing update using a maximum of 8 CPUs\n# write_checkpoint -force post_route.dcp\nINFO: [Timing 38-480] Writing timing data to binary archive.\nWrite ShapeDB Complete: Time (s): cpu = 00:00:00.01 ; elapsed = 00:00:00.01 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44729 ; free virtual = 53730\nWrote PlaceDB: Time (s): cpu = 00:00:00.12 ; elapsed = 00:00:00.05 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44729 ; free virtual = 53733\nWrote PulsedLatchDB: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44729 ; free virtual = 53733\nWriting XDEF routing.\nWriting XDEF routing logical nets.\nWriting XDEF routing special nets.\nWrote RouteStorage: Time (s): cpu = 00:00:00.05 ; elapsed = 00:00:00.04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44728 ; free virtual = 53733\nWrote Netlist Cache: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.01 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44728 ; free virtual = 53733\nWrote Device Cache: Time (s): cpu = 00:00:00.01 ; elapsed = 00:00:00 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44725 ; free virtual = 53733\nWrite Physdb Complete: Time (s): cpu = 00:00:00.18 ; elapsed = 00:00:00.11 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44725 ; free virtual = 53733\nINFO: [Common 17-1381] The checkpoint '/home/iamjames77/Nlp2Verilog/examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_target_stream_plan/post_route.dcp' has been generated.\nINFO: [Common 17-206] Exiting Vivado at Tue Jun 16 09:37:14 2026...\n",
+              "timing": {
+                "setup_worst_slack_ns": 0.508,
+                "hold_worst_slack_ns": 0.042,
+                "pulse_width_worst_slack_ns": 2.225,
+                "constraints_met": true,
+                "worst_slack_ns": 0.508,
+                "parse_status": "parsed"
+              },
+              "implementation_stage": "post-route",
+              "timing_report": "timing_summary.rpt",
+              "timing_report_available": true,
+              "utilization_report": "utilization.rpt",
+              "utilization_report_available": true,
+              "resource_status": "available",
+              "resource_utilization": {
+                "lut_as_logic": {
+                  "used": 1183,
+                  "available": 230400,
+                  "utilization_percent": 0.51
+                },
+                "clb_registers": {
+                  "used": 992,
+                  "available": 460800,
+                  "utilization_percent": 0.22
+                },
+                "block_ram_tile": {
+                  "used": 0,
+                  "available": 312,
+                  "utilization_percent": 0.0
+                },
+                "dsps": {
+                  "used": 6,
+                  "available": 1728,
+                  "utilization_percent": 0.35
+                },
+                "bonded_iob": {
+                  "used": 282,
+                  "available": 360,
+                  "utilization_percent": 78.33
+                }
+              }
+            },
+            "module_ooc_synthesis_evidence": {
+              "status": "not_produced_by_kernel_report"
+            },
+            "remaining_risks": [
+              "AXI_interface",
+              "DDR_controller_integration",
+              "real_checkpoint_layout_compatibility",
+              "full_target_projection_execution",
+              "full_model_execution",
+              "board_level_signoff"
+            ],
+            "skill_update_candidate_complete": false
+          },
+          "module_ooc_synthesis": {
+            "status": "missing",
+            "module_ooc_synthesis_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_gate_proj_gate/module_ooc_synthesis_report.json",
+            "required": true,
+            "reason": "module_ooc_synthesis_report.json not found"
+          },
+          "reason": "module_ooc_synthesis_report.json not found",
+          "skill_update_candidate_complete": false
+        },
+        {
+          "task_id": "projection_up_proj",
+          "status": "module_ooc_synthesis_missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_up_proj_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_up_proj_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "passed",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_up_proj_gate/subagent_result.json",
+            "final_response_complete": true,
+            "missing_fields": [],
+            "changed_files": [
+              "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_up_proj_gate/projection_target_stream_plan.sv",
+              "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_up_proj_gate/tb_projection_target_stream_plan.sv"
+            ],
+            "commands_run": [
+              {
+                "cmd": [
+                  "iverilog",
+                  "-g2012",
+                  "-o",
+                  "kernel_sim",
+                  "projection_target_stream_plan.sv",
+                  "tb_projection_target_stream_plan.sv"
+                ],
+                "source": "kernel_report.simulation"
+              },
+              {
+                "cmd": [
+                  "verilator",
+                  "--lint-only",
+                  "-sv",
+                  "-Wno-STMTDLY",
+                  "-Wno-INFINITELOOP",
+                  "projection_target_stream_plan.sv",
+                  "tb_projection_target_stream_plan.sv"
+                ],
+                "source": "kernel_report.verilator"
+              },
+              {
+                "cmd": [
+                  "vivado",
+                  "-mode",
+                  "batch",
+                  "-source",
+                  "vivado_synth.tcl"
+                ],
+                "source": "kernel_report.synthesis"
+              }
+            ],
+            "simulation_evidence": {
+              "passed": true,
+              "stage": "run",
+              "output": "OBSERVED_ADAPTER_PAYLOADS projection_target_stream_plan 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83\nOBSERVED_CONSUMED_PAYLOADS projection_target_stream_plan 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83\nINPUT_HANDSHAKE_TRACE projection_target_stream_plan accepted=0xf last=0x8 words=4\nBACKPRESSURE_TRACE projection_target_stream_plan ready_low_payload_idx=0,3,4 trace=0x19\nPAYLOAD_LINK_TRACE projection_target_stream_plan payloads=16\nPARALLEL_TRACE projection_target_stream_plan true_lanes=2 pair_count=64\nPASS projection_target_stream_plan\n",
+              "cmd": [
+                "iverilog",
+                "-g2012",
+                "-o",
+                "kernel_sim",
+                "projection_target_stream_plan.sv",
+                "tb_projection_target_stream_plan.sv"
+              ]
+            },
+            "verilator_evidence": {
+              "passed": true,
+              "stage": "lint_only",
+              "cmd": [
+                "verilator",
+                "--lint-only",
+                "-sv",
+                "-Wno-STMTDLY",
+                "-Wno-INFINITELOOP",
+                "projection_target_stream_plan.sv",
+                "tb_projection_target_stream_plan.sv"
+              ],
+              "output": "",
+              "policy": "DUT lint must be warning-clean. Testbench-only Verilator 4.x timing-delay warnings STMTDLY and INFINITELOOP are allowed for lint-only checks because iverilog executes the timed behavioral testbench.",
+              "requested_timing_policy": null,
+              "timing_policy_supported": null,
+              "effective_timing_policy": null,
+              "allowed_warning_classes": [
+                "STMTDLY",
+                "INFINITELOOP"
+              ]
+            },
+            "vivado_timing_resource_evidence": {
+              "passed": true,
+              "cmd": [
+                "vivado",
+                "-mode",
+                "batch",
+                "-source",
+                "vivado_synth.tcl"
+              ],
+              "output": "ss and loadless.\n  Run report_route_status for detailed report.\n  Number of Failed Nets               = 1837\n    (Failed Nets is the sum of unrouted and partially routed nets)\n  Number of Unrouted Nets             = 1712\n  Number of Partially Routed Nets     = 125\n  Number of Node Overlaps             = 0\n\nPhase 2 Router Initialization | Checksum: fc86fef4\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44769 ; free virtual = 53771\n\nPhase 3 Global Routing\nPhase 3 Global Routing | Checksum: fc86fef4\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44769 ; free virtual = 53771\n\nPhase 4 Initial Routing\n\nPhase 4.1 Initial Net Routing Pass\nPhase 4.1 Initial Net Routing Pass | Checksum: 183908807\n\nTime (s): cpu = 00:00:06 ; elapsed = 00:00:03 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44769 ; free virtual = 53770\nPhase 4 Initial Routing | Checksum: 1b92c13d5\n\nTime (s): cpu = 00:00:06 ; elapsed = 00:00:03 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44769 ; free virtual = 53770\n\nPhase 5 Rip-up And Reroute\n\nPhase 5.1 Global Iteration 0\n Number of Nodes with overlaps = 418\n Number of Nodes with overlaps = 17\n Number of Nodes with overlaps = 5\n Number of Nodes with overlaps = 0\nINFO: [Route 35-416] Intermediate Timing Summary | WNS=0.502  | TNS=0.000  | WHS=0.041  | THS=0.000  |\n\nPhase 5.1 Global Iteration 0 | Checksum: 2caf7c74a\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\n\nPhase 5.2 Additional Iteration for Hold\nPhase 5.2 Additional Iteration for Hold | Checksum: 30136c056\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\nPhase 5 Rip-up And Reroute | Checksum: 30136c056\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\n\nPhase 6 Delay and Skew Optimization\n\nPhase 6.1 Delay CleanUp\nPhase 6.1 Delay CleanUp | Checksum: 27e03a2c2\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\n\nPhase 6.2 Clock Skew Optimization\nPhase 6.2 Clock Skew Optimization | Checksum: 27e03a2c2\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\nPhase 6 Delay and Skew Optimization | Checksum: 27e03a2c2\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\n\nPhase 7 Post Hold Fix\n\nPhase 7.1 Hold Fix Iter\nINFO: [Route 35-416] Intermediate Timing Summary | WNS=0.502  | TNS=0.000  | WHS=0.041  | THS=0.000  |\n\nPhase 7.1 Hold Fix Iter | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\nPhase 7 Post Hold Fix | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\n\nPhase 8 Route finalize\n\nRouter Utilization Summary\n  Global Vertical Routing Utilization    = 0.270317 %\n  Global Horizontal Routing Utilization  = 0.161968 %\n  Routable Net Status*\n  *Does not include unroutable nets such as driverless and loadless.\n  Run report_route_status for detailed report.\n  Number of Failed Nets               = 0\n    (Failed Nets is the sum of unrouted and partially routed nets)\n  Number of Unrouted Nets             = 0\n  Number of Partially Routed Nets     = 0\n  Number of Node Overlaps             = 0\n\nPhase 8 Route finalize | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\n\nPhase 9 Verifying routed nets\n\n Verification completed successfully\nPhase 9 Verifying routed nets | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44767 ; free virtual = 53769\n\nPhase 10 Depositing Routes\nPhase 10 Depositing Routes | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44767 ; free virtual = 53769\n\nPhase 11 Resolve XTalk\nPhase 11 Resolve XTalk | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44767 ; free virtual = 53769\n\nPhase 12 Post Process Routing\nPhase 12 Post Process Routing | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44767 ; free virtual = 53769\n\nPhase 13 Post Router Timing\nINFO: [Route 35-57] Estimated Timing Summary | WNS=0.502  | TNS=0.000  | WHS=0.041  | THS=0.000  |\n\nINFO: [Route 35-327] The final timing numbers are based on the router estimated timing analysis. For a complete and accurate timing signoff, please run report_timing_summary.\nPhase 13 Post Router Timing | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44767 ; free virtual = 53769\nTotal Elapsed time in route_design: 4.48 secs\n\nPhase 14 Post-Route Event Processing\nPhase 14 Post-Route Event Processing | Checksum: 1c8b03def\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:05 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44767 ; free virtual = 53769\nINFO: [Route 35-16] Router Completed Successfully\nEnding Routing Task | Checksum: 1c8b03def\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:05 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44767 ; free virtual = 53769\n\nRouting Is Done.\nINFO: [Common 17-83] Releasing license: Implementation\n12 Infos, 0 Warnings, 0 Critical Warnings and 0 Errors encountered.\nroute_design completed successfully\n# report_utilization -file utilization.rpt\n# report_timing_summary -file timing_summary.rpt\nINFO: [Timing 38-91] UpdateTimingParams: Speed grade: -2, Temperature grade: E, Delay Type: min_max.\nINFO: [Timing 38-191] Multithreading enabled for timing update using a maximum of 8 CPUs\n# write_checkpoint -force post_route.dcp\nINFO: [Timing 38-480] Writing timing data to binary archive.\nWrite ShapeDB Complete: Time (s): cpu = 00:00:00.01 ; elapsed = 00:00:00.01 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44729 ; free virtual = 53730\nWrote PlaceDB: Time (s): cpu = 00:00:00.12 ; elapsed = 00:00:00.05 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44729 ; free virtual = 53733\nWrote PulsedLatchDB: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44729 ; free virtual = 53733\nWriting XDEF routing.\nWriting XDEF routing logical nets.\nWriting XDEF routing special nets.\nWrote RouteStorage: Time (s): cpu = 00:00:00.05 ; elapsed = 00:00:00.04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44728 ; free virtual = 53733\nWrote Netlist Cache: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.01 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44728 ; free virtual = 53733\nWrote Device Cache: Time (s): cpu = 00:00:00.01 ; elapsed = 00:00:00 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44725 ; free virtual = 53733\nWrite Physdb Complete: Time (s): cpu = 00:00:00.18 ; elapsed = 00:00:00.11 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44725 ; free virtual = 53733\nINFO: [Common 17-1381] The checkpoint '/home/iamjames77/Nlp2Verilog/examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_target_stream_plan/post_route.dcp' has been generated.\nINFO: [Common 17-206] Exiting Vivado at Tue Jun 16 09:37:14 2026...\n",
+              "timing": {
+                "setup_worst_slack_ns": 0.508,
+                "hold_worst_slack_ns": 0.042,
+                "pulse_width_worst_slack_ns": 2.225,
+                "constraints_met": true,
+                "worst_slack_ns": 0.508,
+                "parse_status": "parsed"
+              },
+              "implementation_stage": "post-route",
+              "timing_report": "timing_summary.rpt",
+              "timing_report_available": true,
+              "utilization_report": "utilization.rpt",
+              "utilization_report_available": true,
+              "resource_status": "available",
+              "resource_utilization": {
+                "lut_as_logic": {
+                  "used": 1183,
+                  "available": 230400,
+                  "utilization_percent": 0.51
+                },
+                "clb_registers": {
+                  "used": 992,
+                  "available": 460800,
+                  "utilization_percent": 0.22
+                },
+                "block_ram_tile": {
+                  "used": 0,
+                  "available": 312,
+                  "utilization_percent": 0.0
+                },
+                "dsps": {
+                  "used": 6,
+                  "available": 1728,
+                  "utilization_percent": 0.35
+                },
+                "bonded_iob": {
+                  "used": 282,
+                  "available": 360,
+                  "utilization_percent": 78.33
+                }
+              }
+            },
+            "module_ooc_synthesis_evidence": {
+              "status": "not_produced_by_kernel_report"
+            },
+            "remaining_risks": [
+              "AXI_interface",
+              "DDR_controller_integration",
+              "real_checkpoint_layout_compatibility",
+              "full_target_projection_execution",
+              "full_model_execution",
+              "board_level_signoff"
+            ],
+            "skill_update_candidate_complete": false
+          },
+          "module_ooc_synthesis": {
+            "status": "missing",
+            "module_ooc_synthesis_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_up_proj_gate/module_ooc_synthesis_report.json",
+            "required": true,
+            "reason": "module_ooc_synthesis_report.json not found"
+          },
+          "reason": "module_ooc_synthesis_report.json not found",
+          "skill_update_candidate_complete": false
+        },
+        {
+          "task_id": "projection_down_proj",
+          "status": "module_ooc_synthesis_missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_down_proj_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_down_proj_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "passed",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_down_proj_gate/subagent_result.json",
+            "final_response_complete": true,
+            "missing_fields": [],
+            "changed_files": [
+              "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_down_proj_gate/projection_target_stream_plan.sv",
+              "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_down_proj_gate/tb_projection_target_stream_plan.sv"
+            ],
+            "commands_run": [
+              {
+                "cmd": [
+                  "iverilog",
+                  "-g2012",
+                  "-o",
+                  "kernel_sim",
+                  "projection_target_stream_plan.sv",
+                  "tb_projection_target_stream_plan.sv"
+                ],
+                "source": "kernel_report.simulation"
+              },
+              {
+                "cmd": [
+                  "verilator",
+                  "--lint-only",
+                  "-sv",
+                  "-Wno-STMTDLY",
+                  "-Wno-INFINITELOOP",
+                  "projection_target_stream_plan.sv",
+                  "tb_projection_target_stream_plan.sv"
+                ],
+                "source": "kernel_report.verilator"
+              },
+              {
+                "cmd": [
+                  "vivado",
+                  "-mode",
+                  "batch",
+                  "-source",
+                  "vivado_synth.tcl"
+                ],
+                "source": "kernel_report.synthesis"
+              }
+            ],
+            "simulation_evidence": {
+              "passed": true,
+              "stage": "run",
+              "output": "OBSERVED_ADAPTER_PAYLOADS projection_target_stream_plan 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83\nOBSERVED_CONSUMED_PAYLOADS projection_target_stream_plan 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83\nINPUT_HANDSHAKE_TRACE projection_target_stream_plan accepted=0xf last=0x8 words=4\nBACKPRESSURE_TRACE projection_target_stream_plan ready_low_payload_idx=0,3,4 trace=0x19\nPAYLOAD_LINK_TRACE projection_target_stream_plan payloads=16\nPARALLEL_TRACE projection_target_stream_plan true_lanes=2 pair_count=64\nPASS projection_target_stream_plan\n",
+              "cmd": [
+                "iverilog",
+                "-g2012",
+                "-o",
+                "kernel_sim",
+                "projection_target_stream_plan.sv",
+                "tb_projection_target_stream_plan.sv"
+              ]
+            },
+            "verilator_evidence": {
+              "passed": true,
+              "stage": "lint_only",
+              "cmd": [
+                "verilator",
+                "--lint-only",
+                "-sv",
+                "-Wno-STMTDLY",
+                "-Wno-INFINITELOOP",
+                "projection_target_stream_plan.sv",
+                "tb_projection_target_stream_plan.sv"
+              ],
+              "output": "",
+              "policy": "DUT lint must be warning-clean. Testbench-only Verilator 4.x timing-delay warnings STMTDLY and INFINITELOOP are allowed for lint-only checks because iverilog executes the timed behavioral testbench.",
+              "requested_timing_policy": null,
+              "timing_policy_supported": null,
+              "effective_timing_policy": null,
+              "allowed_warning_classes": [
+                "STMTDLY",
+                "INFINITELOOP"
+              ]
+            },
+            "vivado_timing_resource_evidence": {
+              "passed": true,
+              "cmd": [
+                "vivado",
+                "-mode",
+                "batch",
+                "-source",
+                "vivado_synth.tcl"
+              ],
+              "output": "ss and loadless.\n  Run report_route_status for detailed report.\n  Number of Failed Nets               = 1837\n    (Failed Nets is the sum of unrouted and partially routed nets)\n  Number of Unrouted Nets             = 1712\n  Number of Partially Routed Nets     = 125\n  Number of Node Overlaps             = 0\n\nPhase 2 Router Initialization | Checksum: fc86fef4\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44769 ; free virtual = 53771\n\nPhase 3 Global Routing\nPhase 3 Global Routing | Checksum: fc86fef4\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44769 ; free virtual = 53771\n\nPhase 4 Initial Routing\n\nPhase 4.1 Initial Net Routing Pass\nPhase 4.1 Initial Net Routing Pass | Checksum: 183908807\n\nTime (s): cpu = 00:00:06 ; elapsed = 00:00:03 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44769 ; free virtual = 53770\nPhase 4 Initial Routing | Checksum: 1b92c13d5\n\nTime (s): cpu = 00:00:06 ; elapsed = 00:00:03 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44769 ; free virtual = 53770\n\nPhase 5 Rip-up And Reroute\n\nPhase 5.1 Global Iteration 0\n Number of Nodes with overlaps = 418\n Number of Nodes with overlaps = 17\n Number of Nodes with overlaps = 5\n Number of Nodes with overlaps = 0\nINFO: [Route 35-416] Intermediate Timing Summary | WNS=0.502  | TNS=0.000  | WHS=0.041  | THS=0.000  |\n\nPhase 5.1 Global Iteration 0 | Checksum: 2caf7c74a\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\n\nPhase 5.2 Additional Iteration for Hold\nPhase 5.2 Additional Iteration for Hold | Checksum: 30136c056\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\nPhase 5 Rip-up And Reroute | Checksum: 30136c056\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\n\nPhase 6 Delay and Skew Optimization\n\nPhase 6.1 Delay CleanUp\nPhase 6.1 Delay CleanUp | Checksum: 27e03a2c2\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\n\nPhase 6.2 Clock Skew Optimization\nPhase 6.2 Clock Skew Optimization | Checksum: 27e03a2c2\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\nPhase 6 Delay and Skew Optimization | Checksum: 27e03a2c2\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\n\nPhase 7 Post Hold Fix\n\nPhase 7.1 Hold Fix Iter\nINFO: [Route 35-416] Intermediate Timing Summary | WNS=0.502  | TNS=0.000  | WHS=0.041  | THS=0.000  |\n\nPhase 7.1 Hold Fix Iter | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\nPhase 7 Post Hold Fix | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:08 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\n\nPhase 8 Route finalize\n\nRouter Utilization Summary\n  Global Vertical Routing Utilization    = 0.270317 %\n  Global Horizontal Routing Utilization  = 0.161968 %\n  Routable Net Status*\n  *Does not include unroutable nets such as driverless and loadless.\n  Run report_route_status for detailed report.\n  Number of Failed Nets               = 0\n    (Failed Nets is the sum of unrouted and partially routed nets)\n  Number of Unrouted Nets             = 0\n  Number of Partially Routed Nets     = 0\n  Number of Node Overlaps             = 0\n\nPhase 8 Route finalize | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44768 ; free virtual = 53770\n\nPhase 9 Verifying routed nets\n\n Verification completed successfully\nPhase 9 Verifying routed nets | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44767 ; free virtual = 53769\n\nPhase 10 Depositing Routes\nPhase 10 Depositing Routes | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44767 ; free virtual = 53769\n\nPhase 11 Resolve XTalk\nPhase 11 Resolve XTalk | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44767 ; free virtual = 53769\n\nPhase 12 Post Process Routing\nPhase 12 Post Process Routing | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44767 ; free virtual = 53769\n\nPhase 13 Post Router Timing\nINFO: [Route 35-57] Estimated Timing Summary | WNS=0.502  | TNS=0.000  | WHS=0.041  | THS=0.000  |\n\nINFO: [Route 35-327] The final timing numbers are based on the router estimated timing analysis. For a complete and accurate timing signoff, please run report_timing_summary.\nPhase 13 Post Router Timing | Checksum: 2496a2563\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44767 ; free virtual = 53769\nTotal Elapsed time in route_design: 4.48 secs\n\nPhase 14 Post-Route Event Processing\nPhase 14 Post-Route Event Processing | Checksum: 1c8b03def\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:05 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44767 ; free virtual = 53769\nINFO: [Route 35-16] Router Completed Successfully\nEnding Routing Task | Checksum: 1c8b03def\n\nTime (s): cpu = 00:00:09 ; elapsed = 00:00:05 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44767 ; free virtual = 53769\n\nRouting Is Done.\nINFO: [Common 17-83] Releasing license: Implementation\n12 Infos, 0 Warnings, 0 Critical Warnings and 0 Errors encountered.\nroute_design completed successfully\n# report_utilization -file utilization.rpt\n# report_timing_summary -file timing_summary.rpt\nINFO: [Timing 38-91] UpdateTimingParams: Speed grade: -2, Temperature grade: E, Delay Type: min_max.\nINFO: [Timing 38-191] Multithreading enabled for timing update using a maximum of 8 CPUs\n# write_checkpoint -force post_route.dcp\nINFO: [Timing 38-480] Writing timing data to binary archive.\nWrite ShapeDB Complete: Time (s): cpu = 00:00:00.01 ; elapsed = 00:00:00.01 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44729 ; free virtual = 53730\nWrote PlaceDB: Time (s): cpu = 00:00:00.12 ; elapsed = 00:00:00.05 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44729 ; free virtual = 53733\nWrote PulsedLatchDB: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44729 ; free virtual = 53733\nWriting XDEF routing.\nWriting XDEF routing logical nets.\nWriting XDEF routing special nets.\nWrote RouteStorage: Time (s): cpu = 00:00:00.05 ; elapsed = 00:00:00.04 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44728 ; free virtual = 53733\nWrote Netlist Cache: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.01 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44728 ; free virtual = 53733\nWrote Device Cache: Time (s): cpu = 00:00:00.01 ; elapsed = 00:00:00 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44725 ; free virtual = 53733\nWrite Physdb Complete: Time (s): cpu = 00:00:00.18 ; elapsed = 00:00:00.11 . Memory (MB): peak = 4823.473 ; gain = 0.000 ; free physical = 44725 ; free virtual = 53733\nINFO: [Common 17-1381] The checkpoint '/home/iamjames77/Nlp2Verilog/examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_target_stream_plan/post_route.dcp' has been generated.\nINFO: [Common 17-206] Exiting Vivado at Tue Jun 16 09:37:14 2026...\n",
+              "timing": {
+                "setup_worst_slack_ns": 0.508,
+                "hold_worst_slack_ns": 0.042,
+                "pulse_width_worst_slack_ns": 2.225,
+                "constraints_met": true,
+                "worst_slack_ns": 0.508,
+                "parse_status": "parsed"
+              },
+              "implementation_stage": "post-route",
+              "timing_report": "timing_summary.rpt",
+              "timing_report_available": true,
+              "utilization_report": "utilization.rpt",
+              "utilization_report_available": true,
+              "resource_status": "available",
+              "resource_utilization": {
+                "lut_as_logic": {
+                  "used": 1183,
+                  "available": 230400,
+                  "utilization_percent": 0.51
+                },
+                "clb_registers": {
+                  "used": 992,
+                  "available": 460800,
+                  "utilization_percent": 0.22
+                },
+                "block_ram_tile": {
+                  "used": 0,
+                  "available": 312,
+                  "utilization_percent": 0.0
+                },
+                "dsps": {
+                  "used": 6,
+                  "available": 1728,
+                  "utilization_percent": 0.35
+                },
+                "bonded_iob": {
+                  "used": 282,
+                  "available": 360,
+                  "utilization_percent": 78.33
+                }
+              }
+            },
+            "module_ooc_synthesis_evidence": {
+              "status": "not_produced_by_kernel_report"
+            },
+            "remaining_risks": [
+              "AXI_interface",
+              "DDR_controller_integration",
+              "real_checkpoint_layout_compatibility",
+              "full_target_projection_execution",
+              "full_model_execution",
+              "board_level_signoff"
+            ],
+            "skill_update_candidate_complete": false
+          },
+          "module_ooc_synthesis": {
+            "status": "missing",
+            "module_ooc_synthesis_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_down_proj_gate/module_ooc_synthesis_report.json",
+            "required": true,
+            "reason": "module_ooc_synthesis_report.json not found"
+          },
+          "reason": "module_ooc_synthesis_report.json not found",
+          "skill_update_candidate_complete": false
+        }
+      ],
+      "verification": {
+        "status": "not_started"
+      }
+    },
+    {
+      "wave_id": "wave_1_non_gemm_kernels",
+      "status": "ready_to_dispatch",
+      "reason": "one or more implementation task results are missing",
+      "target_scope": "bounded_fixture_only",
+      "depends_on_waves": [],
+      "blocked_target_dependencies": [
+        "real_mlir_model_analysis"
+      ],
+      "task_count": 8,
+      "task_status_counts": {
+        "missing": 8
+      },
+      "passed_task_count": 0,
+      "missing_task_count": 8,
+      "task_results": [
+        {
+          "task_id": "non_gemm_input_layernorm",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/non_gemm_input_layernorm_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/non_gemm_input_layernorm_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/non_gemm_input_layernorm_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "non_gemm_rope_qk",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/non_gemm_rope_qk_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/non_gemm_rope_qk_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/non_gemm_rope_qk_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "non_gemm_attention_scores_softmax_kv",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/non_gemm_attention_scores_softmax_kv_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/non_gemm_attention_scores_softmax_kv_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/non_gemm_attention_scores_softmax_kv_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "non_gemm_attention_residual",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/non_gemm_attention_residual_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/non_gemm_attention_residual_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/non_gemm_attention_residual_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "non_gemm_post_attention_layernorm",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/non_gemm_post_attention_layernorm_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/non_gemm_post_attention_layernorm_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/non_gemm_post_attention_layernorm_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "non_gemm_silu_gate",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/non_gemm_silu_gate_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/non_gemm_silu_gate_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/non_gemm_silu_gate_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "non_gemm_swiglu_multiply",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/non_gemm_swiglu_multiply_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/non_gemm_swiglu_multiply_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/non_gemm_swiglu_multiply_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "non_gemm_mlp_residual",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/non_gemm_mlp_residual_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/non_gemm_mlp_residual_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/non_gemm_mlp_residual_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        }
+      ],
+      "verification": {
+        "status": "not_started"
+      }
+    },
+    {
+      "wave_id": "wave_2_decoder_block",
+      "status": "blocked_by_dependency",
+      "reason": "waiting for waves: wave_1_projection_kernels, wave_1_non_gemm_kernels",
+      "target_scope": "bounded_fixture_only",
+      "depends_on_waves": [
+        "wave_1_projection_kernels",
+        "wave_1_non_gemm_kernels"
+      ],
+      "blocked_target_dependencies": [
+        "real_mlir_model_analysis"
+      ],
+      "task_count": 1,
+      "task_status_counts": {
+        "missing": 1
+      },
+      "passed_task_count": 0,
+      "missing_task_count": 1,
+      "task_results": [
+        {
+          "task_id": "decoder_block_attention_mlp_fixture",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/decoder_block_attention_mlp_fixture_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/decoder_block_attention_mlp_fixture_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/decoder_block_attention_mlp_fixture_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        }
+      ],
+      "verification": {
+        "status": "not_applicable_until_dependencies_pass"
+      }
+    },
+    {
+      "wave_id": "wave_3_layer_fsm",
+      "status": "blocked_by_dependency",
+      "reason": "waiting for waves: wave_2_decoder_block",
+      "target_scope": "bounded_fixture_only",
+      "depends_on_waves": [
+        "wave_2_decoder_block"
+      ],
+      "blocked_target_dependencies": [
+        "real_mlir_model_analysis"
+      ],
+      "task_count": 1,
+      "task_status_counts": {
+        "missing": 1
+      },
+      "passed_task_count": 0,
+      "missing_task_count": 1,
+      "task_results": [
+        {
+          "task_id": "layer_fsm_decoder_block_fixture",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/layer_fsm_decoder_block_fixture_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/layer_fsm_decoder_block_fixture_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/layer_fsm_decoder_block_fixture_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        }
+      ],
+      "verification": {
+        "status": "not_applicable_until_dependencies_pass"
+      }
+    },
+    {
+      "wave_id": "wave_4_top_fsm",
+      "status": "blocked_by_dependency",
+      "reason": "waiting for waves: wave_3_layer_fsm",
+      "target_scope": "bounded_fixture_only",
+      "depends_on_waves": [
+        "wave_3_layer_fsm"
+      ],
+      "blocked_target_dependencies": [
+        "real_mlir_model_analysis"
+      ],
+      "task_count": 1,
+      "task_status_counts": {
+        "missing": 1
+      },
+      "passed_task_count": 0,
+      "missing_task_count": 1,
+      "task_results": [
+        {
+          "task_id": "top_fsm_decoder_block_fixture",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/top_fsm_decoder_block_fixture_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/top_fsm_decoder_block_fixture_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/top_fsm_decoder_block_fixture_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        }
+      ],
+      "verification": {
+        "status": "not_applicable_until_dependencies_pass"
+      }
+    },
+    {
+      "wave_id": "wave_5_token_loop",
+      "status": "blocked_by_dependency",
+      "reason": "waiting for waves: wave_4_top_fsm",
+      "target_scope": "bounded_fixture_only",
+      "depends_on_waves": [
+        "wave_4_top_fsm"
+      ],
+      "blocked_target_dependencies": [
+        "real_mlir_model_analysis"
+      ],
+      "task_count": 1,
+      "task_status_counts": {
+        "missing": 1
+      },
+      "passed_task_count": 0,
+      "missing_task_count": 1,
+      "task_results": [
+        {
+          "task_id": "token_loop_decoder_block_fixture",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/token_loop_decoder_block_fixture_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/token_loop_decoder_block_fixture_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/token_loop_decoder_block_fixture_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        }
+      ],
+      "verification": {
+        "status": "not_applicable_until_dependencies_pass"
+      }
+    },
+    {
+      "wave_id": "wave_6_projection_axi_read_command_adapter",
+      "status": "blocked_by_dependency",
+      "reason": "waiting for waves: wave_5_token_loop",
+      "target_scope": "bounded_fixture_only",
+      "depends_on_waves": [
+        "wave_5_token_loop"
+      ],
+      "blocked_target_dependencies": [
+        "real_mlir_model_analysis"
+      ],
+      "task_count": 7,
+      "task_status_counts": {
+        "missing": 7
+      },
+      "passed_task_count": 0,
+      "missing_task_count": 7,
+      "task_results": [
+        {
+          "task_id": "projection_axi_read_command_adapter",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_axi_read_command_adapter_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_axi_read_command_adapter_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_axi_read_command_adapter_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "projection_k_proj_axi_read_command_adapter",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_k_proj_axi_read_command_adapter_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_k_proj_axi_read_command_adapter_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_k_proj_axi_read_command_adapter_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "projection_v_proj_axi_read_command_adapter",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_v_proj_axi_read_command_adapter_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_v_proj_axi_read_command_adapter_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_v_proj_axi_read_command_adapter_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "projection_o_proj_axi_read_command_adapter",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_o_proj_axi_read_command_adapter_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_o_proj_axi_read_command_adapter_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_o_proj_axi_read_command_adapter_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "projection_gate_proj_axi_read_command_adapter",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_gate_proj_axi_read_command_adapter_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_gate_proj_axi_read_command_adapter_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_gate_proj_axi_read_command_adapter_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "projection_up_proj_axi_read_command_adapter",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_up_proj_axi_read_command_adapter_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_up_proj_axi_read_command_adapter_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_up_proj_axi_read_command_adapter_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "projection_down_proj_axi_read_command_adapter",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_down_proj_axi_read_command_adapter_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_down_proj_axi_read_command_adapter_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_down_proj_axi_read_command_adapter_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        }
+      ],
+      "verification": {
+        "status": "not_applicable_until_dependencies_pass"
+      }
+    },
+    {
+      "wave_id": "wave_7_projection_axi_read_data_channel_adapter",
+      "status": "blocked_by_dependency",
+      "reason": "waiting for waves: wave_6_projection_axi_read_command_adapter",
+      "target_scope": "bounded_fixture_only",
+      "depends_on_waves": [
+        "wave_6_projection_axi_read_command_adapter"
+      ],
+      "blocked_target_dependencies": [
+        "real_mlir_model_analysis"
+      ],
+      "task_count": 7,
+      "task_status_counts": {
+        "missing": 7
+      },
+      "passed_task_count": 0,
+      "missing_task_count": 7,
+      "task_results": [
+        {
+          "task_id": "projection_axi_read_data_channel_adapter",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_axi_read_data_channel_adapter_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_axi_read_data_channel_adapter_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_axi_read_data_channel_adapter_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "projection_k_proj_axi_read_data_channel_adapter",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_k_proj_axi_read_data_channel_adapter_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_k_proj_axi_read_data_channel_adapter_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_k_proj_axi_read_data_channel_adapter_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "projection_v_proj_axi_read_data_channel_adapter",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_v_proj_axi_read_data_channel_adapter_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_v_proj_axi_read_data_channel_adapter_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_v_proj_axi_read_data_channel_adapter_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "projection_o_proj_axi_read_data_channel_adapter",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_o_proj_axi_read_data_channel_adapter_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_o_proj_axi_read_data_channel_adapter_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_o_proj_axi_read_data_channel_adapter_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "projection_gate_proj_axi_read_data_channel_adapter",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_gate_proj_axi_read_data_channel_adapter_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_gate_proj_axi_read_data_channel_adapter_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_gate_proj_axi_read_data_channel_adapter_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "projection_up_proj_axi_read_data_channel_adapter",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_up_proj_axi_read_data_channel_adapter_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_up_proj_axi_read_data_channel_adapter_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_up_proj_axi_read_data_channel_adapter_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "projection_down_proj_axi_read_data_channel_adapter",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_down_proj_axi_read_data_channel_adapter_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_down_proj_axi_read_data_channel_adapter_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_down_proj_axi_read_data_channel_adapter_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        }
+      ],
+      "verification": {
+        "status": "not_applicable_until_dependencies_pass"
+      }
+    },
+    {
+      "wave_id": "wave_8_projection_axi_read_transaction_adapter",
+      "status": "blocked_by_dependency",
+      "reason": "waiting for waves: wave_7_projection_axi_read_data_channel_adapter",
+      "target_scope": "bounded_fixture_only",
+      "depends_on_waves": [
+        "wave_7_projection_axi_read_data_channel_adapter"
+      ],
+      "blocked_target_dependencies": [
+        "real_mlir_model_analysis"
+      ],
+      "task_count": 7,
+      "task_status_counts": {
+        "missing": 7
+      },
+      "passed_task_count": 0,
+      "missing_task_count": 7,
+      "task_results": [
+        {
+          "task_id": "projection_axi_read_transaction_adapter",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_axi_read_transaction_adapter_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_axi_read_transaction_adapter_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_axi_read_transaction_adapter_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "projection_k_proj_axi_read_transaction_adapter",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_k_proj_axi_read_transaction_adapter_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_k_proj_axi_read_transaction_adapter_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_k_proj_axi_read_transaction_adapter_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "projection_v_proj_axi_read_transaction_adapter",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_v_proj_axi_read_transaction_adapter_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_v_proj_axi_read_transaction_adapter_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_v_proj_axi_read_transaction_adapter_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "projection_o_proj_axi_read_transaction_adapter",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_o_proj_axi_read_transaction_adapter_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_o_proj_axi_read_transaction_adapter_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_o_proj_axi_read_transaction_adapter_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "projection_gate_proj_axi_read_transaction_adapter",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_gate_proj_axi_read_transaction_adapter_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_gate_proj_axi_read_transaction_adapter_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_gate_proj_axi_read_transaction_adapter_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "projection_up_proj_axi_read_transaction_adapter",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_up_proj_axi_read_transaction_adapter_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_up_proj_axi_read_transaction_adapter_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_up_proj_axi_read_transaction_adapter_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "projection_down_proj_axi_read_transaction_adapter",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_down_proj_axi_read_transaction_adapter_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_down_proj_axi_read_transaction_adapter_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_down_proj_axi_read_transaction_adapter_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        }
+      ],
+      "verification": {
+        "status": "not_applicable_until_dependencies_pass"
+      }
+    },
+    {
+      "wave_id": "wave_9_projection_axi_stream_integration",
+      "status": "blocked_by_dependency",
+      "reason": "waiting for waves: wave_8_projection_axi_read_transaction_adapter",
+      "target_scope": "bounded_fixture_only",
+      "depends_on_waves": [
+        "wave_8_projection_axi_read_transaction_adapter"
+      ],
+      "blocked_target_dependencies": [
+        "real_mlir_model_analysis"
+      ],
+      "task_count": 7,
+      "task_status_counts": {
+        "missing": 7
+      },
+      "passed_task_count": 0,
+      "missing_task_count": 7,
+      "task_results": [
+        {
+          "task_id": "projection_axi_stream_integration",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_axi_stream_integration_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_axi_stream_integration_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_axi_stream_integration_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "projection_k_proj_axi_stream_integration",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_k_proj_axi_stream_integration_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_k_proj_axi_stream_integration_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_k_proj_axi_stream_integration_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "projection_v_proj_axi_stream_integration",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_v_proj_axi_stream_integration_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_v_proj_axi_stream_integration_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_v_proj_axi_stream_integration_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "projection_o_proj_axi_stream_integration",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_o_proj_axi_stream_integration_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_o_proj_axi_stream_integration_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_o_proj_axi_stream_integration_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "projection_gate_proj_axi_stream_integration",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_gate_proj_axi_stream_integration_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_gate_proj_axi_stream_integration_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_gate_proj_axi_stream_integration_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "projection_up_proj_axi_stream_integration",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_up_proj_axi_stream_integration_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_up_proj_axi_stream_integration_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_up_proj_axi_stream_integration_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        },
+        {
+          "task_id": "projection_down_proj_axi_stream_integration",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_down_proj_axi_stream_integration_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_down_proj_axi_stream_integration_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_down_proj_axi_stream_integration_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        }
+      ],
+      "verification": {
+        "status": "not_applicable_until_dependencies_pass"
+      }
+    },
+    {
+      "wave_id": "wave_10_decoder_child_axi_attention_datapath",
+      "status": "blocked_by_dependency",
+      "reason": "waiting for waves: wave_9_projection_axi_stream_integration",
+      "target_scope": "bounded_fixture_only",
+      "depends_on_waves": [
+        "wave_9_projection_axi_stream_integration"
+      ],
+      "blocked_target_dependencies": [
+        "real_mlir_model_analysis"
+      ],
+      "task_count": 1,
+      "task_status_counts": {
+        "missing": 1
+      },
+      "passed_task_count": 0,
+      "missing_task_count": 1,
+      "task_results": [
+        {
+          "task_id": "decoder_child_axi_attention_datapath",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/decoder_child_axi_attention_datapath_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/decoder_child_axi_attention_datapath_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/decoder_child_axi_attention_datapath_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        }
+      ],
+      "verification": {
+        "status": "not_applicable_until_dependencies_pass"
+      }
+    },
+    {
+      "wave_id": "wave_11_layer_fsm_axi_attention_fixture",
+      "status": "blocked_by_dependency",
+      "reason": "waiting for waves: wave_10_decoder_child_axi_attention_datapath",
+      "target_scope": "bounded_fixture_only",
+      "depends_on_waves": [
+        "wave_10_decoder_child_axi_attention_datapath"
+      ],
+      "blocked_target_dependencies": [
+        "real_mlir_model_analysis"
+      ],
+      "task_count": 1,
+      "task_status_counts": {
+        "missing": 1
+      },
+      "passed_task_count": 0,
+      "missing_task_count": 1,
+      "task_results": [
+        {
+          "task_id": "layer_fsm_axi_attention_fixture",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/layer_fsm_axi_attention_fixture_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/layer_fsm_axi_attention_fixture_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/layer_fsm_axi_attention_fixture_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        }
+      ],
+      "verification": {
+        "status": "not_applicable_until_dependencies_pass"
+      }
+    },
+    {
+      "wave_id": "wave_12_top_fsm_axi_attention_fixture",
+      "status": "blocked_by_dependency",
+      "reason": "waiting for waves: wave_11_layer_fsm_axi_attention_fixture",
+      "target_scope": "bounded_fixture_only",
+      "depends_on_waves": [
+        "wave_11_layer_fsm_axi_attention_fixture"
+      ],
+      "blocked_target_dependencies": [
+        "real_mlir_model_analysis"
+      ],
+      "task_count": 1,
+      "task_status_counts": {
+        "missing": 1
+      },
+      "passed_task_count": 0,
+      "missing_task_count": 1,
+      "task_results": [
+        {
+          "task_id": "top_fsm_axi_attention_fixture",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/top_fsm_axi_attention_fixture_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/top_fsm_axi_attention_fixture_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/top_fsm_axi_attention_fixture_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        }
+      ],
+      "verification": {
+        "status": "not_applicable_until_dependencies_pass"
+      }
+    },
+    {
+      "wave_id": "wave_13_token_loop_axi_attention_fixture",
+      "status": "blocked_by_dependency",
+      "reason": "waiting for waves: wave_12_top_fsm_axi_attention_fixture",
+      "target_scope": "bounded_fixture_only",
+      "depends_on_waves": [
+        "wave_12_top_fsm_axi_attention_fixture"
+      ],
+      "blocked_target_dependencies": [
+        "real_mlir_model_analysis"
+      ],
+      "task_count": 1,
+      "task_status_counts": {
+        "missing": 1
+      },
+      "passed_task_count": 0,
+      "missing_task_count": 1,
+      "task_results": [
+        {
+          "task_id": "token_loop_axi_attention_fixture",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/token_loop_axi_attention_fixture_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/token_loop_axi_attention_fixture_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/token_loop_axi_attention_fixture_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        }
+      ],
+      "verification": {
+        "status": "not_applicable_until_dependencies_pass"
+      }
+    },
+    {
+      "wave_id": "wave_14_decoder_block_axi_attention_mlp_fixture",
+      "status": "blocked_by_dependency",
+      "reason": "waiting for waves: wave_13_token_loop_axi_attention_fixture",
+      "target_scope": "bounded_fixture_only",
+      "depends_on_waves": [
+        "wave_13_token_loop_axi_attention_fixture"
+      ],
+      "blocked_target_dependencies": [
+        "real_mlir_model_analysis"
+      ],
+      "task_count": 1,
+      "task_status_counts": {
+        "missing": 1
+      },
+      "passed_task_count": 0,
+      "missing_task_count": 1,
+      "task_results": [
+        {
+          "task_id": "decoder_block_axi_attention_mlp_fixture",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/decoder_block_axi_attention_mlp_fixture_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/decoder_block_axi_attention_mlp_fixture_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/decoder_block_axi_attention_mlp_fixture_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        }
+      ],
+      "verification": {
+        "status": "not_applicable_until_dependencies_pass"
+      }
+    },
+    {
+      "wave_id": "wave_15_layer_fsm_axi_decoder_block_fixture",
+      "status": "blocked_by_dependency",
+      "reason": "waiting for waves: wave_14_decoder_block_axi_attention_mlp_fixture",
+      "target_scope": "bounded_fixture_only",
+      "depends_on_waves": [
+        "wave_14_decoder_block_axi_attention_mlp_fixture"
+      ],
+      "blocked_target_dependencies": [
+        "real_mlir_model_analysis"
+      ],
+      "task_count": 1,
+      "task_status_counts": {
+        "missing": 1
+      },
+      "passed_task_count": 0,
+      "missing_task_count": 1,
+      "task_results": [
+        {
+          "task_id": "layer_fsm_axi_decoder_block_fixture",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/layer_fsm_axi_decoder_block_fixture_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/layer_fsm_axi_decoder_block_fixture_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/layer_fsm_axi_decoder_block_fixture_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        }
+      ],
+      "verification": {
+        "status": "not_applicable_until_dependencies_pass"
+      }
+    },
+    {
+      "wave_id": "wave_16_top_fsm_axi_decoder_block_fixture",
+      "status": "blocked_by_dependency",
+      "reason": "waiting for waves: wave_15_layer_fsm_axi_decoder_block_fixture",
+      "target_scope": "bounded_fixture_only",
+      "depends_on_waves": [
+        "wave_15_layer_fsm_axi_decoder_block_fixture"
+      ],
+      "blocked_target_dependencies": [
+        "real_mlir_model_analysis"
+      ],
+      "task_count": 1,
+      "task_status_counts": {
+        "missing": 1
+      },
+      "passed_task_count": 0,
+      "missing_task_count": 1,
+      "task_results": [
+        {
+          "task_id": "top_fsm_axi_decoder_block_fixture",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/top_fsm_axi_decoder_block_fixture_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/top_fsm_axi_decoder_block_fixture_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/top_fsm_axi_decoder_block_fixture_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        }
+      ],
+      "verification": {
+        "status": "not_applicable_until_dependencies_pass"
+      }
+    },
+    {
+      "wave_id": "wave_17_token_loop_axi_decoder_block_fixture",
+      "status": "blocked_by_dependency",
+      "reason": "waiting for waves: wave_16_top_fsm_axi_decoder_block_fixture",
+      "target_scope": "bounded_fixture_only",
+      "depends_on_waves": [
+        "wave_16_top_fsm_axi_decoder_block_fixture"
+      ],
+      "blocked_target_dependencies": [
+        "real_mlir_model_analysis"
+      ],
+      "task_count": 1,
+      "task_status_counts": {
+        "missing": 1
+      },
+      "passed_task_count": 0,
+      "missing_task_count": 1,
+      "task_results": [
+        {
+          "task_id": "token_loop_axi_decoder_block_fixture",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/token_loop_axi_decoder_block_fixture_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/token_loop_axi_decoder_block_fixture_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/token_loop_axi_decoder_block_fixture_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        }
+      ],
+      "verification": {
+        "status": "not_applicable_until_dependencies_pass"
+      }
+    },
+    {
+      "wave_id": "wave_18_model_fsm_axi_decoder_block_fixture",
+      "status": "blocked_by_dependency",
+      "reason": "waiting for waves: wave_17_token_loop_axi_decoder_block_fixture",
+      "target_scope": "bounded_fixture_only",
+      "depends_on_waves": [
+        "wave_17_token_loop_axi_decoder_block_fixture"
+      ],
+      "blocked_target_dependencies": [
+        "real_mlir_model_analysis"
+      ],
+      "task_count": 1,
+      "task_status_counts": {
+        "missing": 1
+      },
+      "passed_task_count": 0,
+      "missing_task_count": 1,
+      "task_results": [
+        {
+          "task_id": "model_fsm_axi_decoder_block_fixture",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/model_fsm_axi_decoder_block_fixture_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/model_fsm_axi_decoder_block_fixture_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/model_fsm_axi_decoder_block_fixture_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        }
+      ],
+      "verification": {
+        "status": "not_applicable_until_dependencies_pass"
+      }
+    },
+    {
+      "wave_id": "wave_19_ddr_axi_board_shell_fixture",
+      "status": "blocked_by_dependency",
+      "reason": "waiting for waves: wave_18_model_fsm_axi_decoder_block_fixture",
+      "target_scope": "bounded_fixture_only",
+      "depends_on_waves": [
+        "wave_18_model_fsm_axi_decoder_block_fixture"
+      ],
+      "blocked_target_dependencies": [
+        "real_mlir_model_analysis"
+      ],
+      "task_count": 1,
+      "task_status_counts": {
+        "missing": 1
+      },
+      "passed_task_count": 0,
+      "missing_task_count": 1,
+      "task_results": [
+        {
+          "task_id": "ddr_axi_board_shell_fixture",
+          "status": "missing",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/ddr_axi_board_shell_fixture_gate",
+          "kernel_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/ddr_axi_board_shell_fixture_gate/kernel_report.json",
+          "subagent_result": {
+            "status": "missing",
+            "subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/ddr_axi_board_shell_fixture_gate/subagent_result.json",
+            "final_response_complete": false,
+            "missing_fields": [
+              "changed_files",
+              "commands_run",
+              "simulation_evidence",
+              "verilator_evidence",
+              "vivado_timing_resource_evidence",
+              "module_ooc_synthesis_evidence",
+              "remaining_risks"
+            ],
+            "reason": "subagent_result.json not found"
+          },
+          "reason": "kernel_report.json not found"
+        }
+      ],
+      "verification": {
+        "status": "not_applicable_until_dependencies_pass"
+      }
+    }
+  ],
+  "does_not_claim": [
+    "automatic sub-agent spawning",
+    "sub-agent execution occurred",
+    "generated RTL completeness",
+    "full LLaMA execution",
+    "board-level ZCU104 signoff"
+  ]
+}

@@ -1,0 +1,357 @@
+{
+  "kernel": "decoder_child_attention_datapath",
+  "coverage_level": "decoder_child_attention_datapath_fixture",
+  "previous_gap_closed": "attention_kv_fixture_in_child_datapath",
+  "datapath_child_instantiation": true,
+  "attention_kv_child_instantiation": true,
+  "child_modules": [
+    {
+      "name": "rmsnorm_rope_source_path",
+      "coverage_level": "rmsnorm_rope_source_path_fixture",
+      "instantiated": true
+    },
+    {
+      "name": "projection_internal_stream_shell",
+      "coverage_level": "projection_internal_stream_shell_fixture",
+      "instantiated": true
+    },
+    {
+      "name": "attention_kv_cache_fixture",
+      "coverage_level": "attention_kv_cache_fixture",
+      "instantiated": true
+    }
+  ],
+  "fsm_state_order": [
+    "IDLE",
+    "SOURCE_PATH_START",
+    "SOURCE_PATH_BUSY",
+    "PROJECTION_SHELL_START",
+    "PROJECTION_SHELL_BUSY",
+    "ATTENTION_KV_START",
+    "ATTENTION_KV_BUSY",
+    "DONE"
+  ],
+  "child_sequence": [
+    "source_path_start",
+    "source_path_done",
+    "projection_shell_start",
+    "projection_shell_done",
+    "attention_kv_start",
+    "attention_kv_done"
+  ],
+  "child_start_done_trace": [
+    "source_path_start",
+    "source_path_done",
+    "projection_shell_start",
+    "projection_shell_done",
+    "attention_kv_start",
+    "attention_kv_done"
+  ],
+  "expected_child_trace_hex": "0x323122211211",
+  "top_level_interface_summary": {
+    "common_handshake": [
+      "aclk",
+      "aresetn",
+      "start_i",
+      "done_o"
+    ],
+    "registered_outputs": [
+      "output_o",
+      "status_o"
+    ],
+    "compact_top_level_io": true
+  },
+  "exposed_port_width_summary": {
+    "top_level_ports": [
+      "aclk",
+      "aresetn",
+      "start_i",
+      "done_o",
+      "output_o",
+      "status_o"
+    ],
+    "output_o_bits": 64,
+    "status_o_bits": 96,
+    "control_bits": 4,
+    "estimated_total_top_level_iob_bits": 164,
+    "bonded_iob_preferred_limit": 180,
+    "exposes_full_hidden_vectors": false,
+    "exposes_full_kv_arrays": false,
+    "exposes_full_debug_arrays": false,
+    "exposes_128b_memory_response": false,
+    "exposes_wide_memory_response_bus": false
+  },
+  "fixture_output_vector": [
+    4,
+    -2,
+    1,
+    2
+  ],
+  "expected_golden_vector": [
+    4,
+    -2,
+    1,
+    2
+  ],
+  "source_path_evidence": {
+    "rmsnorm_lookup_trace": {
+      "selector": 0,
+      "valid": true,
+      "inv_rms_lookup_value": 7024,
+      "sumsq_expected": 5568
+    },
+    "rope_lookup_trace": [
+      {
+        "position": 7,
+        "pair_index": 0,
+        "valid": true,
+        "cos": 13,
+        "sin": 9
+      },
+      {
+        "position": 7,
+        "pair_index": 1,
+        "valid": true,
+        "cos": 7,
+        "sin": -14
+      }
+    ],
+    "rmsnorm_output_vector": [
+      658,
+      -1372,
+      1152,
+      -659
+    ],
+    "rope_output_vector": [
+      37,
+      -13,
+      3,
+      -42
+    ],
+    "inv_rms_source": "rtl_lookup_fixture",
+    "cos_sin_source": "rtl_lookup_fixture",
+    "reciprocal_sqrt_in_rtl": false,
+    "frequency_generation_in_rtl": false
+  },
+  "projection_shell_evidence": {
+    "projection_output_vector": [
+      976,
+      2360
+    ],
+    "reused_child_fixture_metadata_summary": {
+      "request_trace": {
+        "request_count": 1,
+        "request_addr_hex": "0x120000",
+        "request_beats": 4,
+        "request_tag_hex": "0x2a",
+        "request_fields_stable_under_backpressure": true,
+        "request_ready_backpressure_cycles": 2,
+        "interface_location": "internal_projection_memory_stream_boundary_child",
+        "interface": {
+          "valid": "u_boundary.mem_req_valid_o",
+          "ready": "u_boundary.mem_req_ready_i",
+          "addr": "u_boundary.mem_req_addr_o",
+          "beats": "u_boundary.mem_req_beats_o",
+          "tag": "u_boundary.mem_req_tag_o"
+        }
+      },
+      "response_stall_trace": {
+        "shell_inserts_response_valid_stalls": true,
+        "stall_before_response_indices": [
+          1,
+          3
+        ],
+        "stall_trace_bits_hex": "0xa",
+        "final_beat_requires_last": true,
+        "tag_checked_on_every_accepted_response": true
+      },
+      "payload_backpressure_trace": {
+        "link_name": "internal_boundary_payload_to_projection_consumer",
+        "testbench_observes_projection_ready_low": true,
+        "ready_low_payload_indices": [
+          0,
+          3,
+          4
+        ],
+        "ready_low_event_count": 3,
+        "payload_valid_held_while_ready_low": true,
+        "held_payload_words_hex": [
+          "0xe94fa50b",
+          "0x61c72d83",
+          "0xe94fa50b"
+        ]
+      },
+      "adapter_projection_link_trace": {
+        "adapter_emitted_payload_words_hex": [
+          "0xe94fa50b",
+          "0x61c72d83",
+          "0xe94fa50b",
+          "0x61c72d83",
+          "0xe94fa50b",
+          "0x61c72d83",
+          "0xe94fa50b",
+          "0x61c72d83",
+          "0xe94fa50b",
+          "0x61c72d83",
+          "0xe94fa50b",
+          "0x61c72d83",
+          "0xe94fa50b",
+          "0x61c72d83",
+          "0xe94fa50b",
+          "0x61c72d83"
+        ],
+        "projection_consumed_payload_words_hex": [
+          "0xe94fa50b",
+          "0x61c72d83",
+          "0xe94fa50b",
+          "0x61c72d83",
+          "0xe94fa50b",
+          "0x61c72d83",
+          "0xe94fa50b",
+          "0x61c72d83",
+          "0xe94fa50b",
+          "0x61c72d83",
+          "0xe94fa50b",
+          "0x61c72d83",
+          "0xe94fa50b",
+          "0x61c72d83",
+          "0xe94fa50b",
+          "0x61c72d83"
+        ],
+        "payload_link_match_passed": true,
+        "evidence_source": "tb_projection_internal_stream_shell dynamically observes internal child payload_link_valid/ready transactions",
+        "ready_low_payload_indices": [
+          0,
+          3,
+          4
+        ],
+        "adapter_emit_count": 16,
+        "projection_consume_count": 16
+      },
+      "payload_link_match_passed": true,
+      "evidence_source": "reused_projection_internal_stream_shell_child_report_metadata"
+    },
+    "does_not_expose_128b_memory_response": true
+  },
+  "attention_kv_evidence": {
+    "cache_write_trace": {
+      "count": 1,
+      "slot": 1,
+      "key": [
+        -3,
+        2,
+        1,
+        6
+      ],
+      "value": [
+        -2,
+        6,
+        -5,
+        4
+      ],
+      "field_stability_checked": true
+    },
+    "key_read_trace": [
+      {
+        "slot": 0,
+        "key": [
+          2,
+          -1,
+          4,
+          3
+        ]
+      },
+      {
+        "slot": 1,
+        "key": [
+          -3,
+          2,
+          1,
+          6
+        ]
+      }
+    ],
+    "value_read_trace": [
+      {
+        "slot": 0,
+        "value": [
+          7,
+          -4,
+          3,
+          2
+        ]
+      },
+      {
+        "slot": 1,
+        "value": [
+          -2,
+          6,
+          -5,
+          4
+        ]
+      }
+    ],
+    "attention_score_trace": [
+      25,
+      -14
+    ],
+    "softmax_control_trace": {
+      "policy": "two_score_winner_loser_q0_4",
+      "weights_q0_4": [
+        12,
+        4
+      ],
+      "winner_slot": 0,
+      "softmax_exp_in_rtl": false
+    },
+    "attention_output_vector": [
+      4,
+      -2,
+      1,
+      2
+    ],
+    "softmax_exp_in_rtl": false,
+    "kv_cache_external_memory": false
+  },
+  "softmax_exp_in_rtl": false,
+  "kv_cache_external_memory": false,
+  "omitted_operations": [
+    "mathematically complete Q/K/V/O projection-to-attention wiring",
+    "full target projection execution",
+    "full sequence-length KV-cache",
+    "multi-head attention",
+    "grouped-query attention",
+    "true exponential softmax",
+    "DDR/AXI KV-cache movement",
+    "residual add scheduling",
+    "MLP/SwiGLU gate/up/down path",
+    "full token prefill/decode loop",
+    "full decoder block",
+    "full LLaMA model execution",
+    "board-level signoff"
+  ],
+  "does_not_claim": [
+    "complete_QKV_O_projection_to_attention_math",
+    "full_target_projection_execution",
+    "full_sequence_length_KV_cache",
+    "multi_head_attention",
+    "grouped_query_attention",
+    "true_exponential_softmax",
+    "DDR_AXI_KV_cache_movement",
+    "residual_add_scheduling",
+    "MLP_SwiGLU_path",
+    "full_token_prefill_decode_loop",
+    "full_decoder_block",
+    "full_LLaMA_model_execution",
+    "board_level_signoff"
+  ],
+  "numeric_policy": {
+    "fixture_kind": "decoder_child_attention_datapath_fixture",
+    "datapath_composition": "instantiated_child_fixture_rtl",
+    "child_sequence": "rmsnorm_rope_source_path -> projection_internal_stream_shell -> attention_kv_cache_fixture",
+    "top_output_source": "attention_kv_cache_fixture.output_o",
+    "projection_to_attention_math_wiring_complete": false,
+    "full_decoder_block": false,
+    "full_llama_coverage": false
+  }
+}

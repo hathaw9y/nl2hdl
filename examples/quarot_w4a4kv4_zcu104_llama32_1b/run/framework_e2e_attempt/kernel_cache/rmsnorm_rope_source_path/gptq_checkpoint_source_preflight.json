@@ -1,0 +1,54 @@
+{
+  "artifact": "gptq_checkpoint_source_preflight",
+  "model_name": "examples/quarot_w4a4kv4_zcu104_llama32_1b/input/assumed_gptq_checkpoint",
+  "status": "resolved_local_path",
+  "checkpoint_source_dependency": "satisfied_by_local_path",
+  "expected_file_patterns": [
+    "config.json",
+    "quantize_config.json",
+    "quant_config.json",
+    "gptq_config.json",
+    "quantization_config.json",
+    "*.safetensors.index.json",
+    "*.bin.index.json",
+    "*.safetensors"
+  ],
+  "network_snapshot_download_allowed": false,
+  "network_snapshot_download_env": "NL2HDL_ALLOW_HF_SNAPSHOT_DOWNLOAD",
+  "local_path_probe": {
+    "path": "examples/quarot_w4a4kv4_zcu104_llama32_1b/input/assumed_gptq_checkpoint",
+    "exists": true,
+    "is_dir": true,
+    "is_file": false
+  },
+  "huggingface_hub_probe": {},
+  "local_cache_probe": {},
+  "network_download_probe": {
+    "attempted": false,
+    "reason": "disabled_by_default"
+  },
+  "next_action": "run GPTQ metadata and payload probes against the resolved local checkpoint directory",
+  "does_not_claim": [
+    "permission_to_download_large_checkpoints_by_default",
+    "checkpoint_weight_loading",
+    "full_tensor_materialization",
+    "numeric_GPTQ_correctness",
+    "full_LLaMA_execution"
+  ],
+  "resolved_model_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/input/assumed_gptq_checkpoint",
+  "artifact_inventory": {
+    "model_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/input/assumed_gptq_checkpoint",
+    "file_count": 2,
+    "files": [
+      "model.safetensors",
+      "quantize_config.json"
+    ],
+    "matched_patterns": [
+      "*.safetensors",
+      "quantize_config.json"
+    ],
+    "missing_metadata_json": false,
+    "has_weight_index": false,
+    "has_safetensors": true
+  }
+}

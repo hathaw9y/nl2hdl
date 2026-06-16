@@ -1,0 +1,2065 @@
+{
+  "status": "passed",
+  "out": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/decoder_child_axi_attention_datapath",
+  "files": [
+    "rmsnorm_rope_source_path.sv",
+    "projection_axi_stream_integration.sv",
+    "attention_kv_cache_fixture.sv",
+    "decoder_child_axi_attention_datapath.sv",
+    "tb_decoder_child_axi_attention_datapath.sv"
+  ],
+  "coverage_level": "decoder_child_axi_attention_datapath_fixture",
+  "implementation_stage": "post-route",
+  "simulation": {
+    "passed": true,
+    "stage": "run",
+    "output": "CHILD_TRACE decoder_child_axi_attention_datapath trace_hex=0x323122211211 events=source_path_start,source_path_done,projection_axi_start,projection_axi_done,attention_kv_start,attention_kv_done\nRMS_LOOKUP_TRACE decoder_child_axi_attention_datapath selector=0 valid=1 inv_rms=7024 sumsq=5568\nROPE_LOOKUP_TRACE decoder_child_axi_attention_datapath position=7 pair=0 valid=1 cos=13 sin=9\nROPE_LOOKUP_TRACE decoder_child_axi_attention_datapath position=7 pair=1 valid=1 cos=7 sin=-14\nAXI_PROJECTION_AR_TRACE decoder_child_axi_attention_datapath addr=0x120000 len=1 size=4 burst=1 id=0x2 beats=2 ready_low_cycles=2\nAXI_PROJECTION_R_METADATA_TRACE decoder_child_axi_attention_datapath accepted=0x3 last=0x2 rid_ok=1 rresp_ok=1 rlast_ok=1 status=0xc1a57c0b19080800\nAXI_PROJECTION_CHILD_AR_TRACE decoder_child_axi_attention_datapath projection=q addr=0x120000 len=1 size=4 burst=1 id=0x2 beats=2 ready_low_cycles=2 instance=u_projection_axi_stream_integration\nAXI_PROJECTION_CHILD_AR_TRACE decoder_child_axi_attention_datapath projection=k addr=0x120000 len=1 size=4 burst=1 id=0x2 beats=2 ready_low_cycles=2 instance=u_k_projection_axi_stream_integration\nAXI_PROJECTION_CHILD_AR_TRACE decoder_child_axi_attention_datapath projection=v addr=0x120000 len=1 size=4 burst=1 id=0x2 beats=2 ready_low_cycles=2 instance=u_v_projection_axi_stream_integration\nAXI_PROJECTION_CHILD_AR_TRACE decoder_child_axi_attention_datapath projection=o addr=0x120000 len=1 size=4 burst=1 id=0x2 beats=2 ready_low_cycles=2 instance=u_o_projection_axi_stream_integration\nAXI_PROJECTION_CHILD_R_METADATA_TRACE decoder_child_axi_attention_datapath projection=q accepted=0x3 last=0x2 rid_ok=1 rresp_ok=1 rlast_ok=1 status=0xc1a57c0b19080800 instance=u_projection_axi_stream_integration\nAXI_PROJECTION_CHILD_R_METADATA_TRACE decoder_child_axi_attention_datapath projection=k accepted=0x3 last=0x2 rid_ok=1 rresp_ok=1 rlast_ok=1 status=0xc1a57c0b19080800 instance=u_k_projection_axi_stream_integration\nAXI_PROJECTION_CHILD_R_METADATA_TRACE decoder_child_axi_attention_datapath projection=v accepted=0x3 last=0x2 rid_ok=1 rresp_ok=1 rlast_ok=1 status=0xc1a57c0b19080800 instance=u_v_projection_axi_stream_integration\nAXI_PROJECTION_CHILD_R_METADATA_TRACE decoder_child_axi_attention_datapath projection=o accepted=0x3 last=0x2 rid_ok=1 rresp_ok=1 rlast_ok=1 status=0xc1a57c0b19080800 instance=u_o_projection_axi_stream_integration\nPARENT_AXI_METADATA_PROPAGATION_TRACE decoder_child_axi_attention_datapath parent_bits=0xf parent_mask=0x00000000f000000000000000 parent_bit_lsb=60 parent_bit_msb=63 child_status_bits=0xf q_bits=0xf k_bits=0xf v_bits=0xf o_bits=0xf source=q_projection_axi_stream_integration.integration_status_o[45:42]:k_projection_axi_stream_integration.integration_status_o[45:42]:v_projection_axi_stream_integration.integration_status_o[45:42]:o_projection_axi_stream_integration.integration_status_o[45:42]:aggregate_and status=0xacfbf881323122211211\nAXI_PROJECTION_EMITTED_PAYLOADS decoder_child_axi_attention_datapath 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83\nAXI_PROJECTION_CONSUMED_PAYLOADS decoder_child_axi_attention_datapath 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83\nAXI_PROJECTION_BACKPRESSURE_TRACE decoder_child_axi_attention_datapath ready_low_payload_idx=0,3,4 trace=0x19 payload_hold_ok=1 rvalid_while_projection_not_ready_cycles=6\nAXI_PROJECTION_OUTPUT_TRACE decoder_child_axi_attention_datapath output=484,1904 status=0xc1a57c0b19080800\nAXI_PROJECTION_ROUND_TRIP_TRACE decoder_child_axi_attention_datapath packed_bytes=32 unpacked_values=64 round_trip_passed=1\nAXI_PROJECTION_CHILD_PAYLOAD_TRACE decoder_child_axi_attention_datapath projection=q emitted=8 consumed=8 payload_match=1 ready_low_trace=0x19 instance=u_projection_axi_stream_integration\nAXI_PROJECTION_CHILD_PAYLOAD_TRACE decoder_child_axi_attention_datapath projection=k emitted=8 consumed=8 payload_match=1 ready_low_trace=0x19 instance=u_k_projection_axi_stream_integration\nAXI_PROJECTION_CHILD_PAYLOAD_TRACE decoder_child_axi_attention_datapath projection=v emitted=8 consumed=8 payload_match=1 ready_low_trace=0x19 instance=u_v_projection_axi_stream_integration\nAXI_PROJECTION_CHILD_PAYLOAD_TRACE decoder_child_axi_attention_datapath projection=o emitted=8 consumed=8 payload_match=1 ready_low_trace=0x19 instance=u_o_projection_axi_stream_integration\nAXI_PROJECTION_CHILD_OUTPUT_TRACE decoder_child_axi_attention_datapath projection=q output=484,1904 status=0xc1a57c0b19080800 instance=u_projection_axi_stream_integration\nAXI_PROJECTION_CHILD_OUTPUT_TRACE decoder_child_axi_attention_datapath projection=k output=484,1904 status=0xc1a57c0b19080800 instance=u_k_projection_axi_stream_integration\nAXI_PROJECTION_CHILD_OUTPUT_TRACE decoder_child_axi_attention_datapath projection=v output=484,1904 status=0xc1a57c0b19080800 instance=u_v_projection_axi_stream_integration\nAXI_PROJECTION_CHILD_OUTPUT_TRACE decoder_child_axi_attention_datapath projection=o output=484,1904 status=0xc1a57c0b19080800 instance=u_o_projection_axi_stream_integration\nAXI_PROJECTION_CHILD_ROUND_TRIP_TRACE decoder_child_axi_attention_datapath projection=q packed_bytes=32 unpacked_values=64 round_trip_passed=1 instance=u_projection_axi_stream_integration\nAXI_PROJECTION_CHILD_ROUND_TRIP_TRACE decoder_child_axi_attention_datapath projection=k packed_bytes=32 unpacked_values=64 round_trip_passed=1 instance=u_k_projection_axi_stream_integration\nAXI_PROJECTION_CHILD_ROUND_TRIP_TRACE decoder_child_axi_attention_datapath projection=v packed_bytes=32 unpacked_values=64 round_trip_passed=1 instance=u_v_projection_axi_stream_integration\nAXI_PROJECTION_CHILD_ROUND_TRIP_TRACE decoder_child_axi_attention_datapath projection=o packed_bytes=32 unpacked_values=64 round_trip_passed=1 instance=u_o_projection_axi_stream_integration\nCACHE_WRITE_TRACE decoder_child_axi_attention_datapath count=1 slot=1 key=-3,2,1,6 value=-2,6,-5,4 stable=1\nKEY_READ_TRACE decoder_child_axi_attention_datapath slots=0,1 keys=2,-1,4,3|-3,2,1,6\nVALUE_READ_TRACE decoder_child_axi_attention_datapath slots=0,1 values=7,-4,3,2|-2,6,-5,4\nSCORE_TRACE decoder_child_axi_attention_datapath scores=25,-14\nSOFTMAX_CONTROL_TRACE decoder_child_axi_attention_datapath policy=two_score_winner_loser_q0_4 weights=12,4 exp=0\nATTENTION_OUTPUT_TRACE decoder_child_axi_attention_datapath output=4,-2,1,2\nFINAL_OUTPUT_TRACE decoder_child_axi_attention_datapath output=4,-2,1,2 status=0xacfbf881323122211211\nTOP_STABILITY_TRACE decoder_child_axi_attention_datapath stable=1\nCOMPACT_IO_TRACE decoder_child_axi_attention_datapath estimated_iob_bits=164 exposed_128b_axi_data=0 exposed_kv_arrays=0 exposed_axi_debug=0\nPASS decoder_child_axi_attention_datapath\n",
+    "cmd": [
+      "iverilog",
+      "-g2012",
+      "-o",
+      "kernel_sim",
+      "rmsnorm_rope_source_path.sv",
+      "projection_axi_stream_integration.sv",
+      "attention_kv_cache_fixture.sv",
+      "decoder_child_axi_attention_datapath.sv",
+      "tb_decoder_child_axi_attention_datapath.sv"
+    ]
+  },
+  "verilator": {
+    "passed": true,
+    "stage": "lint_only",
+    "cmd": [
+      "verilator",
+      "--lint-only",
+      "-sv",
+      "-Wno-STMTDLY",
+      "-Wno-INFINITELOOP",
+      "rmsnorm_rope_source_path.sv",
+      "projection_axi_stream_integration.sv",
+      "attention_kv_cache_fixture.sv",
+      "decoder_child_axi_attention_datapath.sv",
+      "tb_decoder_child_axi_attention_datapath.sv"
+    ],
+    "output": "",
+    "policy": "DUT lint must be warning-clean. Testbench-only Verilator 4.x timing-delay warnings STMTDLY and INFINITELOOP are allowed for lint-only checks because iverilog executes the timed behavioral testbench.",
+    "requested_timing_policy": "--timing",
+    "timing_policy_supported": false,
+    "effective_timing_policy": null,
+    "allowed_warning_classes": [
+      "STMTDLY",
+      "INFINITELOOP"
+    ]
+  },
+  "synthesis": {
+    "passed": true,
+    "cmd": [
+      "vivado",
+      "-mode",
+      "batch",
+      "-source",
+      "vivado_synth.tcl"
+    ],
+    "output": "outable Net Status*\n  *Does not include unroutable nets such as driverless and loadless.\n  Run report_route_status for detailed report.\n  Number of Failed Nets               = 472\n    (Failed Nets is the sum of unrouted and partially routed nets)\n  Number of Unrouted Nets             = 436\n  Number of Partially Routed Nets     = 36\n  Number of Node Overlaps             = 0\n\nPhase 2 Router Initialization | Checksum: ac8a7bc4\n\nTime (s): cpu = 00:00:04 ; elapsed = 00:00:03 . Memory (MB): peak = 4791.914 ; gain = 0.000 ; free physical = 44373 ; free virtual = 53664\n\nPhase 3 Global Routing\nPhase 3 Global Routing | Checksum: ac8a7bc4\n\nTime (s): cpu = 00:00:04 ; elapsed = 00:00:03 . Memory (MB): peak = 4791.914 ; gain = 0.000 ; free physical = 44373 ; free virtual = 53664\n\nPhase 4 Initial Routing\n\nPhase 4.1 Initial Net Routing Pass\nPhase 4.1 Initial Net Routing Pass | Checksum: 2dde19255\n\nTime (s): cpu = 00:00:04 ; elapsed = 00:00:03 . Memory (MB): peak = 4791.914 ; gain = 0.000 ; free physical = 44373 ; free virtual = 53664\nPhase 4 Initial Routing | Checksum: 2acd87e62\n\nTime (s): cpu = 00:00:04 ; elapsed = 00:00:03 . Memory (MB): peak = 4791.914 ; gain = 0.000 ; free physical = 44373 ; free virtual = 53664\n\nPhase 5 Rip-up And Reroute\n\nPhase 5.1 Global Iteration 0\n Number of Nodes with overlaps = 31\n Number of Nodes with overlaps = 0\nINFO: [Route 35-416] Intermediate Timing Summary | WNS=2.131  | TNS=0.000  | WHS=0.007  | THS=0.000  |\n\nPhase 5.1 Global Iteration 0 | Checksum: 1c03d0ea8\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4791.914 ; gain = 0.000 ; free physical = 44373 ; free virtual = 53664\n\nPhase 5.2 Additional Iteration for Hold\nPhase 5.2 Additional Iteration for Hold | Checksum: 1bc7c485d\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4791.914 ; gain = 0.000 ; free physical = 44373 ; free virtual = 53664\nPhase 5 Rip-up And Reroute | Checksum: 1bc7c485d\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4791.914 ; gain = 0.000 ; free physical = 44373 ; free virtual = 53664\n\nPhase 6 Delay and Skew Optimization\n\nPhase 6.1 Delay CleanUp\nPhase 6.1 Delay CleanUp | Checksum: 1f06c356d\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4791.914 ; gain = 0.000 ; free physical = 44373 ; free virtual = 53664\n\nPhase 6.2 Clock Skew Optimization\nPhase 6.2 Clock Skew Optimization | Checksum: 1f06c356d\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4791.914 ; gain = 0.000 ; free physical = 44373 ; free virtual = 53664\nPhase 6 Delay and Skew Optimization | Checksum: 1f06c356d\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4791.914 ; gain = 0.000 ; free physical = 44373 ; free virtual = 53664\n\nPhase 7 Post Hold Fix\n\nPhase 7.1 Hold Fix Iter\nINFO: [Route 35-416] Intermediate Timing Summary | WNS=2.131  | TNS=0.000  | WHS=0.007  | THS=0.000  |\n\nPhase 7.1 Hold Fix Iter | Checksum: 17aa770fe\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4791.914 ; gain = 0.000 ; free physical = 44373 ; free virtual = 53664\nPhase 7 Post Hold Fix | Checksum: 17aa770fe\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4791.914 ; gain = 0.000 ; free physical = 44373 ; free virtual = 53664\n\nPhase 8 Route finalize\n\nRouter Utilization Summary\n  Global Vertical Routing Utilization    = 0.0836437 %\n  Global Horizontal Routing Utilization  = 0.0128245 %\n  Routable Net Status*\n  *Does not include unroutable nets such as driverless and loadless.\n  Run report_route_status for detailed report.\n  Number of Failed Nets               = 0\n    (Failed Nets is the sum of unrouted and partially routed nets)\n  Number of Unrouted Nets             = 0\n  Number of Partially Routed Nets     = 0\n  Number of Node Overlaps             = 0\n\nPhase 8 Route finalize | Checksum: 17aa770fe\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4791.914 ; gain = 0.000 ; free physical = 44373 ; free virtual = 53664\n\nPhase 9 Verifying routed nets\n\n Verification completed successfully\nPhase 9 Verifying routed nets | Checksum: 17aa770fe\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4791.914 ; gain = 0.000 ; free physical = 44373 ; free virtual = 53664\n\nPhase 10 Depositing Routes\nPhase 10 Depositing Routes | Checksum: 17aa770fe\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4791.914 ; gain = 0.000 ; free physical = 44373 ; free virtual = 53664\n\nPhase 11 Resolve XTalk\nPhase 11 Resolve XTalk | Checksum: 17aa770fe\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4791.914 ; gain = 0.000 ; free physical = 44373 ; free virtual = 53664\n\nPhase 12 Post Process Routing\nPhase 12 Post Process Routing | Checksum: 17aa770fe\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4791.914 ; gain = 0.000 ; free physical = 44373 ; free virtual = 53664\n\nPhase 13 Post Router Timing\nINFO: [Route 35-57] Estimated Timing Summary | WNS=2.131  | TNS=0.000  | WHS=0.007  | THS=0.000  |\n\nINFO: [Route 35-327] The final timing numbers are based on the router estimated timing analysis. For a complete and accurate timing signoff, please run report_timing_summary.\nPhase 13 Post Router Timing | Checksum: 17aa770fe\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4791.914 ; gain = 0.000 ; free physical = 44373 ; free virtual = 53664\nTotal Elapsed time in route_design: 3.09 secs\n\nPhase 14 Post-Route Event Processing\nPhase 14 Post-Route Event Processing | Checksum: 156721dc3\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4791.914 ; gain = 0.000 ; free physical = 44373 ; free virtual = 53664\nINFO: [Route 35-16] Router Completed Successfully\nEnding Routing Task | Checksum: 156721dc3\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4791.914 ; gain = 0.000 ; free physical = 44373 ; free virtual = 53664\n\nRouting Is Done.\nINFO: [Common 17-83] Releasing license: Implementation\n12 Infos, 0 Warnings, 0 Critical Warnings and 0 Errors encountered.\nroute_design completed successfully\n# report_utilization -file utilization.rpt\n# report_timing_summary -file timing_summary.rpt\nINFO: [Timing 38-91] UpdateTimingParams: Speed grade: -2, Temperature grade: E, Delay Type: min_max.\nINFO: [Timing 38-191] Multithreading enabled for timing update using a maximum of 8 CPUs\n# write_checkpoint -force post_route.dcp\nINFO: [Timing 38-480] Writing timing data to binary archive.\nWrite ShapeDB Complete: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 4791.914 ; gain = 0.000 ; free physical = 44348 ; free virtual = 53639\nWrote PlaceDB: Time (s): cpu = 00:00:00.03 ; elapsed = 00:00:00.01 . Memory (MB): peak = 4791.914 ; gain = 0.000 ; free physical = 44348 ; free virtual = 53639\nWrote PulsedLatchDB: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 4791.914 ; gain = 0.000 ; free physical = 44348 ; free virtual = 53639\nWriting XDEF routing.\nWriting XDEF routing logical nets.\nWriting XDEF routing special nets.\nWrote RouteStorage: Time (s): cpu = 00:00:00.05 ; elapsed = 00:00:00.04 . Memory (MB): peak = 4791.914 ; gain = 0.000 ; free physical = 44348 ; free virtual = 53639\nWrote Netlist Cache: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 4791.914 ; gain = 0.000 ; free physical = 44348 ; free virtual = 53639\nWrote Device Cache: Time (s): cpu = 00:00:00.01 ; elapsed = 00:00:00.01 . Memory (MB): peak = 4791.914 ; gain = 0.000 ; free physical = 44348 ; free virtual = 53642\nWrite Physdb Complete: Time (s): cpu = 00:00:00.09 ; elapsed = 00:00:00.06 . Memory (MB): peak = 4791.914 ; gain = 0.000 ; free physical = 44348 ; free virtual = 53642\nINFO: [Common 17-1381] The checkpoint '/home/iamjames77/Nlp2Verilog/examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/decoder_child_axi_attention_datapath/post_route.dcp' has been generated.\nINFO: [Common 17-206] Exiting Vivado at Tue Jun 16 09:49:27 2026...\n",
+    "timing": {
+      "setup_worst_slack_ns": 2.138,
+      "hold_worst_slack_ns": 0.007,
+      "pulse_width_worst_slack_ns": 2.225,
+      "constraints_met": true,
+      "worst_slack_ns": 2.138,
+      "parse_status": "parsed"
+    },
+    "implementation_stage": "post-route",
+    "timing_report": "timing_summary.rpt",
+    "timing_report_available": true,
+    "utilization_report": "utilization.rpt",
+    "utilization_report_available": true,
+    "resource_status": "available",
+    "resource_utilization": {
+      "lut_as_logic": {
+        "used": 281,
+        "available": 230400,
+        "utilization_percent": 0.12
+      },
+      "clb_registers": {
+        "used": 236,
+        "available": 460800,
+        "utilization_percent": 0.05
+      },
+      "block_ram_tile": {
+        "used": 0,
+        "available": 312,
+        "utilization_percent": 0.0
+      },
+      "dsps": {
+        "used": 0,
+        "available": 1728,
+        "utilization_percent": 0.0
+      },
+      "bonded_iob": {
+        "used": 164,
+        "available": 360,
+        "utilization_percent": 45.56
+      }
+    }
+  },
+  "contract_gate": {
+    "verilator_enforced": true,
+    "synthesis_enforced": true
+  },
+  "numeric_policy": {
+    "fixture_kind": "decoder_child_axi_attention_datapath_fixture",
+    "datapath_composition": "instantiated_child_fixture_rtl",
+    "child_sequence": "rmsnorm_rope_source_path -> q/k/v/o projection_axi_stream_integration children -> attention_kv_cache_fixture",
+    "top_output_source": "attention_kv_cache_fixture.output_o",
+    "uses_axi_projection_stream_child": true,
+    "uses_qkvo_axi_projection_stream_children": true,
+    "projection_axi_done_semantics": "all q/k/v/o projection stream children done",
+    "projection_to_attention_math_wiring_complete": false,
+    "full_decoder_block": false,
+    "full_llama_coverage": false
+  },
+  "kernel": "decoder_child_axi_attention_datapath",
+  "uses_axi_projection_stream_child": true,
+  "uses_qkvo_axi_projection_stream_children": true,
+  "datapath_child_instantiation": true,
+  "attention_kv_child_instantiation": true,
+  "child_modules": [
+    {
+      "name": "rmsnorm_rope_source_path",
+      "coverage_level": "rmsnorm_rope_source_path_fixture",
+      "instantiated": true
+    },
+    {
+      "name": "q_projection_axi_stream_integration",
+      "module": "projection_axi_stream_integration",
+      "projection": "q",
+      "instance": "u_projection_axi_stream_integration",
+      "coverage_level": "projection_axi_stream_integration_fixture",
+      "instantiated": true
+    },
+    {
+      "name": "k_projection_axi_stream_integration",
+      "module": "projection_axi_stream_integration",
+      "projection": "k",
+      "instance": "u_k_projection_axi_stream_integration",
+      "coverage_level": "projection_axi_stream_integration_fixture",
+      "instantiated": true
+    },
+    {
+      "name": "v_projection_axi_stream_integration",
+      "module": "projection_axi_stream_integration",
+      "projection": "v",
+      "instance": "u_v_projection_axi_stream_integration",
+      "coverage_level": "projection_axi_stream_integration_fixture",
+      "instantiated": true
+    },
+    {
+      "name": "o_projection_axi_stream_integration",
+      "module": "projection_axi_stream_integration",
+      "projection": "o",
+      "instance": "u_o_projection_axi_stream_integration",
+      "coverage_level": "projection_axi_stream_integration_fixture",
+      "instantiated": true
+    },
+    {
+      "name": "attention_kv_cache_fixture",
+      "coverage_level": "attention_kv_cache_fixture",
+      "instantiated": true
+    }
+  ],
+  "axi_projection_child_instances": [
+    {
+      "projection": "q",
+      "instance": "u_projection_axi_stream_integration",
+      "module": "projection_axi_stream_integration"
+    },
+    {
+      "projection": "k",
+      "instance": "u_k_projection_axi_stream_integration",
+      "module": "projection_axi_stream_integration"
+    },
+    {
+      "projection": "v",
+      "instance": "u_v_projection_axi_stream_integration",
+      "module": "projection_axi_stream_integration"
+    },
+    {
+      "projection": "o",
+      "instance": "u_o_projection_axi_stream_integration",
+      "module": "projection_axi_stream_integration"
+    }
+  ],
+  "fsm_state_order": [
+    "IDLE",
+    "SOURCE_PATH_START",
+    "SOURCE_PATH_BUSY",
+    "PROJECTION_AXI_START",
+    "PROJECTION_AXI_BUSY",
+    "ATTENTION_KV_START",
+    "ATTENTION_KV_BUSY",
+    "DONE"
+  ],
+  "child_sequence": [
+    "source_path_start",
+    "source_path_done",
+    "projection_axi_start",
+    "projection_axi_done",
+    "attention_kv_start",
+    "attention_kv_done"
+  ],
+  "child_start_done_trace": [
+    "source_path_start",
+    "source_path_done",
+    "projection_axi_start",
+    "projection_axi_done",
+    "attention_kv_start",
+    "attention_kv_done"
+  ],
+  "expected_child_trace_hex": "0x323122211211",
+  "top_level_interface_summary": {
+    "common_handshake": [
+      "aclk",
+      "aresetn",
+      "start_i",
+      "done_o"
+    ],
+    "registered_outputs": [
+      "output_o",
+      "status_o"
+    ],
+    "compact_top_level_io": true
+  },
+  "exposed_port_width_summary": {
+    "top_level_ports": [
+      "aclk",
+      "aresetn",
+      "start_i",
+      "done_o",
+      "output_o",
+      "status_o"
+    ],
+    "output_o_bits": 64,
+    "status_o_bits": 96,
+    "control_bits": 4,
+    "estimated_total_top_level_iob_bits": 164,
+    "exposes_128b_axi_read_data": false,
+    "exposes_axi_address_id_response_debug": false,
+    "exposes_full_hidden_vectors": false,
+    "exposes_full_kv_arrays": false,
+    "exposes_full_debug_arrays": false
+  },
+  "fixture_output_vector": [
+    4,
+    -2,
+    1,
+    2
+  ],
+  "expected_golden_vector": [
+    4,
+    -2,
+    1,
+    2
+  ],
+  "source_path_evidence": {
+    "rmsnorm_lookup_trace": {
+      "selector": 0,
+      "valid": true,
+      "inv_rms_lookup_value": 7024,
+      "sumsq_expected": 5568
+    },
+    "rope_lookup_trace": [
+      {
+        "position": 7,
+        "pair_index": 0,
+        "valid": true,
+        "cos": 13,
+        "sin": 9
+      },
+      {
+        "position": 7,
+        "pair_index": 1,
+        "valid": true,
+        "cos": 7,
+        "sin": -14
+      }
+    ],
+    "rmsnorm_output_vector": [
+      658,
+      -1372,
+      1152,
+      -659
+    ],
+    "rope_output_vector": [
+      37,
+      -13,
+      3,
+      -42
+    ],
+    "inv_rms_source": "rtl_lookup_fixture",
+    "cos_sin_source": "rtl_lookup_fixture",
+    "reciprocal_sqrt_in_rtl": false,
+    "frequency_generation_in_rtl": false
+  },
+  "axi_projection_child_evidence": {
+    "projection_children": [
+      {
+        "projection": "q",
+        "module": "projection_axi_stream_integration",
+        "instance": "u_projection_axi_stream_integration"
+      },
+      {
+        "projection": "k",
+        "module": "projection_axi_stream_integration",
+        "instance": "u_k_projection_axi_stream_integration"
+      },
+      {
+        "projection": "v",
+        "module": "projection_axi_stream_integration",
+        "instance": "u_v_projection_axi_stream_integration"
+      },
+      {
+        "projection": "o",
+        "module": "projection_axi_stream_integration",
+        "instance": "u_o_projection_axi_stream_integration"
+      }
+    ],
+    "axi_command_trace": {
+      "request_addr_hex": "0x00120000",
+      "request_beat_count": 2,
+      "axi_arlen": 1,
+      "axi_arsize": 4,
+      "axi_arburst": 1,
+      "axi_arid_hex": "0x02",
+      "configured_memory_data_width_bits": 128,
+      "bytes_per_beat": 16
+    },
+    "r_metadata_validation": {
+      "expected_axi_rid_hex": "0x02",
+      "expected_axi_rresp": "0b00",
+      "expected_rlast_on_final_beat_only": true
+    },
+    "parent_compact_status_propagation_plan": {
+      "child_source": "q/k/v/o projection_axi_stream_integration.integration_status_o[45:42] aggregate_and",
+      "parent_status_bit_lsb": 60,
+      "parent_status_bit_msb": 63,
+      "parent_status_mask_hex": "0x00000000f000000000000000",
+      "bit_mapping": {
+        "rid_good": 60,
+        "rresp_good": 61,
+        "rlast_good": 62,
+        "all_metadata_good": 63
+      }
+    },
+    "expected_payload_words_hex": [
+      "0xe94fa50b",
+      "0x61c72d83",
+      "0xe94fa50b",
+      "0x61c72d83",
+      "0xe94fa50b",
+      "0x61c72d83",
+      "0xe94fa50b",
+      "0x61c72d83"
+    ],
+    "gptq_payload_probe_golden_source": {
+      "env_var": "NL2HDL_GPTQ_PAYLOAD_PROBE_JSON",
+      "artifact": "gptq_payload_probe",
+      "status": "absent",
+      "projection": "q_proj",
+      "used": false,
+      "payload_golden_source": "deterministic_fixture",
+      "fallback_reason": "NL2HDL_GPTQ_PAYLOAD_PROBE_JSON not set",
+      "target_checkpoint_payload_dependency": "not_provided",
+      "qweight_payload_words32_le_hex": [],
+      "qweight_payload_word_count": 0,
+      "expected_fixture_payload_word_count": 8,
+      "payload_words_match_gptq_probe": false
+    },
+    "gptq_payload_probe_used": false,
+    "target_checkpoint_payload_dependency": "not_provided",
+    "gptq_probe_qweight_payload_words32_le_hex": [],
+    "payload_words_match_gptq_probe": false,
+    "payload_link_match_passed": true,
+    "projection_output_vector": [
+      484,
+      1904
+    ],
+    "packed_int4_values": [
+      -5,
+      0,
+      5,
+      -6,
+      -1,
+      4,
+      -7,
+      -2,
+      3,
+      -8,
+      -3,
+      2,
+      7,
+      -4,
+      1,
+      6,
+      -5,
+      0,
+      5,
+      -6,
+      -1,
+      4,
+      -7,
+      -2,
+      3,
+      -8,
+      -3,
+      2,
+      7,
+      -4,
+      1,
+      6,
+      -5,
+      0,
+      5,
+      -6,
+      -1,
+      4,
+      -7,
+      -2,
+      3,
+      -8,
+      -3,
+      2,
+      7,
+      -4,
+      1,
+      6,
+      -5,
+      0,
+      5,
+      -6,
+      -1,
+      4,
+      -7,
+      -2,
+      3,
+      -8,
+      -3,
+      2,
+      7,
+      -4,
+      1,
+      6
+    ],
+    "projection_backpressure_trace": {
+      "link_name": "axi_payload_adapter_to_projection_consumer",
+      "ready_low_payload_indices": [
+        0,
+        3,
+        4
+      ],
+      "ready_low_trace_hex": "0x19",
+      "inside_beat_ready_low_index": 0,
+      "beat_boundary_ready_low_index": 3,
+      "post_boundary_ready_low_index": 4,
+      "payload_valid_held_while_ready_low": true,
+      "crosses_axi_to_projection_boundary": true
+    },
+    "round_trip_passed": true,
+    "packed_int4_round_trip_evidence": {
+      "packed_bytes": 32,
+      "unpacked_values": 64,
+      "round_trip_passed": true
+    },
+    "does_not_expose_128b_axi_read_data_at_parent_top": true,
+    "evidence_source": "dynamic_integration_testbench_overwrites_static_summary_fields",
+    "observed_axi_command_trace": {
+      "addr_hex": "0x120000",
+      "axi_arlen": 1,
+      "axi_arsize": 4,
+      "axi_arburst": 1,
+      "axi_arid_hex": "0x2",
+      "request_beat_count": 2,
+      "ar_ready_low_cycles": 2,
+      "evidence_source": "parsed_from_integration_testbench_axi_child_ar_trace"
+    },
+    "observed_r_metadata_validation": {
+      "accepted_trace_hex": "0x3",
+      "rlast_trace_hex": "0x2",
+      "rid_ok": true,
+      "rresp_ok": true,
+      "rlast_ok": true,
+      "compact_status_hex": "0xc1a57c0b19080800",
+      "evidence_source": "parsed_from_integration_testbench_axi_child_r_metadata"
+    },
+    "observed_payload_trace": {
+      "emitted_payload_words_hex": [
+        "0xe94fa50b",
+        "0x61c72d83",
+        "0xe94fa50b",
+        "0x61c72d83",
+        "0xe94fa50b",
+        "0x61c72d83",
+        "0xe94fa50b",
+        "0x61c72d83"
+      ],
+      "consumed_payload_words_hex": [
+        "0xe94fa50b",
+        "0x61c72d83",
+        "0xe94fa50b",
+        "0x61c72d83",
+        "0xe94fa50b",
+        "0x61c72d83",
+        "0xe94fa50b",
+        "0x61c72d83"
+      ],
+      "payload_link_match_passed": true,
+      "evidence_source": "parsed_from_integration_testbench_axi_child_payload_trace"
+    },
+    "emitted_payload_words_hex": [
+      "0xe94fa50b",
+      "0x61c72d83",
+      "0xe94fa50b",
+      "0x61c72d83",
+      "0xe94fa50b",
+      "0x61c72d83",
+      "0xe94fa50b",
+      "0x61c72d83"
+    ],
+    "projection_consumed_payload_words_hex": [
+      "0xe94fa50b",
+      "0x61c72d83",
+      "0xe94fa50b",
+      "0x61c72d83",
+      "0xe94fa50b",
+      "0x61c72d83",
+      "0xe94fa50b",
+      "0x61c72d83"
+    ],
+    "observed_backpressure_trace": {
+      "ready_low_payload_indices": [
+        0,
+        3,
+        4
+      ],
+      "ready_low_trace_hex": "0x19",
+      "payload_valid_held_while_ready_low": true,
+      "rvalid_while_projection_not_ready_cycles": 6,
+      "evidence_source": "parsed_from_integration_testbench_axi_child_backpressure_trace"
+    },
+    "observed_projection_output_trace": {
+      "projection_output_vector": [
+        484,
+        1904
+      ],
+      "integration_status_hex": "0xc1a57c0b19080800",
+      "evidence_source": "parsed_from_integration_testbench_axi_child_output"
+    },
+    "observed_packed_int4_round_trip_evidence": {
+      "packed_bytes": 32,
+      "unpacked_values": 64,
+      "round_trip_passed": true,
+      "evidence_source": "parsed_from_integration_testbench_axi_child_round_trip"
+    }
+  },
+  "axi_projection_children_evidence": {
+    "q": {
+      "projection_children": [
+        {
+          "projection": "q",
+          "module": "projection_axi_stream_integration",
+          "instance": "u_projection_axi_stream_integration"
+        },
+        {
+          "projection": "k",
+          "module": "projection_axi_stream_integration",
+          "instance": "u_k_projection_axi_stream_integration"
+        },
+        {
+          "projection": "v",
+          "module": "projection_axi_stream_integration",
+          "instance": "u_v_projection_axi_stream_integration"
+        },
+        {
+          "projection": "o",
+          "module": "projection_axi_stream_integration",
+          "instance": "u_o_projection_axi_stream_integration"
+        }
+      ],
+      "axi_command_trace": {
+        "request_addr_hex": "0x00120000",
+        "request_beat_count": 2,
+        "axi_arlen": 1,
+        "axi_arsize": 4,
+        "axi_arburst": 1,
+        "axi_arid_hex": "0x02",
+        "configured_memory_data_width_bits": 128,
+        "bytes_per_beat": 16
+      },
+      "r_metadata_validation": {
+        "expected_axi_rid_hex": "0x02",
+        "expected_axi_rresp": "0b00",
+        "expected_rlast_on_final_beat_only": true
+      },
+      "parent_compact_status_propagation_plan": {
+        "child_source": "q/k/v/o projection_axi_stream_integration.integration_status_o[45:42] aggregate_and",
+        "parent_status_bit_lsb": 60,
+        "parent_status_bit_msb": 63,
+        "parent_status_mask_hex": "0x00000000f000000000000000",
+        "bit_mapping": {
+          "rid_good": 60,
+          "rresp_good": 61,
+          "rlast_good": 62,
+          "all_metadata_good": 63
+        }
+      },
+      "expected_payload_words_hex": [
+        "0xe94fa50b",
+        "0x61c72d83",
+        "0xe94fa50b",
+        "0x61c72d83",
+        "0xe94fa50b",
+        "0x61c72d83",
+        "0xe94fa50b",
+        "0x61c72d83"
+      ],
+      "gptq_payload_probe_golden_source": {
+        "env_var": "NL2HDL_GPTQ_PAYLOAD_PROBE_JSON",
+        "artifact": "gptq_payload_probe",
+        "status": "absent",
+        "projection": "q_proj",
+        "used": false,
+        "payload_golden_source": "deterministic_fixture",
+        "fallback_reason": "NL2HDL_GPTQ_PAYLOAD_PROBE_JSON not set",
+        "target_checkpoint_payload_dependency": "not_provided",
+        "qweight_payload_words32_le_hex": [],
+        "qweight_payload_word_count": 0,
+        "expected_fixture_payload_word_count": 8,
+        "payload_words_match_gptq_probe": false
+      },
+      "gptq_payload_probe_used": false,
+      "target_checkpoint_payload_dependency": "not_provided",
+      "gptq_probe_qweight_payload_words32_le_hex": [],
+      "payload_words_match_gptq_probe": false,
+      "payload_link_match_passed": true,
+      "projection_output_vector": [
+        484,
+        1904
+      ],
+      "packed_int4_values": [
+        -5,
+        0,
+        5,
+        -6,
+        -1,
+        4,
+        -7,
+        -2,
+        3,
+        -8,
+        -3,
+        2,
+        7,
+        -4,
+        1,
+        6,
+        -5,
+        0,
+        5,
+        -6,
+        -1,
+        4,
+        -7,
+        -2,
+        3,
+        -8,
+        -3,
+        2,
+        7,
+        -4,
+        1,
+        6,
+        -5,
+        0,
+        5,
+        -6,
+        -1,
+        4,
+        -7,
+        -2,
+        3,
+        -8,
+        -3,
+        2,
+        7,
+        -4,
+        1,
+        6,
+        -5,
+        0,
+        5,
+        -6,
+        -1,
+        4,
+        -7,
+        -2,
+        3,
+        -8,
+        -3,
+        2,
+        7,
+        -4,
+        1,
+        6
+      ],
+      "projection_backpressure_trace": {
+        "link_name": "axi_payload_adapter_to_projection_consumer",
+        "ready_low_payload_indices": [
+          0,
+          3,
+          4
+        ],
+        "ready_low_trace_hex": "0x19",
+        "inside_beat_ready_low_index": 0,
+        "beat_boundary_ready_low_index": 3,
+        "post_boundary_ready_low_index": 4,
+        "payload_valid_held_while_ready_low": true,
+        "crosses_axi_to_projection_boundary": true
+      },
+      "round_trip_passed": true,
+      "packed_int4_round_trip_evidence": {
+        "packed_bytes": 32,
+        "unpacked_values": 64,
+        "round_trip_passed": true
+      },
+      "does_not_expose_128b_axi_read_data_at_parent_top": true,
+      "evidence_source": "dynamic_integration_testbench_overwrites_static_summary_fields",
+      "projection": "q",
+      "instance": "u_projection_axi_stream_integration",
+      "observed_axi_command_trace": {
+        "projection": "q",
+        "addr_hex": "0x120000",
+        "axi_arlen": 1,
+        "axi_arsize": 4,
+        "axi_arburst": 1,
+        "axi_arid_hex": "0x2",
+        "request_beat_count": 2,
+        "ar_ready_low_cycles": 2,
+        "instance": "u_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_ar_trace"
+      },
+      "observed_r_metadata_validation": {
+        "projection": "q",
+        "accepted_trace_hex": "0x3",
+        "rlast_trace_hex": "0x2",
+        "rid_ok": true,
+        "rresp_ok": true,
+        "rlast_ok": true,
+        "compact_status_hex": "0xc1a57c0b19080800",
+        "instance": "u_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_r_metadata"
+      },
+      "observed_payload_trace": {
+        "projection": "q",
+        "emitted_count": 8,
+        "consumed_count": 8,
+        "payload_link_match_passed": true,
+        "ready_low_trace_hex": "0x19",
+        "instance": "u_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_payload_trace"
+      },
+      "observed_projection_output_trace": {
+        "projection": "q",
+        "projection_output_vector": [
+          484,
+          1904
+        ],
+        "integration_status_hex": "0xc1a57c0b19080800",
+        "instance": "u_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_output"
+      },
+      "observed_packed_int4_round_trip_evidence": {
+        "projection": "q",
+        "packed_bytes": 32,
+        "unpacked_values": 64,
+        "round_trip_passed": true,
+        "instance": "u_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_round_trip"
+      },
+      "dynamic_integration_observed": true
+    },
+    "k": {
+      "projection_children": [
+        {
+          "projection": "q",
+          "module": "projection_axi_stream_integration",
+          "instance": "u_projection_axi_stream_integration"
+        },
+        {
+          "projection": "k",
+          "module": "projection_axi_stream_integration",
+          "instance": "u_k_projection_axi_stream_integration"
+        },
+        {
+          "projection": "v",
+          "module": "projection_axi_stream_integration",
+          "instance": "u_v_projection_axi_stream_integration"
+        },
+        {
+          "projection": "o",
+          "module": "projection_axi_stream_integration",
+          "instance": "u_o_projection_axi_stream_integration"
+        }
+      ],
+      "axi_command_trace": {
+        "request_addr_hex": "0x00120000",
+        "request_beat_count": 2,
+        "axi_arlen": 1,
+        "axi_arsize": 4,
+        "axi_arburst": 1,
+        "axi_arid_hex": "0x02",
+        "configured_memory_data_width_bits": 128,
+        "bytes_per_beat": 16
+      },
+      "r_metadata_validation": {
+        "expected_axi_rid_hex": "0x02",
+        "expected_axi_rresp": "0b00",
+        "expected_rlast_on_final_beat_only": true
+      },
+      "parent_compact_status_propagation_plan": {
+        "child_source": "q/k/v/o projection_axi_stream_integration.integration_status_o[45:42] aggregate_and",
+        "parent_status_bit_lsb": 60,
+        "parent_status_bit_msb": 63,
+        "parent_status_mask_hex": "0x00000000f000000000000000",
+        "bit_mapping": {
+          "rid_good": 60,
+          "rresp_good": 61,
+          "rlast_good": 62,
+          "all_metadata_good": 63
+        }
+      },
+      "expected_payload_words_hex": [
+        "0xe94fa50b",
+        "0x61c72d83",
+        "0xe94fa50b",
+        "0x61c72d83",
+        "0xe94fa50b",
+        "0x61c72d83",
+        "0xe94fa50b",
+        "0x61c72d83"
+      ],
+      "gptq_payload_probe_golden_source": {
+        "env_var": "NL2HDL_GPTQ_PAYLOAD_PROBE_JSON",
+        "artifact": "gptq_payload_probe",
+        "status": "absent",
+        "projection": "q_proj",
+        "used": false,
+        "payload_golden_source": "deterministic_fixture",
+        "fallback_reason": "NL2HDL_GPTQ_PAYLOAD_PROBE_JSON not set",
+        "target_checkpoint_payload_dependency": "not_provided",
+        "qweight_payload_words32_le_hex": [],
+        "qweight_payload_word_count": 0,
+        "expected_fixture_payload_word_count": 8,
+        "payload_words_match_gptq_probe": false
+      },
+      "gptq_payload_probe_used": false,
+      "target_checkpoint_payload_dependency": "not_provided",
+      "gptq_probe_qweight_payload_words32_le_hex": [],
+      "payload_words_match_gptq_probe": false,
+      "payload_link_match_passed": true,
+      "projection_output_vector": [
+        484,
+        1904
+      ],
+      "packed_int4_values": [
+        -5,
+        0,
+        5,
+        -6,
+        -1,
+        4,
+        -7,
+        -2,
+        3,
+        -8,
+        -3,
+        2,
+        7,
+        -4,
+        1,
+        6,
+        -5,
+        0,
+        5,
+        -6,
+        -1,
+        4,
+        -7,
+        -2,
+        3,
+        -8,
+        -3,
+        2,
+        7,
+        -4,
+        1,
+        6,
+        -5,
+        0,
+        5,
+        -6,
+        -1,
+        4,
+        -7,
+        -2,
+        3,
+        -8,
+        -3,
+        2,
+        7,
+        -4,
+        1,
+        6,
+        -5,
+        0,
+        5,
+        -6,
+        -1,
+        4,
+        -7,
+        -2,
+        3,
+        -8,
+        -3,
+        2,
+        7,
+        -4,
+        1,
+        6
+      ],
+      "projection_backpressure_trace": {
+        "link_name": "axi_payload_adapter_to_projection_consumer",
+        "ready_low_payload_indices": [
+          0,
+          3,
+          4
+        ],
+        "ready_low_trace_hex": "0x19",
+        "inside_beat_ready_low_index": 0,
+        "beat_boundary_ready_low_index": 3,
+        "post_boundary_ready_low_index": 4,
+        "payload_valid_held_while_ready_low": true,
+        "crosses_axi_to_projection_boundary": true
+      },
+      "round_trip_passed": true,
+      "packed_int4_round_trip_evidence": {
+        "packed_bytes": 32,
+        "unpacked_values": 64,
+        "round_trip_passed": true
+      },
+      "does_not_expose_128b_axi_read_data_at_parent_top": true,
+      "evidence_source": "dynamic_integration_testbench_overwrites_static_summary_fields",
+      "projection": "k",
+      "instance": "u_k_projection_axi_stream_integration",
+      "observed_axi_command_trace": {
+        "projection": "k",
+        "addr_hex": "0x120000",
+        "axi_arlen": 1,
+        "axi_arsize": 4,
+        "axi_arburst": 1,
+        "axi_arid_hex": "0x2",
+        "request_beat_count": 2,
+        "ar_ready_low_cycles": 2,
+        "instance": "u_k_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_ar_trace"
+      },
+      "observed_r_metadata_validation": {
+        "projection": "k",
+        "accepted_trace_hex": "0x3",
+        "rlast_trace_hex": "0x2",
+        "rid_ok": true,
+        "rresp_ok": true,
+        "rlast_ok": true,
+        "compact_status_hex": "0xc1a57c0b19080800",
+        "instance": "u_k_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_r_metadata"
+      },
+      "observed_payload_trace": {
+        "projection": "k",
+        "emitted_count": 8,
+        "consumed_count": 8,
+        "payload_link_match_passed": true,
+        "ready_low_trace_hex": "0x19",
+        "instance": "u_k_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_payload_trace"
+      },
+      "observed_projection_output_trace": {
+        "projection": "k",
+        "projection_output_vector": [
+          484,
+          1904
+        ],
+        "integration_status_hex": "0xc1a57c0b19080800",
+        "instance": "u_k_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_output"
+      },
+      "observed_packed_int4_round_trip_evidence": {
+        "projection": "k",
+        "packed_bytes": 32,
+        "unpacked_values": 64,
+        "round_trip_passed": true,
+        "instance": "u_k_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_round_trip"
+      },
+      "dynamic_integration_observed": true
+    },
+    "v": {
+      "projection_children": [
+        {
+          "projection": "q",
+          "module": "projection_axi_stream_integration",
+          "instance": "u_projection_axi_stream_integration"
+        },
+        {
+          "projection": "k",
+          "module": "projection_axi_stream_integration",
+          "instance": "u_k_projection_axi_stream_integration"
+        },
+        {
+          "projection": "v",
+          "module": "projection_axi_stream_integration",
+          "instance": "u_v_projection_axi_stream_integration"
+        },
+        {
+          "projection": "o",
+          "module": "projection_axi_stream_integration",
+          "instance": "u_o_projection_axi_stream_integration"
+        }
+      ],
+      "axi_command_trace": {
+        "request_addr_hex": "0x00120000",
+        "request_beat_count": 2,
+        "axi_arlen": 1,
+        "axi_arsize": 4,
+        "axi_arburst": 1,
+        "axi_arid_hex": "0x02",
+        "configured_memory_data_width_bits": 128,
+        "bytes_per_beat": 16
+      },
+      "r_metadata_validation": {
+        "expected_axi_rid_hex": "0x02",
+        "expected_axi_rresp": "0b00",
+        "expected_rlast_on_final_beat_only": true
+      },
+      "parent_compact_status_propagation_plan": {
+        "child_source": "q/k/v/o projection_axi_stream_integration.integration_status_o[45:42] aggregate_and",
+        "parent_status_bit_lsb": 60,
+        "parent_status_bit_msb": 63,
+        "parent_status_mask_hex": "0x00000000f000000000000000",
+        "bit_mapping": {
+          "rid_good": 60,
+          "rresp_good": 61,
+          "rlast_good": 62,
+          "all_metadata_good": 63
+        }
+      },
+      "expected_payload_words_hex": [
+        "0xe94fa50b",
+        "0x61c72d83",
+        "0xe94fa50b",
+        "0x61c72d83",
+        "0xe94fa50b",
+        "0x61c72d83",
+        "0xe94fa50b",
+        "0x61c72d83"
+      ],
+      "gptq_payload_probe_golden_source": {
+        "env_var": "NL2HDL_GPTQ_PAYLOAD_PROBE_JSON",
+        "artifact": "gptq_payload_probe",
+        "status": "absent",
+        "projection": "q_proj",
+        "used": false,
+        "payload_golden_source": "deterministic_fixture",
+        "fallback_reason": "NL2HDL_GPTQ_PAYLOAD_PROBE_JSON not set",
+        "target_checkpoint_payload_dependency": "not_provided",
+        "qweight_payload_words32_le_hex": [],
+        "qweight_payload_word_count": 0,
+        "expected_fixture_payload_word_count": 8,
+        "payload_words_match_gptq_probe": false
+      },
+      "gptq_payload_probe_used": false,
+      "target_checkpoint_payload_dependency": "not_provided",
+      "gptq_probe_qweight_payload_words32_le_hex": [],
+      "payload_words_match_gptq_probe": false,
+      "payload_link_match_passed": true,
+      "projection_output_vector": [
+        484,
+        1904
+      ],
+      "packed_int4_values": [
+        -5,
+        0,
+        5,
+        -6,
+        -1,
+        4,
+        -7,
+        -2,
+        3,
+        -8,
+        -3,
+        2,
+        7,
+        -4,
+        1,
+        6,
+        -5,
+        0,
+        5,
+        -6,
+        -1,
+        4,
+        -7,
+        -2,
+        3,
+        -8,
+        -3,
+        2,
+        7,
+        -4,
+        1,
+        6,
+        -5,
+        0,
+        5,
+        -6,
+        -1,
+        4,
+        -7,
+        -2,
+        3,
+        -8,
+        -3,
+        2,
+        7,
+        -4,
+        1,
+        6,
+        -5,
+        0,
+        5,
+        -6,
+        -1,
+        4,
+        -7,
+        -2,
+        3,
+        -8,
+        -3,
+        2,
+        7,
+        -4,
+        1,
+        6
+      ],
+      "projection_backpressure_trace": {
+        "link_name": "axi_payload_adapter_to_projection_consumer",
+        "ready_low_payload_indices": [
+          0,
+          3,
+          4
+        ],
+        "ready_low_trace_hex": "0x19",
+        "inside_beat_ready_low_index": 0,
+        "beat_boundary_ready_low_index": 3,
+        "post_boundary_ready_low_index": 4,
+        "payload_valid_held_while_ready_low": true,
+        "crosses_axi_to_projection_boundary": true
+      },
+      "round_trip_passed": true,
+      "packed_int4_round_trip_evidence": {
+        "packed_bytes": 32,
+        "unpacked_values": 64,
+        "round_trip_passed": true
+      },
+      "does_not_expose_128b_axi_read_data_at_parent_top": true,
+      "evidence_source": "dynamic_integration_testbench_overwrites_static_summary_fields",
+      "projection": "v",
+      "instance": "u_v_projection_axi_stream_integration",
+      "observed_axi_command_trace": {
+        "projection": "v",
+        "addr_hex": "0x120000",
+        "axi_arlen": 1,
+        "axi_arsize": 4,
+        "axi_arburst": 1,
+        "axi_arid_hex": "0x2",
+        "request_beat_count": 2,
+        "ar_ready_low_cycles": 2,
+        "instance": "u_v_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_ar_trace"
+      },
+      "observed_r_metadata_validation": {
+        "projection": "v",
+        "accepted_trace_hex": "0x3",
+        "rlast_trace_hex": "0x2",
+        "rid_ok": true,
+        "rresp_ok": true,
+        "rlast_ok": true,
+        "compact_status_hex": "0xc1a57c0b19080800",
+        "instance": "u_v_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_r_metadata"
+      },
+      "observed_payload_trace": {
+        "projection": "v",
+        "emitted_count": 8,
+        "consumed_count": 8,
+        "payload_link_match_passed": true,
+        "ready_low_trace_hex": "0x19",
+        "instance": "u_v_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_payload_trace"
+      },
+      "observed_projection_output_trace": {
+        "projection": "v",
+        "projection_output_vector": [
+          484,
+          1904
+        ],
+        "integration_status_hex": "0xc1a57c0b19080800",
+        "instance": "u_v_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_output"
+      },
+      "observed_packed_int4_round_trip_evidence": {
+        "projection": "v",
+        "packed_bytes": 32,
+        "unpacked_values": 64,
+        "round_trip_passed": true,
+        "instance": "u_v_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_round_trip"
+      },
+      "dynamic_integration_observed": true
+    },
+    "o": {
+      "projection_children": [
+        {
+          "projection": "q",
+          "module": "projection_axi_stream_integration",
+          "instance": "u_projection_axi_stream_integration"
+        },
+        {
+          "projection": "k",
+          "module": "projection_axi_stream_integration",
+          "instance": "u_k_projection_axi_stream_integration"
+        },
+        {
+          "projection": "v",
+          "module": "projection_axi_stream_integration",
+          "instance": "u_v_projection_axi_stream_integration"
+        },
+        {
+          "projection": "o",
+          "module": "projection_axi_stream_integration",
+          "instance": "u_o_projection_axi_stream_integration"
+        }
+      ],
+      "axi_command_trace": {
+        "request_addr_hex": "0x00120000",
+        "request_beat_count": 2,
+        "axi_arlen": 1,
+        "axi_arsize": 4,
+        "axi_arburst": 1,
+        "axi_arid_hex": "0x02",
+        "configured_memory_data_width_bits": 128,
+        "bytes_per_beat": 16
+      },
+      "r_metadata_validation": {
+        "expected_axi_rid_hex": "0x02",
+        "expected_axi_rresp": "0b00",
+        "expected_rlast_on_final_beat_only": true
+      },
+      "parent_compact_status_propagation_plan": {
+        "child_source": "q/k/v/o projection_axi_stream_integration.integration_status_o[45:42] aggregate_and",
+        "parent_status_bit_lsb": 60,
+        "parent_status_bit_msb": 63,
+        "parent_status_mask_hex": "0x00000000f000000000000000",
+        "bit_mapping": {
+          "rid_good": 60,
+          "rresp_good": 61,
+          "rlast_good": 62,
+          "all_metadata_good": 63
+        }
+      },
+      "expected_payload_words_hex": [
+        "0xe94fa50b",
+        "0x61c72d83",
+        "0xe94fa50b",
+        "0x61c72d83",
+        "0xe94fa50b",
+        "0x61c72d83",
+        "0xe94fa50b",
+        "0x61c72d83"
+      ],
+      "gptq_payload_probe_golden_source": {
+        "env_var": "NL2HDL_GPTQ_PAYLOAD_PROBE_JSON",
+        "artifact": "gptq_payload_probe",
+        "status": "absent",
+        "projection": "q_proj",
+        "used": false,
+        "payload_golden_source": "deterministic_fixture",
+        "fallback_reason": "NL2HDL_GPTQ_PAYLOAD_PROBE_JSON not set",
+        "target_checkpoint_payload_dependency": "not_provided",
+        "qweight_payload_words32_le_hex": [],
+        "qweight_payload_word_count": 0,
+        "expected_fixture_payload_word_count": 8,
+        "payload_words_match_gptq_probe": false
+      },
+      "gptq_payload_probe_used": false,
+      "target_checkpoint_payload_dependency": "not_provided",
+      "gptq_probe_qweight_payload_words32_le_hex": [],
+      "payload_words_match_gptq_probe": false,
+      "payload_link_match_passed": true,
+      "projection_output_vector": [
+        484,
+        1904
+      ],
+      "packed_int4_values": [
+        -5,
+        0,
+        5,
+        -6,
+        -1,
+        4,
+        -7,
+        -2,
+        3,
+        -8,
+        -3,
+        2,
+        7,
+        -4,
+        1,
+        6,
+        -5,
+        0,
+        5,
+        -6,
+        -1,
+        4,
+        -7,
+        -2,
+        3,
+        -8,
+        -3,
+        2,
+        7,
+        -4,
+        1,
+        6,
+        -5,
+        0,
+        5,
+        -6,
+        -1,
+        4,
+        -7,
+        -2,
+        3,
+        -8,
+        -3,
+        2,
+        7,
+        -4,
+        1,
+        6,
+        -5,
+        0,
+        5,
+        -6,
+        -1,
+        4,
+        -7,
+        -2,
+        3,
+        -8,
+        -3,
+        2,
+        7,
+        -4,
+        1,
+        6
+      ],
+      "projection_backpressure_trace": {
+        "link_name": "axi_payload_adapter_to_projection_consumer",
+        "ready_low_payload_indices": [
+          0,
+          3,
+          4
+        ],
+        "ready_low_trace_hex": "0x19",
+        "inside_beat_ready_low_index": 0,
+        "beat_boundary_ready_low_index": 3,
+        "post_boundary_ready_low_index": 4,
+        "payload_valid_held_while_ready_low": true,
+        "crosses_axi_to_projection_boundary": true
+      },
+      "round_trip_passed": true,
+      "packed_int4_round_trip_evidence": {
+        "packed_bytes": 32,
+        "unpacked_values": 64,
+        "round_trip_passed": true
+      },
+      "does_not_expose_128b_axi_read_data_at_parent_top": true,
+      "evidence_source": "dynamic_integration_testbench_overwrites_static_summary_fields",
+      "projection": "o",
+      "instance": "u_o_projection_axi_stream_integration",
+      "observed_axi_command_trace": {
+        "projection": "o",
+        "addr_hex": "0x120000",
+        "axi_arlen": 1,
+        "axi_arsize": 4,
+        "axi_arburst": 1,
+        "axi_arid_hex": "0x2",
+        "request_beat_count": 2,
+        "ar_ready_low_cycles": 2,
+        "instance": "u_o_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_ar_trace"
+      },
+      "observed_r_metadata_validation": {
+        "projection": "o",
+        "accepted_trace_hex": "0x3",
+        "rlast_trace_hex": "0x2",
+        "rid_ok": true,
+        "rresp_ok": true,
+        "rlast_ok": true,
+        "compact_status_hex": "0xc1a57c0b19080800",
+        "instance": "u_o_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_r_metadata"
+      },
+      "observed_payload_trace": {
+        "projection": "o",
+        "emitted_count": 8,
+        "consumed_count": 8,
+        "payload_link_match_passed": true,
+        "ready_low_trace_hex": "0x19",
+        "instance": "u_o_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_payload_trace"
+      },
+      "observed_projection_output_trace": {
+        "projection": "o",
+        "projection_output_vector": [
+          484,
+          1904
+        ],
+        "integration_status_hex": "0xc1a57c0b19080800",
+        "instance": "u_o_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_output"
+      },
+      "observed_packed_int4_round_trip_evidence": {
+        "projection": "o",
+        "packed_bytes": 32,
+        "unpacked_values": 64,
+        "round_trip_passed": true,
+        "instance": "u_o_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_round_trip"
+      },
+      "dynamic_integration_observed": true
+    }
+  },
+  "attention_kv_evidence": {
+    "cache_write_trace": {
+      "count": 1,
+      "slot": 1,
+      "key": [
+        -3,
+        2,
+        1,
+        6
+      ],
+      "value": [
+        -2,
+        6,
+        -5,
+        4
+      ],
+      "field_stability_checked": true
+    },
+    "key_read_trace": [
+      {
+        "slot": 0,
+        "key": [
+          2,
+          -1,
+          4,
+          3
+        ]
+      },
+      {
+        "slot": 1,
+        "key": [
+          -3,
+          2,
+          1,
+          6
+        ]
+      }
+    ],
+    "value_read_trace": [
+      {
+        "slot": 0,
+        "value": [
+          7,
+          -4,
+          3,
+          2
+        ]
+      },
+      {
+        "slot": 1,
+        "value": [
+          -2,
+          6,
+          -5,
+          4
+        ]
+      }
+    ],
+    "attention_score_trace": [
+      25,
+      -14
+    ],
+    "softmax_control_trace": {
+      "policy": "two_score_winner_loser_q0_4",
+      "weights_q0_4": [
+        12,
+        4
+      ],
+      "winner_slot": 0,
+      "softmax_exp_in_rtl": false
+    },
+    "attention_output_vector": [
+      4,
+      -2,
+      1,
+      2
+    ],
+    "softmax_exp_in_rtl": false,
+    "kv_cache_external_memory": false
+  },
+  "softmax_exp_in_rtl": false,
+  "kv_cache_external_memory": false,
+  "omitted_operations": [
+    "DDR controller integration",
+    "multi-burst or outstanding AXI master",
+    "full qweight payload streaming",
+    "mathematically complete Q/K/V/O projection-to-attention wiring",
+    "full target projection execution",
+    "full sequence-length KV-cache",
+    "multi-head attention",
+    "grouped-query attention",
+    "true exponential softmax",
+    "DDR/AXI KV-cache movement",
+    "residual add scheduling",
+    "MLP/SwiGLU gate/up/down path",
+    "full token prefill/decode loop",
+    "full decoder block",
+    "full LLaMA model execution",
+    "board-level signoff"
+  ],
+  "caveats": [
+    "decoder_child_axi_attention_datapath is a bounded fixture-level child scheduler",
+    "AXI evidence comes from q/k/v/o projection_axi_stream_integration child hierarchies in this run",
+    "Routed timing, when present, is fixture timing and not board-level signoff"
+  ],
+  "does_not_claim": [
+    "DDR_controller_integration",
+    "multi_burst_or_outstanding_AXI_master",
+    "full_AXI_master",
+    "full_qweight_payload_streaming",
+    "mathematically_complete_QKV_O_attention_wiring",
+    "full_target_projection_execution",
+    "full_sequence_KV_cache",
+    "multi_head_attention",
+    "grouped_query_attention",
+    "true_exponential_softmax",
+    "DDR_AXI_KV_cache_movement",
+    "residual_add_scheduling",
+    "MLP_SwiGLU_path",
+    "full_token_prefill_decode_loop",
+    "full_decoder_block",
+    "full_LLaMA_model_execution",
+    "board_level_ZCU104_signoff",
+    "board_level_signoff"
+  ],
+  "board_level_signoff": false,
+  "expected_child_trace": "0x323122211211",
+  "expected_outputs": [
+    4,
+    -2,
+    1,
+    2
+  ],
+  "golden_reference": "decoder_child_axi_attention_datapath_golden.json",
+  "implementation_stage_policy": "post-route when synthesis is enabled",
+  "verilator_status_policy": "Verilator lint result recorded when verification.enable_verilator is true",
+  "vivado_timing_status_policy": "post-route with non-NA setup/hold/pulse-width when synthesis is enabled",
+  "vivado_resource_status_policy": "utilization.rpt emitted when Vivado synthesis completes",
+  "simulation_child_start_done_trace": {
+    "recorded": true,
+    "trace_hex": "0x323122211211",
+    "ordered_events": [
+      "source_path_start",
+      "source_path_done",
+      "projection_axi_start",
+      "projection_axi_done",
+      "attention_kv_start",
+      "attention_kv_done"
+    ],
+    "evidence_source": "parsed_from_iverilog_child_trace"
+  },
+  "observed_child_start_done_trace": [
+    "source_path_start",
+    "source_path_done",
+    "projection_axi_start",
+    "projection_axi_done",
+    "attention_kv_start",
+    "attention_kv_done"
+  ],
+  "source_path_rmsnorm_observed_trace": {
+    "selector": 0,
+    "valid": true,
+    "inv_rms": 7024,
+    "sumsq": 5568,
+    "evidence_source": "parsed_from_integration_testbench_child_status"
+  },
+  "source_path_rope_observed_trace": [
+    {
+      "position": 7,
+      "pair_index": 0,
+      "valid": true,
+      "cos": 13,
+      "sin": 9,
+      "evidence_source": "parsed_from_integration_testbench_child_status"
+    },
+    {
+      "position": 7,
+      "pair_index": 1,
+      "valid": true,
+      "cos": 7,
+      "sin": -14,
+      "evidence_source": "parsed_from_integration_testbench_child_status"
+    }
+  ],
+  "axi_projection_child_observed_command_trace": {
+    "addr_hex": "0x120000",
+    "axi_arlen": 1,
+    "axi_arsize": 4,
+    "axi_arburst": 1,
+    "axi_arid_hex": "0x2",
+    "request_beat_count": 2,
+    "ar_ready_low_cycles": 2,
+    "evidence_source": "parsed_from_integration_testbench_axi_child_ar_trace"
+  },
+  "axi_projection_child_observed_r_metadata_trace": {
+    "accepted_trace_hex": "0x3",
+    "rlast_trace_hex": "0x2",
+    "rid_ok": true,
+    "rresp_ok": true,
+    "rlast_ok": true,
+    "compact_status_hex": "0xc1a57c0b19080800",
+    "evidence_source": "parsed_from_integration_testbench_axi_child_r_metadata"
+  },
+  "axi_projection_child_dut_metadata_validation": {
+    "accepted_trace_hex": "0x3",
+    "rlast_trace_hex": "0x2",
+    "rid_ok": true,
+    "rresp_ok": true,
+    "rlast_ok": true,
+    "compact_status_hex": "0xc1a57c0b19080800",
+    "evidence_source": "parsed_from_integration_testbench_axi_child_r_metadata"
+  },
+  "parent_compact_status_axi_metadata_propagation": {
+    "propagated": true,
+    "parent_status_bits_hex": "0xf",
+    "parent_status_mask_hex": "0x00000000f000000000000000",
+    "parent_bit_lsb": 60,
+    "parent_bit_msb": 63,
+    "child_status_bits_hex": "0xf",
+    "q_status_bits_hex": "0xf",
+    "k_status_bits_hex": "0xf",
+    "v_status_bits_hex": "0xf",
+    "o_status_bits_hex": "0xf",
+    "child_source": "q_projection_axi_stream_integration.integration_status_o[45:42]:k_projection_axi_stream_integration.integration_status_o[45:42]:v_projection_axi_stream_integration.integration_status_o[45:42]:o_projection_axi_stream_integration.integration_status_o[45:42]:aggregate_and",
+    "compact_status_hex": "0xacfbf881323122211211",
+    "bit_mapping": {
+      "rid_good": 60,
+      "rresp_good": 61,
+      "rlast_good": 62,
+      "all_metadata_good": 63
+    },
+    "evidence_source": "parsed_from_integration_testbench_parent_compact_status"
+  },
+  "axi_projection_emitted_payload_words_hex": [
+    "0xe94fa50b",
+    "0x61c72d83",
+    "0xe94fa50b",
+    "0x61c72d83",
+    "0xe94fa50b",
+    "0x61c72d83",
+    "0xe94fa50b",
+    "0x61c72d83"
+  ],
+  "axi_projection_consumed_payload_words_hex": [
+    "0xe94fa50b",
+    "0x61c72d83",
+    "0xe94fa50b",
+    "0x61c72d83",
+    "0xe94fa50b",
+    "0x61c72d83",
+    "0xe94fa50b",
+    "0x61c72d83"
+  ],
+  "axi_projection_child_payload_trace": {
+    "emitted_payload_words_hex": [
+      "0xe94fa50b",
+      "0x61c72d83",
+      "0xe94fa50b",
+      "0x61c72d83",
+      "0xe94fa50b",
+      "0x61c72d83",
+      "0xe94fa50b",
+      "0x61c72d83"
+    ],
+    "consumed_payload_words_hex": [
+      "0xe94fa50b",
+      "0x61c72d83",
+      "0xe94fa50b",
+      "0x61c72d83",
+      "0xe94fa50b",
+      "0x61c72d83",
+      "0xe94fa50b",
+      "0x61c72d83"
+    ],
+    "payload_link_match_passed": true,
+    "evidence_source": "parsed_from_integration_testbench_axi_child_payload_trace"
+  },
+  "axi_projection_child_payload_match_passed": true,
+  "axi_projection_child_backpressure_trace": {
+    "ready_low_payload_indices": [
+      0,
+      3,
+      4
+    ],
+    "ready_low_trace_hex": "0x19",
+    "payload_valid_held_while_ready_low": true,
+    "rvalid_while_projection_not_ready_cycles": 6,
+    "evidence_source": "parsed_from_integration_testbench_axi_child_backpressure_trace"
+  },
+  "axi_projection_child_observed_output_trace": {
+    "projection_output_vector": [
+      484,
+      1904
+    ],
+    "integration_status_hex": "0xc1a57c0b19080800",
+    "evidence_source": "parsed_from_integration_testbench_axi_child_output"
+  },
+  "axi_projection_child_round_trip_evidence": {
+    "packed_bytes": 32,
+    "unpacked_values": 64,
+    "round_trip_passed": true,
+    "evidence_source": "parsed_from_integration_testbench_axi_child_round_trip"
+  },
+  "axi_projection_children_observed": {
+    "q": {
+      "command_trace": {
+        "projection": "q",
+        "addr_hex": "0x120000",
+        "axi_arlen": 1,
+        "axi_arsize": 4,
+        "axi_arburst": 1,
+        "axi_arid_hex": "0x2",
+        "request_beat_count": 2,
+        "ar_ready_low_cycles": 2,
+        "instance": "u_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_ar_trace"
+      },
+      "r_metadata_trace": {
+        "projection": "q",
+        "accepted_trace_hex": "0x3",
+        "rlast_trace_hex": "0x2",
+        "rid_ok": true,
+        "rresp_ok": true,
+        "rlast_ok": true,
+        "compact_status_hex": "0xc1a57c0b19080800",
+        "instance": "u_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_r_metadata"
+      },
+      "payload_trace": {
+        "projection": "q",
+        "emitted_count": 8,
+        "consumed_count": 8,
+        "payload_link_match_passed": true,
+        "ready_low_trace_hex": "0x19",
+        "instance": "u_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_payload_trace"
+      },
+      "output_trace": {
+        "projection": "q",
+        "projection_output_vector": [
+          484,
+          1904
+        ],
+        "integration_status_hex": "0xc1a57c0b19080800",
+        "instance": "u_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_output"
+      },
+      "round_trip_evidence": {
+        "projection": "q",
+        "packed_bytes": 32,
+        "unpacked_values": 64,
+        "round_trip_passed": true,
+        "instance": "u_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_round_trip"
+      }
+    },
+    "k": {
+      "command_trace": {
+        "projection": "k",
+        "addr_hex": "0x120000",
+        "axi_arlen": 1,
+        "axi_arsize": 4,
+        "axi_arburst": 1,
+        "axi_arid_hex": "0x2",
+        "request_beat_count": 2,
+        "ar_ready_low_cycles": 2,
+        "instance": "u_k_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_ar_trace"
+      },
+      "r_metadata_trace": {
+        "projection": "k",
+        "accepted_trace_hex": "0x3",
+        "rlast_trace_hex": "0x2",
+        "rid_ok": true,
+        "rresp_ok": true,
+        "rlast_ok": true,
+        "compact_status_hex": "0xc1a57c0b19080800",
+        "instance": "u_k_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_r_metadata"
+      },
+      "payload_trace": {
+        "projection": "k",
+        "emitted_count": 8,
+        "consumed_count": 8,
+        "payload_link_match_passed": true,
+        "ready_low_trace_hex": "0x19",
+        "instance": "u_k_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_payload_trace"
+      },
+      "output_trace": {
+        "projection": "k",
+        "projection_output_vector": [
+          484,
+          1904
+        ],
+        "integration_status_hex": "0xc1a57c0b19080800",
+        "instance": "u_k_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_output"
+      },
+      "round_trip_evidence": {
+        "projection": "k",
+        "packed_bytes": 32,
+        "unpacked_values": 64,
+        "round_trip_passed": true,
+        "instance": "u_k_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_round_trip"
+      }
+    },
+    "v": {
+      "command_trace": {
+        "projection": "v",
+        "addr_hex": "0x120000",
+        "axi_arlen": 1,
+        "axi_arsize": 4,
+        "axi_arburst": 1,
+        "axi_arid_hex": "0x2",
+        "request_beat_count": 2,
+        "ar_ready_low_cycles": 2,
+        "instance": "u_v_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_ar_trace"
+      },
+      "r_metadata_trace": {
+        "projection": "v",
+        "accepted_trace_hex": "0x3",
+        "rlast_trace_hex": "0x2",
+        "rid_ok": true,
+        "rresp_ok": true,
+        "rlast_ok": true,
+        "compact_status_hex": "0xc1a57c0b19080800",
+        "instance": "u_v_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_r_metadata"
+      },
+      "payload_trace": {
+        "projection": "v",
+        "emitted_count": 8,
+        "consumed_count": 8,
+        "payload_link_match_passed": true,
+        "ready_low_trace_hex": "0x19",
+        "instance": "u_v_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_payload_trace"
+      },
+      "output_trace": {
+        "projection": "v",
+        "projection_output_vector": [
+          484,
+          1904
+        ],
+        "integration_status_hex": "0xc1a57c0b19080800",
+        "instance": "u_v_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_output"
+      },
+      "round_trip_evidence": {
+        "projection": "v",
+        "packed_bytes": 32,
+        "unpacked_values": 64,
+        "round_trip_passed": true,
+        "instance": "u_v_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_round_trip"
+      }
+    },
+    "o": {
+      "command_trace": {
+        "projection": "o",
+        "addr_hex": "0x120000",
+        "axi_arlen": 1,
+        "axi_arsize": 4,
+        "axi_arburst": 1,
+        "axi_arid_hex": "0x2",
+        "request_beat_count": 2,
+        "ar_ready_low_cycles": 2,
+        "instance": "u_o_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_ar_trace"
+      },
+      "r_metadata_trace": {
+        "projection": "o",
+        "accepted_trace_hex": "0x3",
+        "rlast_trace_hex": "0x2",
+        "rid_ok": true,
+        "rresp_ok": true,
+        "rlast_ok": true,
+        "compact_status_hex": "0xc1a57c0b19080800",
+        "instance": "u_o_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_r_metadata"
+      },
+      "payload_trace": {
+        "projection": "o",
+        "emitted_count": 8,
+        "consumed_count": 8,
+        "payload_link_match_passed": true,
+        "ready_low_trace_hex": "0x19",
+        "instance": "u_o_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_payload_trace"
+      },
+      "output_trace": {
+        "projection": "o",
+        "projection_output_vector": [
+          484,
+          1904
+        ],
+        "integration_status_hex": "0xc1a57c0b19080800",
+        "instance": "u_o_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_output"
+      },
+      "round_trip_evidence": {
+        "projection": "o",
+        "packed_bytes": 32,
+        "unpacked_values": 64,
+        "round_trip_passed": true,
+        "instance": "u_o_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_round_trip"
+      }
+    }
+  },
+  "attention_kv_observed_write_trace": {
+    "count": 1,
+    "slot": 1,
+    "key": [
+      -3,
+      2,
+      1,
+      6
+    ],
+    "value": [
+      -2,
+      6,
+      -5,
+      4
+    ],
+    "field_stability_checked": true,
+    "evidence_source": "parsed_from_integration_testbench_attention_child"
+  },
+  "attention_kv_observed_key_read_trace": [
+    {
+      "slot": 0,
+      "key": [
+        2,
+        -1,
+        4,
+        3
+      ]
+    },
+    {
+      "slot": 1,
+      "key": [
+        -3,
+        2,
+        1,
+        6
+      ]
+    }
+  ],
+  "attention_kv_observed_value_read_trace": [
+    {
+      "slot": 0,
+      "value": [
+        7,
+        -4,
+        3,
+        2
+      ]
+    },
+    {
+      "slot": 1,
+      "value": [
+        -2,
+        6,
+        -5,
+        4
+      ]
+    }
+  ],
+  "attention_kv_observed_score_trace": [
+    25,
+    -14
+  ],
+  "attention_kv_observed_softmax_control_trace": {
+    "policy": "two_score_winner_loser_q0_4",
+    "weights": [
+      12,
+      4
+    ],
+    "softmax_exp_in_rtl": false,
+    "evidence_source": "parsed_from_integration_testbench_attention_child"
+  },
+  "observed_final_fixture_output_vector": [
+    4,
+    -2,
+    1,
+    2
+  ],
+  "observed_compact_status_hex": "0xacfbf881323122211211",
+  "top_done_stability_observed": true,
+  "compact_io_observed_trace": {
+    "estimated_iob_bits": 164,
+    "exposes_128b_axi_data": false,
+    "exposes_full_kv_arrays": false,
+    "exposes_axi_debug_buses": false,
+    "evidence_source": "parsed_from_integration_testbench_compact_io_trace"
+  }
+}

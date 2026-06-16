@@ -1,0 +1,31 @@
+{
+  "artifact": "model_level_execution_harness_agent_task",
+  "task_id": "model_level_execution_harness",
+  "spawn_kind": "target_evidence_implementation_agent",
+  "agent": "Codex",
+  "mode": "read_write_non_hdl_harness",
+  "ready_to_spawn": false,
+  "spawn_precondition_failures": [
+    "target_preflight.status must be passed"
+  ],
+  "harness_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/full_llama_execution_gate/model_level_execution_harness_report.json",
+  "harness_failures": [
+    "model_level_execution_harness_report.json not found"
+  ],
+  "prompt_file": "target_evidence_prompts/model_level_execution_harness_agent.md",
+  "expected_evidence_file": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/full_llama_execution_gate/model_level_execution_harness_report.json",
+  "expected_subagent_result": "build/full_llama_execution_gate/model_level_harness_subagent_result.json",
+  "source_readiness_status": "blocked_by_target_preflight",
+  "required_commands": [
+    "python3 -m pytest -q tests/test_llm_kernels.py",
+    "python3 -m nl2hdl subagents status --dispatch-plan examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/00_parent_inspect/hdl_subagent_dispatch_plan.json --evidence-root examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence --out build/full_llama_execution_gate/model_harness_status_after"
+  ],
+  "parent_must_not_write_hdl": true,
+  "failure_to_skill_required": true,
+  "does_not_claim": [
+    "full_LLaMA_execution",
+    "board_level_ZCU104_signoff",
+    "real_time_LLaMA_inference_performance",
+    "hardware_lab_runtime_validation"
+  ]
+}

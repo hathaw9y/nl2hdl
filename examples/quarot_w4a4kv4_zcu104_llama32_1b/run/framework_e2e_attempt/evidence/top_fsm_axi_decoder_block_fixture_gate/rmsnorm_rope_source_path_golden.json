@@ -1,0 +1,115 @@
+{
+  "kernel": "rmsnorm_rope_source_path",
+  "coverage_level": "rmsnorm_rope_source_path_fixture",
+  "selected_non_gemm": "input_layernorm",
+  "selected_non_gemm_op_type": "RMSNorm",
+  "selected_non_gemm_shape": {
+    "hidden_size": 2048
+  },
+  "target_source_path": "rmsnorm_source_path",
+  "target_fixture_distinction": {
+    "selected_non_gemm": "input_layernorm",
+    "selected_non_gemm_op_type": "RMSNorm",
+    "selected_non_gemm_shape": {
+      "hidden_size": 2048
+    },
+    "target_source_path": "rmsnorm_source_path",
+    "fixture_kind": "bounded_4_element_rmsnorm_rope_source_path_fixture",
+    "fixture_rmsnorm_element_count": 4,
+    "fixture_rope_element_count": 4,
+    "fixture_rope_pair_count": 2,
+    "full_target_non_gemm_execution": false,
+    "distinction": "selected non-GEMM op is input_layernorm; report includes target semantic metadata plus bounded 4-element RMSNorm/RoPE source-path fixture evidence"
+  },
+  "full_target_non_gemm_execution": false,
+  "target_model": "meta-llama/Llama-3.2-1B",
+  "target_design_style": "llm_decoder_streaming",
+  "target_quantization": "int4_gptq",
+  "norm_token": 0,
+  "rope_position": 7,
+  "rmsnorm_values_q4_4": [
+    24,
+    -40,
+    56,
+    -16
+  ],
+  "rmsnorm_gamma_q4_4": [
+    16,
+    20,
+    12,
+    24
+  ],
+  "rmsnorm_inv_rms_q2_14": 7024,
+  "rmsnorm_sumsq_expected_raw_q8_8": 5568,
+  "rmsnorm_expected_outputs_raw_q8_10": [
+    658,
+    -1372,
+    1152,
+    -659
+  ],
+  "rope_values_q4_4": [
+    24,
+    -32,
+    40,
+    -16
+  ],
+  "rope_cos_q4_4": [
+    13,
+    7
+  ],
+  "rope_sin_q4_4": [
+    9,
+    -14
+  ],
+  "rope_expected_outputs_raw_q13_4": [
+    37,
+    -13,
+    3,
+    -42
+  ],
+  "rmsnorm_lookup_trace": {
+    "selector": 0,
+    "valid": true,
+    "inv_rms_lookup_value": 7024,
+    "sumsq_expected": 5568
+  },
+  "rope_lookup_trace": [
+    {
+      "position": 7,
+      "pair_index": 0,
+      "valid": true,
+      "cos": 13,
+      "sin": 9
+    },
+    {
+      "position": 7,
+      "pair_index": 1,
+      "valid": true,
+      "cos": 7,
+      "sin": -14
+    }
+  ],
+  "numeric_policy": {
+    "fixture_kind": "rmsnorm_rope_source_path_fixture",
+    "schedule": "rmsnorm_lookup_apply_then_rope_lookup_apply",
+    "rmsnorm": {
+      "formula": "y_i = (x_i * gamma_i * inv_rms_lookup_value) >>> output_shift",
+      "input_format": "signed_q4_4",
+      "gamma_format": "signed_q4_4",
+      "inv_rms_format": "unsigned_q2_14",
+      "output_format": "signed_q8_10",
+      "output_shift": 12,
+      "rounding_mode": "arithmetic_shift_truncates_toward_negative_infinity",
+      "saturation_policy": "none_fixture_vectors_chosen_to_avoid_overflow"
+    },
+    "rope": {
+      "formula": "out_even = (even * cos - odd * sin) >>> fractional_bits; out_odd = (even * sin + odd * cos) >>> fractional_bits",
+      "input_format": "signed_q4_4",
+      "cos_sin_format": "signed_q4_4",
+      "output_format": "signed_q13_4",
+      "fractional_bits": 4,
+      "rounding_mode": "arithmetic_shift_truncates_toward_negative_infinity",
+      "saturation_policy": "none_fixture_vectors_chosen_to_avoid_overflow"
+    }
+  }
+}

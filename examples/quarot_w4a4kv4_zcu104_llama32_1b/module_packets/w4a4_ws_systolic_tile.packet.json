@@ -1,0 +1,137 @@
+{
+  "artifact": "module_packet",
+  "task_id": "w4a4_ws_systolic_tile",
+  "agent_role": "hdl_module_implementation_agent",
+  "semantic_op": "generic_projection_tile",
+  "module_family": "projection_gemm_gemv",
+  "target_coverage_level": "projection_systolic_w4a4_weight_stationary_tile_fixture",
+  "source_scope": {
+    "owned_files": [
+      "../rtl/projection_systolic/w4a4_ws_systolic_tile.sv",
+      "../rtl/projection_systolic/tb_w4a4_ws_systolic_tile.sv",
+      "../rtl/projection_systolic/golden_vectors.json",
+      "../rtl/projection_systolic/kernel_report.json",
+      "../rtl/projection_systolic/subagent_result.json",
+      "../rtl/projection_systolic/README.md"
+    ],
+    "must_not_edit": [
+      "../../../nl2hdl/llm_kernels.py",
+      "../../../nl2hdl/subagent_tasks.py",
+      "../../../nl2hdl/cli.py",
+      "../../../tests",
+      "../run/inspect"
+    ]
+  },
+  "target_context": {
+    "board": "AMD ZCU104",
+    "fpga_part": "xczu7ev-ffvc1156-2-e",
+    "target_clock_mhz": 200,
+    "model": "meta-llama/Llama-3.2-1B",
+    "optimization": "QuaRot W4A4KV4",
+    "weight_quantization": "GPTQ INT4",
+    "activation_quantization": "rotated signed A4",
+    "compute_style": "systolic_array",
+    "dataflow": "weight_stationary"
+  },
+  "interface_contract": {
+    "clock": "aclk",
+    "reset": {
+      "name": "aresetn",
+      "polarity": "active_low",
+      "style": "synchronous"
+    },
+    "common_handshake": {
+      "start": "start_i",
+      "done": "done_o",
+      "rules": [
+        "start_i is sampled only while the module is idle",
+        "done_o remains high until start_i is deasserted",
+        "activation_tile_i and weight_tile_i are sampled on start_i while idle",
+        "acc_tile_o and status_o remain stable whenever done_o is high"
+      ]
+    },
+    "packed_vector_order": "little_element_order_idx_times_width_plus_width",
+    "ports": {
+      "activation_tile_i": "signed A4 packed row-major [row*K+k]",
+      "weight_tile_i": "signed W4 packed row-major [k*COLS+col]",
+      "acc_tile_o": "signed INT32 packed row-major [row*COLS+col]",
+      "status_o": "compact 32-bit status/debug word"
+    }
+  },
+  "memory_contract": {
+    "weight_storage_behavior": "weight_tile_i is latched into weight_hold_r at start and held through RUN/DONE",
+    "activation_storage_behavior": "activation_tile_i is latched into activation_hold_r at start",
+    "external_memory_boundary": "not_implemented_in_this_packet",
+    "future_ddr_streaming_requirement": "integration must add DDR/AXI read and tile-buffer packets before claiming weight streaming",
+    "buffer_policy": "single bounded tile registers in fixture; target path requires double-buffered BRAM/URAM tile buffers"
+  },
+  "numeric_contract": {
+    "weight_bits": 4,
+    "activation_bits": 4,
+    "accumulator_bits": 32,
+    "weight_signedness": "signed_twos_complement",
+    "activation_signedness": "signed_twos_complement",
+    "operation": "C[row][col] = sum_k A[row][k] * W[k][col]",
+    "requantization": "not_implemented_in_this_packet"
+  },
+  "resource_budget": {
+    "active_dsp_budget_for_full_projection_path": 1536,
+    "reserved_dsp_for_non_gemm_and_control": 192,
+    "fixture_expected_dsp": "small_or_tool_inferred",
+    "resource_objective": "bounded correctness first; full systolic shape chosen after module OOC synthesis",
+    "low_utilization_policy": "acceptable only because this packet is fixture-level"
+  },
+  "allowed_tuning_knobs": {
+    "ROWS": [2, 4, 8, 16, 24, 32],
+    "COLS": [3, 4, 8, 16, 48, 64],
+    "K": "positive tile reduction dimension",
+    "ACC_BITS": [32],
+    "pipeline_stages": "may be added by retry agent",
+    "target_candidate_shapes": [
+      [16, 64],
+      [24, 48],
+      [32, 32]
+    ]
+  },
+  "verification_contract": {
+    "golden_source": "../rtl/projection_systolic/golden_vectors.json",
+    "testbench": "../rtl/projection_systolic/tb_w4a4_ws_systolic_tile.sv",
+    "required_checks": [
+      "signed int4 packed decode",
+      "INT32 accumulation",
+      "weight-stationary hold behavior",
+      "done_o hold/release",
+      "output stability while done_o is high"
+    ],
+    "required_evidence_files": [
+      "../rtl/projection_systolic/kernel_report.json",
+      "../rtl/projection_systolic/subagent_result.json"
+    ],
+    "observed_parent_verification": {
+      "iverilog_vvp": "passed",
+      "dut_verilator_lint": "passed",
+      "vivado_xvlog_frontend": "passed",
+      "json_validation": "passed",
+      "vivado_ooc_timing_resource": "not_run"
+    }
+  },
+  "blocked_target_dependencies": [
+    "real_mlir_model_analysis",
+    "full_projection_tile_systolic_shape_selection",
+    "module_ooc_synthesis_for_selected_shape",
+    "DDR_AXI_weight_streaming_integration",
+    "full_llama_model_execution",
+    "board_level_zcu104_signoff"
+  ],
+  "forbidden_claims": [
+    "full_LLaMA_projection_coverage",
+    "real_GPTQ_checkpoint_numeric_correctness",
+    "QuaRot_end_to_end_numeric_signoff",
+    "DDR_or_AXI_streaming_integration",
+    "ZCU104_board_level_signoff",
+    "final_systolic_array_shape_selection"
+  ],
+  "pre_integration_status": "requires_parent_boundary_review",
+  "integration_note": "Integration may consume this as a bounded child only after confirming fixture scope and stable handshake."
+}
+

@@ -1,0 +1,803 @@
+{
+  "kernel": "ddr_axi_board_shell_fixture",
+  "coverage_level": "ddr_axi_board_shell_fixture",
+  "ddr_axi_board_shell_fixture": true,
+  "uses_model_fsm_axi_decoder_block_fixture": true,
+  "child_modules": [
+    {
+      "name": "model_fsm_axi_decoder_block_fixture",
+      "coverage_level": "model_fsm_axi_decoder_block_fixture",
+      "instantiated": true,
+      "input_source": "ddr_axi_board_shell_fixture_model_start",
+      "output_consumed_by": "ddr_axi_board_shell_fixture.final_output_o",
+      "nested_child_modules": [
+        {
+          "name": "token_loop_axi_decoder_block_fixture",
+          "coverage_level": "token_loop_axi_decoder_block_fixture",
+          "instantiated": true
+        },
+        {
+          "name": "top_fsm_axi_decoder_block_fixture",
+          "coverage_level": "top_fsm_axi_decoder_block_fixture",
+          "instantiated": true
+        },
+        {
+          "name": "layer_fsm_axi_decoder_block_fixture",
+          "coverage_level": "layer_fsm_axi_decoder_block_fixture",
+          "instantiated": true
+        },
+        {
+          "name": "decoder_block_axi_attention_mlp_fixture",
+          "coverage_level": "decoder_block_axi_attention_mlp_fixture",
+          "instantiated": true
+        },
+        {
+          "name": "decoder_child_axi_attention_datapath",
+          "coverage_level": "decoder_child_axi_attention_datapath_fixture",
+          "instantiated": true
+        },
+        {
+          "name": "residual_mlp_fixture",
+          "coverage_level": "residual_mlp_fixture",
+          "instantiated": true
+        },
+        {
+          "name": "rmsnorm_rope_source_path",
+          "coverage_level": "rmsnorm_rope_source_path_fixture",
+          "instantiated": true
+        },
+        {
+          "name": "q_projection_axi_stream_integration",
+          "coverage_level": "projection_axi_stream_integration_fixture",
+          "instantiated": true,
+          "projection": "q",
+          "instance": "u_projection_axi_stream_integration"
+        },
+        {
+          "name": "k_projection_axi_stream_integration",
+          "coverage_level": "projection_axi_stream_integration_fixture",
+          "instantiated": true,
+          "projection": "k",
+          "instance": "u_k_projection_axi_stream_integration"
+        },
+        {
+          "name": "v_projection_axi_stream_integration",
+          "coverage_level": "projection_axi_stream_integration_fixture",
+          "instantiated": true,
+          "projection": "v",
+          "instance": "u_v_projection_axi_stream_integration"
+        },
+        {
+          "name": "o_projection_axi_stream_integration",
+          "coverage_level": "projection_axi_stream_integration_fixture",
+          "instantiated": true,
+          "projection": "o",
+          "instance": "u_o_projection_axi_stream_integration"
+        },
+        {
+          "name": "attention_kv_cache_fixture",
+          "coverage_level": "attention_kv_cache_fixture",
+          "instantiated": true
+        }
+      ]
+    }
+  ],
+  "nested_child_coverage_summary": [
+    {
+      "name": "model_fsm_axi_decoder_block_fixture",
+      "coverage_level": "model_fsm_axi_decoder_block_fixture",
+      "instantiated": true
+    },
+    {
+      "name": "token_loop_axi_decoder_block_fixture",
+      "coverage_level": "token_loop_axi_decoder_block_fixture",
+      "instantiated": true
+    },
+    {
+      "name": "top_fsm_axi_decoder_block_fixture",
+      "coverage_level": "top_fsm_axi_decoder_block_fixture",
+      "instantiated": true
+    },
+    {
+      "name": "layer_fsm_axi_decoder_block_fixture",
+      "coverage_level": "layer_fsm_axi_decoder_block_fixture",
+      "instantiated": true
+    },
+    {
+      "name": "decoder_block_axi_attention_mlp_fixture",
+      "coverage_level": "decoder_block_axi_attention_mlp_fixture",
+      "instantiated": true
+    },
+    {
+      "name": "decoder_child_axi_attention_datapath",
+      "coverage_level": "decoder_child_axi_attention_datapath_fixture",
+      "instantiated": true
+    },
+    {
+      "name": "residual_mlp_fixture",
+      "coverage_level": "residual_mlp_fixture",
+      "instantiated": true
+    },
+    {
+      "name": "rmsnorm_rope_source_path",
+      "coverage_level": "rmsnorm_rope_source_path_fixture",
+      "instantiated": true
+    },
+    {
+      "name": "q_projection_axi_stream_integration",
+      "coverage_level": "projection_axi_stream_integration_fixture",
+      "instantiated": true,
+      "projection": "q",
+      "instance": "u_projection_axi_stream_integration"
+    },
+    {
+      "name": "k_projection_axi_stream_integration",
+      "coverage_level": "projection_axi_stream_integration_fixture",
+      "instantiated": true,
+      "projection": "k",
+      "instance": "u_k_projection_axi_stream_integration"
+    },
+    {
+      "name": "v_projection_axi_stream_integration",
+      "coverage_level": "projection_axi_stream_integration_fixture",
+      "instantiated": true,
+      "projection": "v",
+      "instance": "u_v_projection_axi_stream_integration"
+    },
+    {
+      "name": "o_projection_axi_stream_integration",
+      "coverage_level": "projection_axi_stream_integration_fixture",
+      "instantiated": true,
+      "projection": "o",
+      "instance": "u_o_projection_axi_stream_integration"
+    },
+    {
+      "name": "attention_kv_cache_fixture",
+      "coverage_level": "attention_kv_cache_fixture",
+      "instantiated": true
+    }
+  ],
+  "fsm_state_order": [
+    "IDLE",
+    "MODEL_START",
+    "MODEL_BUSY",
+    "MODEL_RELEASE",
+    "DONE"
+  ],
+  "expected_shell_trace_hex": "0x8281",
+  "expected_model_trace_hex": "0x74737271",
+  "board_shell_start_done_trace": [
+    "model_fsm_axi_decoder_block_fixture_start",
+    "model_fsm_axi_decoder_block_fixture_done"
+  ],
+  "projection_weight_stream_plan": {
+    "artifact": "projection_weight_stream_plan",
+    "coverage_level": "all_projection_checkpoint_qweight_stream_planning",
+    "model": {
+      "name": "meta-llama/Llama-3.2-1B",
+      "decoder_layers": 16,
+      "hidden_size": 2048,
+      "intermediate_size": 8192
+    },
+    "hardware": {
+      "fpga_part": "xczu7ev-ffvc1156-2-e",
+      "memory_data_width_bits": 128
+    },
+    "projection_count": 7,
+    "attention_projection_order": [
+      "q_proj",
+      "k_proj",
+      "v_proj",
+      "o_proj"
+    ],
+    "mlp_projection_order": [
+      "gate_proj",
+      "up_proj",
+      "down_proj"
+    ],
+    "target_stream_plan_valid_count": 0,
+    "payload_satisfied_projection_count": 0,
+    "layout_blocked_projection_count": 7,
+    "payload_blocked_projection_count": 7,
+    "layout_blocked_projections": [
+      "q_proj",
+      "k_proj",
+      "v_proj",
+      "o_proj",
+      "gate_proj",
+      "up_proj",
+      "down_proj"
+    ],
+    "payload_blocked_projections": [
+      "q_proj",
+      "k_proj",
+      "v_proj",
+      "o_proj",
+      "gate_proj",
+      "up_proj",
+      "down_proj"
+    ],
+    "all_projection_layout_dependency": "blocked_by_real_gptq_weight_layout_preflight",
+    "all_projection_payload_dependency": "blocked_by_gptq_payload_probe",
+    "target_scale_ready_for_all_projection_streaming": false,
+    "projections": [
+      {
+        "name": "q_proj",
+        "decoder_use": "attention",
+        "rows": 2048,
+        "cols": 2048,
+        "packed_int4_bytes": 2097152,
+        "memory_beats": 131072,
+        "target_weight_stream_plan": {
+          "source": "unavailable",
+          "qweight_file": null,
+          "qweight_key": null,
+          "qweight_byte_offset": null,
+          "qweight_byte_end_exclusive": null,
+          "qweight_byte_count": null,
+          "memory_data_width_bits": 128,
+          "bytes_per_memory_beat": 16,
+          "raw_qweight_memory_beats": 131072,
+          "observed_memory_beats": null,
+          "request_byte_addr": null,
+          "request_beat_start_index": null,
+          "request_beat_count": null,
+          "first_beat_byte_offset": null,
+          "last_beat_valid_bytes": null,
+          "request_covers_unaligned_qweight_range": false,
+          "stream_plan_valid": false,
+          "does_not_claim": [
+            "checkpoint_tensor_payload_loading",
+            "AXI_or_DDR_burst_execution",
+            "checkpoint_specific_qweight_order_correctness"
+          ]
+        },
+        "target_checkpoint_layout_dependency": "blocked_by_real_gptq_weight_layout_preflight",
+        "target_checkpoint_payload_dependency": "blocked_by_gptq_payload_probe",
+        "qweight_payload_word_count": 0,
+        "qweight_payload_words32_le_hex": [],
+        "qweight_first_memory_beats_128b_le_hex": [],
+        "qweight_memory_beat_word_chunks32_le_hex": [],
+        "qweight_payload_covers_first_memory_beat": false
+      },
+      {
+        "name": "k_proj",
+        "decoder_use": "attention",
+        "rows": 512,
+        "cols": 2048,
+        "packed_int4_bytes": 524288,
+        "memory_beats": 32768,
+        "target_weight_stream_plan": {
+          "source": "unavailable",
+          "qweight_file": null,
+          "qweight_key": null,
+          "qweight_byte_offset": null,
+          "qweight_byte_end_exclusive": null,
+          "qweight_byte_count": null,
+          "memory_data_width_bits": 128,
+          "bytes_per_memory_beat": 16,
+          "raw_qweight_memory_beats": 32768,
+          "observed_memory_beats": null,
+          "request_byte_addr": null,
+          "request_beat_start_index": null,
+          "request_beat_count": null,
+          "first_beat_byte_offset": null,
+          "last_beat_valid_bytes": null,
+          "request_covers_unaligned_qweight_range": false,
+          "stream_plan_valid": false,
+          "does_not_claim": [
+            "checkpoint_tensor_payload_loading",
+            "AXI_or_DDR_burst_execution",
+            "checkpoint_specific_qweight_order_correctness"
+          ]
+        },
+        "target_checkpoint_layout_dependency": "blocked_by_real_gptq_weight_layout_preflight",
+        "target_checkpoint_payload_dependency": "blocked_by_gptq_payload_probe",
+        "qweight_payload_word_count": 0,
+        "qweight_payload_words32_le_hex": [],
+        "qweight_first_memory_beats_128b_le_hex": [],
+        "qweight_memory_beat_word_chunks32_le_hex": [],
+        "qweight_payload_covers_first_memory_beat": false
+      },
+      {
+        "name": "v_proj",
+        "decoder_use": "attention",
+        "rows": 512,
+        "cols": 2048,
+        "packed_int4_bytes": 524288,
+        "memory_beats": 32768,
+        "target_weight_stream_plan": {
+          "source": "unavailable",
+          "qweight_file": null,
+          "qweight_key": null,
+          "qweight_byte_offset": null,
+          "qweight_byte_end_exclusive": null,
+          "qweight_byte_count": null,
+          "memory_data_width_bits": 128,
+          "bytes_per_memory_beat": 16,
+          "raw_qweight_memory_beats": 32768,
+          "observed_memory_beats": null,
+          "request_byte_addr": null,
+          "request_beat_start_index": null,
+          "request_beat_count": null,
+          "first_beat_byte_offset": null,
+          "last_beat_valid_bytes": null,
+          "request_covers_unaligned_qweight_range": false,
+          "stream_plan_valid": false,
+          "does_not_claim": [
+            "checkpoint_tensor_payload_loading",
+            "AXI_or_DDR_burst_execution",
+            "checkpoint_specific_qweight_order_correctness"
+          ]
+        },
+        "target_checkpoint_layout_dependency": "blocked_by_real_gptq_weight_layout_preflight",
+        "target_checkpoint_payload_dependency": "blocked_by_gptq_payload_probe",
+        "qweight_payload_word_count": 0,
+        "qweight_payload_words32_le_hex": [],
+        "qweight_first_memory_beats_128b_le_hex": [],
+        "qweight_memory_beat_word_chunks32_le_hex": [],
+        "qweight_payload_covers_first_memory_beat": false
+      },
+      {
+        "name": "o_proj",
+        "decoder_use": "attention",
+        "rows": 2048,
+        "cols": 2048,
+        "packed_int4_bytes": 2097152,
+        "memory_beats": 131072,
+        "target_weight_stream_plan": {
+          "source": "unavailable",
+          "qweight_file": null,
+          "qweight_key": null,
+          "qweight_byte_offset": null,
+          "qweight_byte_end_exclusive": null,
+          "qweight_byte_count": null,
+          "memory_data_width_bits": 128,
+          "bytes_per_memory_beat": 16,
+          "raw_qweight_memory_beats": 131072,
+          "observed_memory_beats": null,
+          "request_byte_addr": null,
+          "request_beat_start_index": null,
+          "request_beat_count": null,
+          "first_beat_byte_offset": null,
+          "last_beat_valid_bytes": null,
+          "request_covers_unaligned_qweight_range": false,
+          "stream_plan_valid": false,
+          "does_not_claim": [
+            "checkpoint_tensor_payload_loading",
+            "AXI_or_DDR_burst_execution",
+            "checkpoint_specific_qweight_order_correctness"
+          ]
+        },
+        "target_checkpoint_layout_dependency": "blocked_by_real_gptq_weight_layout_preflight",
+        "target_checkpoint_payload_dependency": "blocked_by_gptq_payload_probe",
+        "qweight_payload_word_count": 0,
+        "qweight_payload_words32_le_hex": [],
+        "qweight_first_memory_beats_128b_le_hex": [],
+        "qweight_memory_beat_word_chunks32_le_hex": [],
+        "qweight_payload_covers_first_memory_beat": false
+      },
+      {
+        "name": "gate_proj",
+        "decoder_use": "mlp",
+        "rows": 8192,
+        "cols": 2048,
+        "packed_int4_bytes": 8388608,
+        "memory_beats": 524288,
+        "target_weight_stream_plan": {
+          "source": "unavailable",
+          "qweight_file": null,
+          "qweight_key": null,
+          "qweight_byte_offset": null,
+          "qweight_byte_end_exclusive": null,
+          "qweight_byte_count": null,
+          "memory_data_width_bits": 128,
+          "bytes_per_memory_beat": 16,
+          "raw_qweight_memory_beats": 524288,
+          "observed_memory_beats": null,
+          "request_byte_addr": null,
+          "request_beat_start_index": null,
+          "request_beat_count": null,
+          "first_beat_byte_offset": null,
+          "last_beat_valid_bytes": null,
+          "request_covers_unaligned_qweight_range": false,
+          "stream_plan_valid": false,
+          "does_not_claim": [
+            "checkpoint_tensor_payload_loading",
+            "AXI_or_DDR_burst_execution",
+            "checkpoint_specific_qweight_order_correctness"
+          ]
+        },
+        "target_checkpoint_layout_dependency": "blocked_by_real_gptq_weight_layout_preflight",
+        "target_checkpoint_payload_dependency": "blocked_by_gptq_payload_probe",
+        "qweight_payload_word_count": 0,
+        "qweight_payload_words32_le_hex": [],
+        "qweight_first_memory_beats_128b_le_hex": [],
+        "qweight_memory_beat_word_chunks32_le_hex": [],
+        "qweight_payload_covers_first_memory_beat": false
+      },
+      {
+        "name": "up_proj",
+        "decoder_use": "mlp",
+        "rows": 8192,
+        "cols": 2048,
+        "packed_int4_bytes": 8388608,
+        "memory_beats": 524288,
+        "target_weight_stream_plan": {
+          "source": "unavailable",
+          "qweight_file": null,
+          "qweight_key": null,
+          "qweight_byte_offset": null,
+          "qweight_byte_end_exclusive": null,
+          "qweight_byte_count": null,
+          "memory_data_width_bits": 128,
+          "bytes_per_memory_beat": 16,
+          "raw_qweight_memory_beats": 524288,
+          "observed_memory_beats": null,
+          "request_byte_addr": null,
+          "request_beat_start_index": null,
+          "request_beat_count": null,
+          "first_beat_byte_offset": null,
+          "last_beat_valid_bytes": null,
+          "request_covers_unaligned_qweight_range": false,
+          "stream_plan_valid": false,
+          "does_not_claim": [
+            "checkpoint_tensor_payload_loading",
+            "AXI_or_DDR_burst_execution",
+            "checkpoint_specific_qweight_order_correctness"
+          ]
+        },
+        "target_checkpoint_layout_dependency": "blocked_by_real_gptq_weight_layout_preflight",
+        "target_checkpoint_payload_dependency": "blocked_by_gptq_payload_probe",
+        "qweight_payload_word_count": 0,
+        "qweight_payload_words32_le_hex": [],
+        "qweight_first_memory_beats_128b_le_hex": [],
+        "qweight_memory_beat_word_chunks32_le_hex": [],
+        "qweight_payload_covers_first_memory_beat": false
+      },
+      {
+        "name": "down_proj",
+        "decoder_use": "mlp",
+        "rows": 2048,
+        "cols": 8192,
+        "packed_int4_bytes": 8388608,
+        "memory_beats": 524288,
+        "target_weight_stream_plan": {
+          "source": "unavailable",
+          "qweight_file": null,
+          "qweight_key": null,
+          "qweight_byte_offset": null,
+          "qweight_byte_end_exclusive": null,
+          "qweight_byte_count": null,
+          "memory_data_width_bits": 128,
+          "bytes_per_memory_beat": 16,
+          "raw_qweight_memory_beats": 524288,
+          "observed_memory_beats": null,
+          "request_byte_addr": null,
+          "request_beat_start_index": null,
+          "request_beat_count": null,
+          "first_beat_byte_offset": null,
+          "last_beat_valid_bytes": null,
+          "request_covers_unaligned_qweight_range": false,
+          "stream_plan_valid": false,
+          "does_not_claim": [
+            "checkpoint_tensor_payload_loading",
+            "AXI_or_DDR_burst_execution",
+            "checkpoint_specific_qweight_order_correctness"
+          ]
+        },
+        "target_checkpoint_layout_dependency": "blocked_by_real_gptq_weight_layout_preflight",
+        "target_checkpoint_payload_dependency": "blocked_by_gptq_payload_probe",
+        "qweight_payload_word_count": 0,
+        "qweight_payload_words32_le_hex": [],
+        "qweight_first_memory_beats_128b_le_hex": [],
+        "qweight_memory_beat_word_chunks32_le_hex": [],
+        "qweight_payload_covers_first_memory_beat": false
+      }
+    ],
+    "next_memory_agent_scaling_input": "use this artifact to scale q_proj-only AXI fixtures to q/k/v/o and MLP projection streams",
+    "does_not_claim": [
+      "DDR_controller_integration",
+      "AXI_master_implementation",
+      "full_qweight_payload_streaming",
+      "numeric_GPTQ_correctness",
+      "full_target_projection_execution",
+      "full_LLaMA_model_execution",
+      "board_level_ZCU104_signoff"
+    ]
+  },
+  "compact_projection_stream_summary": [
+    {
+      "name": "q_proj",
+      "decoder_use": "attention",
+      "rows": 2048,
+      "cols": 2048,
+      "packed_int4_bytes": 2097152,
+      "memory_beats": 131072,
+      "target_checkpoint_layout_dependency": "blocked_by_real_gptq_weight_layout_preflight",
+      "target_checkpoint_payload_dependency": "blocked_by_gptq_payload_probe",
+      "qweight_payload_word_count": 0,
+      "qweight_payload_covers_first_memory_beat": false
+    },
+    {
+      "name": "k_proj",
+      "decoder_use": "attention",
+      "rows": 512,
+      "cols": 2048,
+      "packed_int4_bytes": 524288,
+      "memory_beats": 32768,
+      "target_checkpoint_layout_dependency": "blocked_by_real_gptq_weight_layout_preflight",
+      "target_checkpoint_payload_dependency": "blocked_by_gptq_payload_probe",
+      "qweight_payload_word_count": 0,
+      "qweight_payload_covers_first_memory_beat": false
+    },
+    {
+      "name": "v_proj",
+      "decoder_use": "attention",
+      "rows": 512,
+      "cols": 2048,
+      "packed_int4_bytes": 524288,
+      "memory_beats": 32768,
+      "target_checkpoint_layout_dependency": "blocked_by_real_gptq_weight_layout_preflight",
+      "target_checkpoint_payload_dependency": "blocked_by_gptq_payload_probe",
+      "qweight_payload_word_count": 0,
+      "qweight_payload_covers_first_memory_beat": false
+    },
+    {
+      "name": "o_proj",
+      "decoder_use": "attention",
+      "rows": 2048,
+      "cols": 2048,
+      "packed_int4_bytes": 2097152,
+      "memory_beats": 131072,
+      "target_checkpoint_layout_dependency": "blocked_by_real_gptq_weight_layout_preflight",
+      "target_checkpoint_payload_dependency": "blocked_by_gptq_payload_probe",
+      "qweight_payload_word_count": 0,
+      "qweight_payload_covers_first_memory_beat": false
+    },
+    {
+      "name": "gate_proj",
+      "decoder_use": "mlp",
+      "rows": 8192,
+      "cols": 2048,
+      "packed_int4_bytes": 8388608,
+      "memory_beats": 524288,
+      "target_checkpoint_layout_dependency": "blocked_by_real_gptq_weight_layout_preflight",
+      "target_checkpoint_payload_dependency": "blocked_by_gptq_payload_probe",
+      "qweight_payload_word_count": 0,
+      "qweight_payload_covers_first_memory_beat": false
+    },
+    {
+      "name": "up_proj",
+      "decoder_use": "mlp",
+      "rows": 8192,
+      "cols": 2048,
+      "packed_int4_bytes": 8388608,
+      "memory_beats": 524288,
+      "target_checkpoint_layout_dependency": "blocked_by_real_gptq_weight_layout_preflight",
+      "target_checkpoint_payload_dependency": "blocked_by_gptq_payload_probe",
+      "qweight_payload_word_count": 0,
+      "qweight_payload_covers_first_memory_beat": false
+    },
+    {
+      "name": "down_proj",
+      "decoder_use": "mlp",
+      "rows": 2048,
+      "cols": 8192,
+      "packed_int4_bytes": 8388608,
+      "memory_beats": 524288,
+      "target_checkpoint_layout_dependency": "blocked_by_real_gptq_weight_layout_preflight",
+      "target_checkpoint_payload_dependency": "blocked_by_gptq_payload_probe",
+      "qweight_payload_word_count": 0,
+      "qweight_payload_covers_first_memory_beat": false
+    }
+  ],
+  "compact_axi_request_status_plan": {
+    "status_o_bits": 64,
+    "shell_trace_start_lsb": 0,
+    "shell_trace_done_lsb": 8,
+    "model_trace_lsb16_lsb": 16,
+    "attention_request_mask_lsb": 32,
+    "attention_request_mask_hex": "0xf",
+    "mlp_request_mask_lsb": 36,
+    "mlp_request_mask_hex": "0x7",
+    "all_projection_request_mask_lsb": 39,
+    "all_projection_request_mask_hex": "0x7f",
+    "model_axi_metadata_bits_lsb": 46,
+    "projection_count_lsb": 50,
+    "projection_count": 7,
+    "tag_lsb": 56,
+    "tag_hex": "0xdd"
+  },
+  "sampled_gptq_payload_provenance": {
+    "artifact": "gptq_payload_probe.json",
+    "payload_satisfied_projection_count": 0,
+    "all_projection_payload_dependency": "blocked_by_gptq_payload_probe",
+    "blocked_projections": [
+      "q_proj",
+      "k_proj",
+      "v_proj",
+      "o_proj",
+      "gate_proj",
+      "up_proj",
+      "down_proj"
+    ],
+    "source_policy": "link_when_available_else_record_blocked_dependency"
+  },
+  "target_gate_dependencies": {
+    "real_gptq_weight_layout_preflight": "blocked_by_real_gptq_weight_layout_preflight",
+    "real_gptq_payload_probe": "blocked_by_gptq_payload_probe"
+  },
+  "top_level_interface_summary": {
+    "common_handshake": [
+      "aclk",
+      "aresetn",
+      "start_i",
+      "done_o"
+    ],
+    "registered_outputs": [
+      "final_output_o",
+      "status_o"
+    ],
+    "compact_top_level_io": true,
+    "no_full_axi_data_ports": true,
+    "no_axi_debug_buses": true,
+    "no_kv_debug_arrays": true,
+    "no_child_wide_status_arrays": true,
+    "no_ps_pl_block_design_ports": true
+  },
+  "exposed_port_width_summary": {
+    "top_level_ports": [
+      "aclk",
+      "aresetn",
+      "start_i",
+      "done_o",
+      "final_output_o",
+      "status_o"
+    ],
+    "final_output_o_bits": 64,
+    "status_o_bits": 64,
+    "control_bits": 4,
+    "estimated_total_top_level_iob_bits": 132,
+    "prior_model_fsm_axi_decoder_block_bonded_iob_reference": 132,
+    "prior_model_fsm_axi_decoder_block_status_bits": 64,
+    "prior_model_fsm_axi_decoder_block_whs_ns": 0.019,
+    "exposes_128b_axi_read_data": false,
+    "exposes_axi_address_id_response_debug": false,
+    "exposes_full_hidden_vectors": false,
+    "exposes_full_intermediate_tensors": false,
+    "exposes_full_kv_arrays": false,
+    "exposes_child_wide_status_arrays": false
+  },
+  "axi_projection_child_evidence_summary": {
+    "gptq_payload_probe_used": false,
+    "target_checkpoint_payload_dependency": "not_provided",
+    "gptq_probe_qweight_payload_words32_le_hex": [],
+    "expected_payload_words_hex": [
+      "0xe94fa50b",
+      "0x61c72d83",
+      "0xe94fa50b",
+      "0x61c72d83",
+      "0xe94fa50b",
+      "0x61c72d83",
+      "0xe94fa50b",
+      "0x61c72d83"
+    ],
+    "gptq_payload_probe_golden_source": {
+      "env_var": "NL2HDL_GPTQ_PAYLOAD_PROBE_JSON",
+      "artifact": "gptq_payload_probe",
+      "status": "absent",
+      "projection": "q_proj",
+      "used": false,
+      "payload_golden_source": "deterministic_fixture",
+      "fallback_reason": "NL2HDL_GPTQ_PAYLOAD_PROBE_JSON not set",
+      "target_checkpoint_payload_dependency": "not_provided",
+      "qweight_payload_words32_le_hex": [],
+      "qweight_payload_word_count": 0,
+      "expected_fixture_payload_word_count": 8,
+      "payload_words_match_gptq_probe": false
+    },
+    "projection_children": [
+      {
+        "projection": "q",
+        "instance": "u_projection_axi_stream_integration",
+        "module": "projection_axi_stream_integration"
+      },
+      {
+        "projection": "k",
+        "instance": "u_k_projection_axi_stream_integration",
+        "module": "projection_axi_stream_integration"
+      },
+      {
+        "projection": "v",
+        "instance": "u_v_projection_axi_stream_integration",
+        "module": "projection_axi_stream_integration"
+      },
+      {
+        "projection": "o",
+        "instance": "u_o_projection_axi_stream_integration",
+        "module": "projection_axi_stream_integration"
+      }
+    ],
+    "projection_output_vector": [
+      484,
+      1904
+    ],
+    "block_compact_status_propagation_plan": {
+      "child_source": "decoder_child_axi_attention_datapath.status_o[63:60]",
+      "nested_axi_source": "q/k/v/o projection_axi_stream_integration.integration_status_o[45:42] aggregate_and",
+      "block_status_bit_lsb": 80,
+      "block_status_bit_msb": 83,
+      "block_status_mask_hex": "0x00000000000000000000f000000000000000000000",
+      "bit_mapping": {
+        "rid_good": 80,
+        "rresp_good": 81,
+        "rlast_good": 82,
+        "all_metadata_good": 83
+      }
+    },
+    "does_not_expose_128b_axi_read_data": true,
+    "evidence_source": "expected_from_decoder_child_axi_attention_datapath_fixture_metadata_checked_through_block_hierarchy"
+  },
+  "static_nested_axi_projection_children_probe_evidence": {},
+  "model_fsm_child_output_vector": [
+    12,
+    -6,
+    18,
+    6
+  ],
+  "final_output_vector": [
+    12,
+    -6,
+    18,
+    6
+  ],
+  "expected_golden_vector": [
+    12,
+    -6,
+    18,
+    6
+  ],
+  "timing_margin_note": "Prior model_fsm_axi_decoder_block_fixture routed timing had WNS 1.089 ns, WHS 0.019 ns, WPWS 2.225 ns, 132 bonded IOB, and status was 64 bits. This board-shell fixture keeps the same compact top-level data/status width and records projection request metadata without exposing AXI data, debug buses, or KV arrays.",
+  "implementation_stage_policy": "post-route when synthesis is enabled",
+  "verilator_status_policy": "Verilator lint result recorded when verification.enable_verilator is true",
+  "vivado_timing_status_policy": "post-route with non-NA setup/hold/pulse-width when synthesis is enabled",
+  "vivado_resource_status_policy": "utilization.rpt emitted when Vivado synthesis completes",
+  "timing_caveat": "Routed timing is bounded fixture timing without DDR controller IP, board I/O delays, or PS/PL integration constraints; it is not board-level ZCU104 signoff.",
+  "board_io_constraints_present": false,
+  "omitted_operations": [
+    "real DDR controller IP integration",
+    "PS/PL block design integration",
+    "board-level timing with package I/O delays",
+    "full checkpoint tensor streaming",
+    "real checkpoint payload streaming",
+    "full target 16-layer LLaMA execution",
+    "token-dependent KV-cache semantics",
+    "logits or sampling",
+    "board-level ZCU104 signoff"
+  ],
+  "does_not_claim": [
+    "real_DDR_controller_IP_integration",
+    "PS_PL_block_design_integration",
+    "board_level_timing_with_package_IO_delays",
+    "full_checkpoint_tensor_streaming",
+    "real_checkpoint_payload_streaming",
+    "full_target_16_layer_LLaMA_execution",
+    "token_dependent_KV_cache_semantics",
+    "logits_or_sampling",
+    "board_level_ZCU104_signoff"
+  ],
+  "numeric_policy": {
+    "fixture_kind": "ddr_axi_board_shell_fixture",
+    "datapath_composition": "instantiated_model_fsm_axi_decoder_block_fixture",
+    "child_sequence": "model_fsm_axi_decoder_block_fixture called once with start_i held while busy and release-waited",
+    "projection_plan_source": "projection_weight_stream_plan",
+    "attention_projection_request_count": 4,
+    "mlp_projection_request_count": 3,
+    "projection_payload_streaming": "not_implemented_bounded_planning_metadata_only",
+    "real_ddr_controller_ip": false,
+    "ps_pl_block_design": false,
+    "board_level_signoff": false,
+    "full_llama_model": false
+  }
+}

@@ -1,0 +1,1032 @@
+{
+  "status": "passed",
+  "out": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/token_loop_axi_decoder_block_fixture",
+  "files": [
+    "rmsnorm_rope_source_path.sv",
+    "projection_axi_stream_integration.sv",
+    "attention_kv_cache_fixture.sv",
+    "decoder_child_axi_attention_datapath.sv",
+    "residual_mlp_fixture.sv",
+    "decoder_block_axi_attention_mlp_fixture.sv",
+    "layer_fsm_axi_decoder_block_fixture.sv",
+    "top_fsm_axi_decoder_block_fixture.sv",
+    "token_loop_axi_decoder_block_fixture.sv",
+    "tb_token_loop_axi_decoder_block_fixture.sv"
+  ],
+  "coverage_level": "token_loop_axi_decoder_block_fixture",
+  "implementation_stage": "post-route",
+  "simulation": {
+    "passed": true,
+    "stage": "run",
+    "output": "TOKEN_LOOP_AXI_DECODER_BLOCK_TRACE token_loop_axi_decoder_block_fixture trace_hex=0x64636261 events=token0_start,token0_done,token1_start,token1_done\nTOKEN_CHILD_CALL_TRACE token_loop_axi_decoder_block_fixture token=0 top_trace_hex=0x5453 layer_trace_hex=0x4241 block_trace_hex=0xb2b1a2a1 axi_metadata_bits=0xf output=12,-6,18,6\nTOKEN_CHILD_CALL_TRACE token_loop_axi_decoder_block_fixture token=1 top_trace_hex=0x5453 layer_trace_hex=0x4241 block_trace_hex=0xb2b1a2a1 axi_metadata_bits=0xf output=12,-6,18,6\nTOKEN_CHILD_START_HOLD_TRACE token_loop_axi_decoder_block_fixture token=0 busy_cycles=388 done_seen_while_start_high=1 deasserted_after_done=1 release_seen=1\nTOKEN_CHILD_START_HOLD_TRACE token_loop_axi_decoder_block_fixture token=1 busy_cycles=386 done_seen_while_start_high=1 deasserted_after_done=1 release_seen=1\nTOP_AXI_DECODER_BLOCK_TRACE token_loop_axi_decoder_block_fixture token=0 top_trace_hex=0x5453 layer_trace_hex=0x4241 block_trace_hex=0xb2b1a2a1 axi_metadata_bits=0xf events=layer_fsm_axi_decoder_block_fixture_start,layer_fsm_axi_decoder_block_fixture_done\nTOP_AXI_DECODER_BLOCK_TRACE token_loop_axi_decoder_block_fixture token=1 top_trace_hex=0x5453 layer_trace_hex=0x4241 block_trace_hex=0xb2b1a2a1 axi_metadata_bits=0xf events=layer_fsm_axi_decoder_block_fixture_start,layer_fsm_axi_decoder_block_fixture_done\nLAYER_AXI_DECODER_BLOCK_TRACE token_loop_axi_decoder_block_fixture token=1 layer_trace_hex=0x4241 block_trace_hex=0xb2b1a2a1 axi_metadata_bits=0xf events=decoder_block_axi_attention_mlp_fixture_start,decoder_block_axi_attention_mlp_fixture_done\nBLOCK_AXI_TRACE token_loop_axi_decoder_block_fixture token=1 block_trace_hex=0xb2b1a2a1 attention_trace_hex=0x323122211211 axi_metadata_bits=0xf mlp_trace_hex=0x52514241323122211211 events=axi_attention_start,axi_attention_done,mlp_start,mlp_done\nAXI_ATTENTION_CHILD_TRACE token_loop_axi_decoder_block_fixture token=1 trace_hex=0x323122211211 events=source_path_start,source_path_done,projection_axi_start,projection_axi_done,attention_kv_start,attention_kv_done\nMLP_CHILD_TRACE token_loop_axi_decoder_block_fixture token=1 trace_hex=0x52514241323122211211 events=residual0_start,residual0_done,gate_up_start,gate_up_done,swiglu_start,swiglu_done,down_start,down_done,residual1_start,residual1_done\nTOKEN_LOOP_AXI_METADATA_PROPAGATION_TRACE token_loop_axi_decoder_block_fixture loop_bits=0xf loop_bit_lsb=48 loop_bit_msb=51 top_bits=0xf layer_bits=0xf child_block_bits=0xf q_bits=0xf k_bits=0xf v_bits=0xf o_bits=0xf source=top_fsm_axi_decoder_block_fixture.status_o[51:48]:layer_fsm_axi_decoder_block_fixture.status_o[51:48]:decoder_block_axi_attention_mlp_fixture.status_o[83:80]:q_projection_axi_stream_integration.integration_status_o[45:42]:k_projection_axi_stream_integration.integration_status_o[45:42]:v_projection_axi_stream_integration.integration_status_o[45:42]:o_projection_axi_stream_integration.integration_status_o[45:42]:aggregate_and status=0x6a1f545364636261\nAXI_PROJECTION_CHILD_AR_TRACE token_loop_axi_decoder_block_fixture projection=q addr=0x120000 len=1 size=4 burst=1 id=0x2 beats=2 ready_low_cycles=2 instance=u_top_fsm_axi_decoder_block_fixture.u_layer_fsm_axi_decoder_block_fixture.u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_projection_axi_stream_integration\nAXI_PROJECTION_CHILD_AR_TRACE token_loop_axi_decoder_block_fixture projection=k addr=0x120000 len=1 size=4 burst=1 id=0x2 beats=2 ready_low_cycles=2 instance=u_top_fsm_axi_decoder_block_fixture.u_layer_fsm_axi_decoder_block_fixture.u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_k_projection_axi_stream_integration\nAXI_PROJECTION_CHILD_AR_TRACE token_loop_axi_decoder_block_fixture projection=v addr=0x120000 len=1 size=4 burst=1 id=0x2 beats=2 ready_low_cycles=2 instance=u_top_fsm_axi_decoder_block_fixture.u_layer_fsm_axi_decoder_block_fixture.u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_v_projection_axi_stream_integration\nAXI_PROJECTION_CHILD_AR_TRACE token_loop_axi_decoder_block_fixture projection=o addr=0x120000 len=1 size=4 burst=1 id=0x2 beats=2 ready_low_cycles=2 instance=u_top_fsm_axi_decoder_block_fixture.u_layer_fsm_axi_decoder_block_fixture.u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_o_projection_axi_stream_integration\nAXI_PROJECTION_CHILD_R_METADATA_TRACE token_loop_axi_decoder_block_fixture projection=q accepted=0x3 last=0x2 rid_ok=1 rresp_ok=1 rlast_ok=1 status=0xc1a57c0b19080800 instance=u_top_fsm_axi_decoder_block_fixture.u_layer_fsm_axi_decoder_block_fixture.u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_projection_axi_stream_integration\nAXI_PROJECTION_CHILD_R_METADATA_TRACE token_loop_axi_decoder_block_fixture projection=k accepted=0x3 last=0x2 rid_ok=1 rresp_ok=1 rlast_ok=1 status=0xc1a57c0b19080800 instance=u_top_fsm_axi_decoder_block_fixture.u_layer_fsm_axi_decoder_block_fixture.u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_k_projection_axi_stream_integration\nAXI_PROJECTION_CHILD_R_METADATA_TRACE token_loop_axi_decoder_block_fixture projection=v accepted=0x3 last=0x2 rid_ok=1 rresp_ok=1 rlast_ok=1 status=0xc1a57c0b19080800 instance=u_top_fsm_axi_decoder_block_fixture.u_layer_fsm_axi_decoder_block_fixture.u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_v_projection_axi_stream_integration\nAXI_PROJECTION_CHILD_R_METADATA_TRACE token_loop_axi_decoder_block_fixture projection=o accepted=0x3 last=0x2 rid_ok=1 rresp_ok=1 rlast_ok=1 status=0xc1a57c0b19080800 instance=u_top_fsm_axi_decoder_block_fixture.u_layer_fsm_axi_decoder_block_fixture.u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_o_projection_axi_stream_integration\nAXI_PROJECTION_CHILD_PAYLOAD_TRACE token_loop_axi_decoder_block_fixture projection=q emitted=8 consumed=8 payload_match=1 ready_low_trace=0x19 instance=u_top_fsm_axi_decoder_block_fixture.u_layer_fsm_axi_decoder_block_fixture.u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_projection_axi_stream_integration\nAXI_PROJECTION_CHILD_PAYLOAD_TRACE token_loop_axi_decoder_block_fixture projection=k emitted=8 consumed=8 payload_match=1 ready_low_trace=0x19 instance=u_top_fsm_axi_decoder_block_fixture.u_layer_fsm_axi_decoder_block_fixture.u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_k_projection_axi_stream_integration\nAXI_PROJECTION_CHILD_PAYLOAD_TRACE token_loop_axi_decoder_block_fixture projection=v emitted=8 consumed=8 payload_match=1 ready_low_trace=0x19 instance=u_top_fsm_axi_decoder_block_fixture.u_layer_fsm_axi_decoder_block_fixture.u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_v_projection_axi_stream_integration\nAXI_PROJECTION_CHILD_PAYLOAD_TRACE token_loop_axi_decoder_block_fixture projection=o emitted=8 consumed=8 payload_match=1 ready_low_trace=0x19 instance=u_top_fsm_axi_decoder_block_fixture.u_layer_fsm_axi_decoder_block_fixture.u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_o_projection_axi_stream_integration\nAXI_PROJECTION_CHILD_OUTPUT_TRACE token_loop_axi_decoder_block_fixture projection=q output=484,1904 status=0xc1a57c0b19080800 instance=u_top_fsm_axi_decoder_block_fixture.u_layer_fsm_axi_decoder_block_fixture.u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_projection_axi_stream_integration\nAXI_PROJECTION_CHILD_OUTPUT_TRACE token_loop_axi_decoder_block_fixture projection=k output=484,1904 status=0xc1a57c0b19080800 instance=u_top_fsm_axi_decoder_block_fixture.u_layer_fsm_axi_decoder_block_fixture.u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_k_projection_axi_stream_integration\nAXI_PROJECTION_CHILD_OUTPUT_TRACE token_loop_axi_decoder_block_fixture projection=v output=484,1904 status=0xc1a57c0b19080800 instance=u_top_fsm_axi_decoder_block_fixture.u_layer_fsm_axi_decoder_block_fixture.u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_v_projection_axi_stream_integration\nAXI_PROJECTION_CHILD_OUTPUT_TRACE token_loop_axi_decoder_block_fixture projection=o output=484,1904 status=0xc1a57c0b19080800 instance=u_top_fsm_axi_decoder_block_fixture.u_layer_fsm_axi_decoder_block_fixture.u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_o_projection_axi_stream_integration\nAXI_PROJECTION_CHILD_ROUND_TRIP_TRACE token_loop_axi_decoder_block_fixture projection=q packed_bytes=32 unpacked_values=64 round_trip_passed=1 instance=u_top_fsm_axi_decoder_block_fixture.u_layer_fsm_axi_decoder_block_fixture.u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_projection_axi_stream_integration\nAXI_PROJECTION_CHILD_ROUND_TRIP_TRACE token_loop_axi_decoder_block_fixture projection=k packed_bytes=32 unpacked_values=64 round_trip_passed=1 instance=u_top_fsm_axi_decoder_block_fixture.u_layer_fsm_axi_decoder_block_fixture.u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_k_projection_axi_stream_integration\nAXI_PROJECTION_CHILD_ROUND_TRIP_TRACE token_loop_axi_decoder_block_fixture projection=v packed_bytes=32 unpacked_values=64 round_trip_passed=1 instance=u_top_fsm_axi_decoder_block_fixture.u_layer_fsm_axi_decoder_block_fixture.u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_v_projection_axi_stream_integration\nAXI_PROJECTION_CHILD_ROUND_TRIP_TRACE token_loop_axi_decoder_block_fixture projection=o packed_bytes=32 unpacked_values=64 round_trip_passed=1 instance=u_top_fsm_axi_decoder_block_fixture.u_layer_fsm_axi_decoder_block_fixture.u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_o_projection_axi_stream_integration\nATTENTION_OUTPUT_TRACE token_loop_axi_decoder_block_fixture token=1 output=4,-2,1,2 source=hierarchical_axi_attention_child_output\nMLP_INPUT_TRACE token_loop_axi_decoder_block_fixture token=1 hidden=0,4,1,1 attention=4,-2,1,2 source=hierarchical_residual_mlp_child_inputs\nRESIDUAL0_TRACE token_loop_axi_decoder_block_fixture token=1 residual0=4,2,2,3\nMLP_FINAL_TRACE token_loop_axi_decoder_block_fixture token=1 output=12,-6,18,6\nFINAL_OUTPUT_TRACE token_loop_axi_decoder_block_fixture output=12,-6,18,6 status=0x6a1f545364636261\nTOKEN_LOOP_STABILITY_TRACE token_loop_axi_decoder_block_fixture stable=1\nTOKEN_OUTPUT_POLICY_TRACE token_loop_axi_decoder_block_fixture repeated_deterministic_outputs=1 token_dependent_outputs=0\nCOMPACT_IO_TRACE token_loop_axi_decoder_block_fixture estimated_iob_bits=132 prior_top_fsm_axi_bonded_iob=132 prior_top_fsm_axi_status_bits=64 exposed_child_vectors=0 exposed_wide_status=0 exposed_128b_axi_data=0 exposed_axi_debug=0 exposed_kv_arrays=0\nPASS token_loop_axi_decoder_block_fixture\n",
+    "cmd": [
+      "iverilog",
+      "-g2012",
+      "-o",
+      "kernel_sim",
+      "rmsnorm_rope_source_path.sv",
+      "projection_axi_stream_integration.sv",
+      "attention_kv_cache_fixture.sv",
+      "decoder_child_axi_attention_datapath.sv",
+      "residual_mlp_fixture.sv",
+      "decoder_block_axi_attention_mlp_fixture.sv",
+      "layer_fsm_axi_decoder_block_fixture.sv",
+      "top_fsm_axi_decoder_block_fixture.sv",
+      "token_loop_axi_decoder_block_fixture.sv",
+      "tb_token_loop_axi_decoder_block_fixture.sv"
+    ]
+  },
+  "verilator": {
+    "passed": true,
+    "stage": "lint_only",
+    "cmd": [
+      "verilator",
+      "--lint-only",
+      "-sv",
+      "-Wno-STMTDLY",
+      "-Wno-INFINITELOOP",
+      "rmsnorm_rope_source_path.sv",
+      "projection_axi_stream_integration.sv",
+      "attention_kv_cache_fixture.sv",
+      "decoder_child_axi_attention_datapath.sv",
+      "residual_mlp_fixture.sv",
+      "decoder_block_axi_attention_mlp_fixture.sv",
+      "layer_fsm_axi_decoder_block_fixture.sv",
+      "top_fsm_axi_decoder_block_fixture.sv",
+      "token_loop_axi_decoder_block_fixture.sv",
+      "tb_token_loop_axi_decoder_block_fixture.sv"
+    ],
+    "output": "",
+    "policy": "DUT lint must be warning-clean. Testbench-only Verilator 4.x timing-delay warnings STMTDLY and INFINITELOOP are allowed for lint-only checks because iverilog executes the timed behavioral testbench.",
+    "requested_timing_policy": "--timing",
+    "timing_policy_supported": false,
+    "effective_timing_policy": null,
+    "allowed_warning_classes": [
+      "STMTDLY",
+      "INFINITELOOP"
+    ]
+  },
+  "synthesis": {
+    "passed": true,
+    "cmd": [
+      "vivado",
+      "-mode",
+      "batch",
+      "-source",
+      "vivado_synth.tcl"
+    ],
+    "output": "table nets such as driverless and loadless.\n  Run report_route_status for detailed report.\n  Number of Failed Nets               = 2241\n    (Failed Nets is the sum of unrouted and partially routed nets)\n  Number of Unrouted Nets             = 2068\n  Number of Partially Routed Nets     = 173\n  Number of Node Overlaps             = 0\n\nPhase 2 Router Initialization | Checksum: 2aa50157c\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4804.812 ; gain = 0.000 ; free physical = 44251 ; free virtual = 53630\n\nPhase 3 Global Routing\nPhase 3 Global Routing | Checksum: 2aa50157c\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4804.812 ; gain = 0.000 ; free physical = 44251 ; free virtual = 53630\n\nPhase 4 Initial Routing\n\nPhase 4.1 Initial Net Routing Pass\nPhase 4.1 Initial Net Routing Pass | Checksum: 2138a49a3\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4804.812 ; gain = 0.000 ; free physical = 44251 ; free virtual = 53630\nPhase 4 Initial Routing | Checksum: 279114550\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4804.812 ; gain = 0.000 ; free physical = 44251 ; free virtual = 53630\n\nPhase 5 Rip-up And Reroute\n\nPhase 5.1 Global Iteration 0\n Number of Nodes with overlaps = 185\n Number of Nodes with overlaps = 1\n Number of Nodes with overlaps = 0\nINFO: [Route 35-416] Intermediate Timing Summary | WNS=1.347  | TNS=0.000  | WHS=0.009  | THS=0.000  |\n\nPhase 5.1 Global Iteration 0 | Checksum: 25faed836\n\nTime (s): cpu = 00:00:06 ; elapsed = 00:00:03 . Memory (MB): peak = 4804.812 ; gain = 0.000 ; free physical = 44251 ; free virtual = 53630\n\nPhase 5.2 Additional Iteration for Hold\nPhase 5.2 Additional Iteration for Hold | Checksum: 1d046e825\n\nTime (s): cpu = 00:00:06 ; elapsed = 00:00:03 . Memory (MB): peak = 4804.812 ; gain = 0.000 ; free physical = 44251 ; free virtual = 53630\nPhase 5 Rip-up And Reroute | Checksum: 1d046e825\n\nTime (s): cpu = 00:00:06 ; elapsed = 00:00:03 . Memory (MB): peak = 4804.812 ; gain = 0.000 ; free physical = 44251 ; free virtual = 53630\n\nPhase 6 Delay and Skew Optimization\n\nPhase 6.1 Delay CleanUp\nPhase 6.1 Delay CleanUp | Checksum: 252a1cf6e\n\nTime (s): cpu = 00:00:06 ; elapsed = 00:00:03 . Memory (MB): peak = 4804.812 ; gain = 0.000 ; free physical = 44251 ; free virtual = 53630\n\nPhase 6.2 Clock Skew Optimization\nPhase 6.2 Clock Skew Optimization | Checksum: 252a1cf6e\n\nTime (s): cpu = 00:00:06 ; elapsed = 00:00:03 . Memory (MB): peak = 4804.812 ; gain = 0.000 ; free physical = 44251 ; free virtual = 53630\nPhase 6 Delay and Skew Optimization | Checksum: 252a1cf6e\n\nTime (s): cpu = 00:00:06 ; elapsed = 00:00:03 . Memory (MB): peak = 4804.812 ; gain = 0.000 ; free physical = 44251 ; free virtual = 53630\n\nPhase 7 Post Hold Fix\n\nPhase 7.1 Hold Fix Iter\nINFO: [Route 35-416] Intermediate Timing Summary | WNS=1.347  | TNS=0.000  | WHS=0.009  | THS=0.000  |\n\nPhase 7.1 Hold Fix Iter | Checksum: 30972e38f\n\nTime (s): cpu = 00:00:07 ; elapsed = 00:00:04 . Memory (MB): peak = 4804.812 ; gain = 0.000 ; free physical = 44251 ; free virtual = 53630\nPhase 7 Post Hold Fix | Checksum: 30972e38f\n\nTime (s): cpu = 00:00:07 ; elapsed = 00:00:04 . Memory (MB): peak = 4804.812 ; gain = 0.000 ; free physical = 44251 ; free virtual = 53630\n\nPhase 8 Route finalize\n\nRouter Utilization Summary\n  Global Vertical Routing Utilization    = 0.142709 %\n  Global Horizontal Routing Utilization  = 0.109917 %\n  Routable Net Status*\n  *Does not include unroutable nets such as driverless and loadless.\n  Run report_route_status for detailed report.\n  Number of Failed Nets               = 0\n    (Failed Nets is the sum of unrouted and partially routed nets)\n  Number of Unrouted Nets             = 0\n  Number of Partially Routed Nets     = 0\n  Number of Node Overlaps             = 0\n\nPhase 8 Route finalize | Checksum: 30972e38f\n\nTime (s): cpu = 00:00:07 ; elapsed = 00:00:04 . Memory (MB): peak = 4804.812 ; gain = 0.000 ; free physical = 44251 ; free virtual = 53630\n\nPhase 9 Verifying routed nets\n\n Verification completed successfully\nPhase 9 Verifying routed nets | Checksum: 30972e38f\n\nTime (s): cpu = 00:00:07 ; elapsed = 00:00:04 . Memory (MB): peak = 4804.812 ; gain = 0.000 ; free physical = 44251 ; free virtual = 53630\n\nPhase 10 Depositing Routes\nPhase 10 Depositing Routes | Checksum: 30972e38f\n\nTime (s): cpu = 00:00:07 ; elapsed = 00:00:04 . Memory (MB): peak = 4804.812 ; gain = 0.000 ; free physical = 44251 ; free virtual = 53630\n\nPhase 11 Resolve XTalk\nPhase 11 Resolve XTalk | Checksum: 30972e38f\n\nTime (s): cpu = 00:00:07 ; elapsed = 00:00:04 . Memory (MB): peak = 4804.812 ; gain = 0.000 ; free physical = 44251 ; free virtual = 53630\n\nPhase 12 Post Process Routing\nPhase 12 Post Process Routing | Checksum: 30972e38f\n\nTime (s): cpu = 00:00:07 ; elapsed = 00:00:04 . Memory (MB): peak = 4804.812 ; gain = 0.000 ; free physical = 44251 ; free virtual = 53630\n\nPhase 13 Post Router Timing\nINFO: [Route 35-57] Estimated Timing Summary | WNS=1.347  | TNS=0.000  | WHS=0.009  | THS=0.000  |\n\nINFO: [Route 35-327] The final timing numbers are based on the router estimated timing analysis. For a complete and accurate timing signoff, please run report_timing_summary.\nPhase 13 Post Router Timing | Checksum: 30972e38f\n\nTime (s): cpu = 00:00:07 ; elapsed = 00:00:04 . Memory (MB): peak = 4804.812 ; gain = 0.000 ; free physical = 44251 ; free virtual = 53630\nTotal Elapsed time in route_design: 3.68 secs\n\nPhase 14 Post-Route Event Processing\nPhase 14 Post-Route Event Processing | Checksum: 14e99bbe1\n\nTime (s): cpu = 00:00:07 ; elapsed = 00:00:04 . Memory (MB): peak = 4804.812 ; gain = 0.000 ; free physical = 44251 ; free virtual = 53630\nINFO: [Route 35-16] Router Completed Successfully\nEnding Routing Task | Checksum: 14e99bbe1\n\nTime (s): cpu = 00:00:07 ; elapsed = 00:00:04 . Memory (MB): peak = 4804.812 ; gain = 0.000 ; free physical = 44251 ; free virtual = 53630\n\nRouting Is Done.\nINFO: [Common 17-83] Releasing license: Implementation\n12 Infos, 0 Warnings, 0 Critical Warnings and 0 Errors encountered.\nroute_design completed successfully\n# report_utilization -file utilization.rpt\n# report_timing_summary -file timing_summary.rpt\nINFO: [Timing 38-91] UpdateTimingParams: Speed grade: -2, Temperature grade: E, Delay Type: min_max.\nINFO: [Timing 38-191] Multithreading enabled for timing update using a maximum of 8 CPUs\n# write_checkpoint -force post_route.dcp\nINFO: [Timing 38-480] Writing timing data to binary archive.\nWrite ShapeDB Complete: Time (s): cpu = 00:00:00.02 ; elapsed = 00:00:00 . Memory (MB): peak = 4804.812 ; gain = 0.000 ; free physical = 44222 ; free virtual = 53601\nWrote PlaceDB: Time (s): cpu = 00:00:00.15 ; elapsed = 00:00:00.06 . Memory (MB): peak = 4804.812 ; gain = 0.000 ; free physical = 44223 ; free virtual = 53606\nWrote PulsedLatchDB: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 4804.812 ; gain = 0.000 ; free physical = 44223 ; free virtual = 53606\nWriting XDEF routing.\nWriting XDEF routing logical nets.\nWriting XDEF routing special nets.\nWrote RouteStorage: Time (s): cpu = 00:00:00.05 ; elapsed = 00:00:00.04 . Memory (MB): peak = 4804.812 ; gain = 0.000 ; free physical = 44223 ; free virtual = 53607\nWrote Netlist Cache: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.01 . Memory (MB): peak = 4804.812 ; gain = 0.000 ; free physical = 44223 ; free virtual = 53607\nWrote Device Cache: Time (s): cpu = 00:00:00.01 ; elapsed = 00:00:00.01 . Memory (MB): peak = 4804.812 ; gain = 0.000 ; free physical = 44223 ; free virtual = 53609\nWrite Physdb Complete: Time (s): cpu = 00:00:00.21 ; elapsed = 00:00:00.12 . Memory (MB): peak = 4804.812 ; gain = 0.000 ; free physical = 44223 ; free virtual = 53609\nINFO: [Common 17-1381] The checkpoint '/home/iamjames77/Nlp2Verilog/examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/token_loop_axi_decoder_block_fixture/post_route.dcp' has been generated.\nINFO: [Common 17-206] Exiting Vivado at Tue Jun 16 09:55:23 2026...\n",
+    "timing": {
+      "setup_worst_slack_ns": 1.348,
+      "hold_worst_slack_ns": 0.009,
+      "pulse_width_worst_slack_ns": 2.225,
+      "constraints_met": true,
+      "worst_slack_ns": 1.348,
+      "parse_status": "parsed"
+    },
+    "implementation_stage": "post-route",
+    "timing_report": "timing_summary.rpt",
+    "timing_report_available": true,
+    "utilization_report": "utilization.rpt",
+    "utilization_report_available": true,
+    "resource_status": "available",
+    "resource_utilization": {
+      "lut_as_logic": {
+        "used": 1536,
+        "available": 230400,
+        "utilization_percent": 0.67
+      },
+      "clb_registers": {
+        "used": 906,
+        "available": 460800,
+        "utilization_percent": 0.2
+      },
+      "block_ram_tile": {
+        "used": 0,
+        "available": 312,
+        "utilization_percent": 0.0
+      },
+      "dsps": {
+        "used": 8,
+        "available": 1728,
+        "utilization_percent": 0.46
+      },
+      "bonded_iob": {
+        "used": 132,
+        "available": 360,
+        "utilization_percent": 36.67
+      }
+    }
+  },
+  "contract_gate": {
+    "verilator_enforced": true,
+    "synthesis_enforced": true
+  },
+  "numeric_policy": {
+    "fixture_kind": "token_loop_axi_decoder_block_fixture",
+    "datapath_composition": "instantiated_top_fsm_axi_decoder_block_fixture",
+    "fixture_token_count": 2,
+    "child_sequence": "top_fsm_axi_decoder_block_fixture called twice with start_i held while busy and release-waited",
+    "token_outputs_are_token_dependent": false,
+    "repeated_deterministic_fixture_outputs": true,
+    "uses_axi_decoder_block_top": true,
+    "full_token_prefill_decode_semantics": false,
+    "target_sequence_scheduling": false,
+    "target_multi_layer_scheduling": false,
+    "ddr_axi_streaming": false,
+    "full_llama_layer": false,
+    "full_llama_model": false,
+    "board_level_signoff": false
+  },
+  "kernel": "token_loop_axi_decoder_block_fixture",
+  "token_loop_axi_decoder_block_fixture": true,
+  "uses_top_fsm_axi_decoder_block_fixture": true,
+  "fixture_token_count": 2,
+  "child_modules": [
+    {
+      "name": "top_fsm_axi_decoder_block_fixture",
+      "coverage_level": "top_fsm_axi_decoder_block_fixture",
+      "instantiated": true,
+      "input_source": "token_loop_axi_decoder_block_fixture_token_step_scheduler",
+      "output_consumed_by": "token_loop_axi_decoder_block_fixture.final_output_o",
+      "nested_child_modules": [
+        {
+          "name": "layer_fsm_axi_decoder_block_fixture",
+          "coverage_level": "layer_fsm_axi_decoder_block_fixture",
+          "instantiated": true
+        },
+        {
+          "name": "decoder_block_axi_attention_mlp_fixture",
+          "coverage_level": "decoder_block_axi_attention_mlp_fixture",
+          "instantiated": true
+        },
+        {
+          "name": "decoder_child_axi_attention_datapath",
+          "coverage_level": "decoder_child_axi_attention_datapath_fixture",
+          "instantiated": true
+        },
+        {
+          "name": "residual_mlp_fixture",
+          "coverage_level": "residual_mlp_fixture",
+          "instantiated": true
+        },
+        {
+          "name": "rmsnorm_rope_source_path",
+          "coverage_level": "rmsnorm_rope_source_path_fixture",
+          "instantiated": true
+        },
+        {
+          "name": "q_projection_axi_stream_integration",
+          "coverage_level": "projection_axi_stream_integration_fixture",
+          "instantiated": true,
+          "projection": "q",
+          "instance": "u_projection_axi_stream_integration"
+        },
+        {
+          "name": "k_projection_axi_stream_integration",
+          "coverage_level": "projection_axi_stream_integration_fixture",
+          "instantiated": true,
+          "projection": "k",
+          "instance": "u_k_projection_axi_stream_integration"
+        },
+        {
+          "name": "v_projection_axi_stream_integration",
+          "coverage_level": "projection_axi_stream_integration_fixture",
+          "instantiated": true,
+          "projection": "v",
+          "instance": "u_v_projection_axi_stream_integration"
+        },
+        {
+          "name": "o_projection_axi_stream_integration",
+          "coverage_level": "projection_axi_stream_integration_fixture",
+          "instantiated": true,
+          "projection": "o",
+          "instance": "u_o_projection_axi_stream_integration"
+        },
+        {
+          "name": "attention_kv_cache_fixture",
+          "coverage_level": "attention_kv_cache_fixture",
+          "instantiated": true
+        }
+      ]
+    }
+  ],
+  "nested_child_coverage_summary": [
+    {
+      "name": "top_fsm_axi_decoder_block_fixture",
+      "coverage_level": "top_fsm_axi_decoder_block_fixture",
+      "instantiated": true
+    },
+    {
+      "name": "layer_fsm_axi_decoder_block_fixture",
+      "coverage_level": "layer_fsm_axi_decoder_block_fixture",
+      "instantiated": true
+    },
+    {
+      "name": "decoder_block_axi_attention_mlp_fixture",
+      "coverage_level": "decoder_block_axi_attention_mlp_fixture",
+      "instantiated": true
+    },
+    {
+      "name": "decoder_child_axi_attention_datapath",
+      "coverage_level": "decoder_child_axi_attention_datapath_fixture",
+      "instantiated": true
+    },
+    {
+      "name": "residual_mlp_fixture",
+      "coverage_level": "residual_mlp_fixture",
+      "instantiated": true
+    },
+    {
+      "name": "rmsnorm_rope_source_path",
+      "coverage_level": "rmsnorm_rope_source_path_fixture",
+      "instantiated": true
+    },
+    {
+      "name": "q_projection_axi_stream_integration",
+      "coverage_level": "projection_axi_stream_integration_fixture",
+      "instantiated": true,
+      "projection": "q",
+      "instance": "u_projection_axi_stream_integration"
+    },
+    {
+      "name": "k_projection_axi_stream_integration",
+      "coverage_level": "projection_axi_stream_integration_fixture",
+      "instantiated": true,
+      "projection": "k",
+      "instance": "u_k_projection_axi_stream_integration"
+    },
+    {
+      "name": "v_projection_axi_stream_integration",
+      "coverage_level": "projection_axi_stream_integration_fixture",
+      "instantiated": true,
+      "projection": "v",
+      "instance": "u_v_projection_axi_stream_integration"
+    },
+    {
+      "name": "o_projection_axi_stream_integration",
+      "coverage_level": "projection_axi_stream_integration_fixture",
+      "instantiated": true,
+      "projection": "o",
+      "instance": "u_o_projection_axi_stream_integration"
+    },
+    {
+      "name": "attention_kv_cache_fixture",
+      "coverage_level": "attention_kv_cache_fixture",
+      "instantiated": true
+    }
+  ],
+  "fsm_state_order": [
+    "IDLE",
+    "TOKEN0_START",
+    "TOKEN0_BUSY",
+    "TOKEN0_RELEASE",
+    "TOKEN1_START",
+    "TOKEN1_BUSY",
+    "TOKEN1_RELEASE",
+    "DONE"
+  ],
+  "token_start_done_trace": [
+    "token0_start",
+    "token0_done",
+    "token1_start",
+    "token1_done"
+  ],
+  "top_fsm_trace": {
+    "ordered_events": [
+      "layer_fsm_axi_decoder_block_fixture_start",
+      "layer_fsm_axi_decoder_block_fixture_done"
+    ],
+    "trace_hex": "0x5453",
+    "evidence_source": "expected_from_top_fsm_axi_decoder_block_fixture_metadata_checked_through_token_loop_hierarchy"
+  },
+  "layer_fsm_trace": {
+    "ordered_events": [
+      "decoder_block_axi_attention_mlp_fixture_start",
+      "decoder_block_axi_attention_mlp_fixture_done"
+    ],
+    "trace_hex": "0x4241",
+    "evidence_source": "expected_from_top_fsm_axi_decoder_block_fixture_metadata_checked_through_token_loop_hierarchy"
+  },
+  "decoder_block_trace": {
+    "ordered_events": [
+      "axi_attention_start",
+      "axi_attention_done",
+      "mlp_start",
+      "mlp_done"
+    ],
+    "trace_hex": "0xb2b1a2a1",
+    "evidence_source": "expected_from_top_fsm_axi_decoder_block_fixture_metadata_checked_through_token_loop_hierarchy"
+  },
+  "axi_attention_child_trace": {
+    "ordered_events": [
+      "source_path_start",
+      "source_path_done",
+      "projection_axi_start",
+      "projection_axi_done",
+      "attention_kv_start",
+      "attention_kv_done"
+    ],
+    "trace_hex": "0x323122211211",
+    "evidence_source": "expected_from_top_fsm_axi_decoder_block_fixture_metadata_checked_through_token_loop_hierarchy"
+  },
+  "mlp_child_trace": {
+    "ordered_events": [
+      "residual0_start",
+      "residual0_done",
+      "gate_up_start",
+      "gate_up_done",
+      "swiglu_start",
+      "swiglu_done",
+      "down_start",
+      "down_done",
+      "residual1_start",
+      "residual1_done"
+    ],
+    "trace_hex": "0x52514241323122211211",
+    "evidence_source": "expected_from_top_fsm_axi_decoder_block_fixture_metadata_checked_through_token_loop_hierarchy"
+  },
+  "expected_token_trace_hex": "0x64636261",
+  "expected_top_trace_hex": "0x5453",
+  "expected_layer_trace_hex": "0x4241",
+  "expected_block_trace_hex": "0xb2b1a2a1",
+  "expected_attention_trace_hex": "0x323122211211",
+  "expected_mlp_trace_hex": "0x52514241323122211211",
+  "per_token_child_start_hold_deassert_release_evidence": [
+    {
+      "token": 0,
+      "busy_cycles": 388,
+      "done_seen_while_start_high": true,
+      "deasserted_after_done": true,
+      "done_release_seen_after_start_deassert": true,
+      "evidence_source": "parsed_from_token_loop_axi_decoder_block_testbench_top_start_monitor"
+    },
+    {
+      "token": 1,
+      "busy_cycles": 386,
+      "done_seen_while_start_high": true,
+      "deasserted_after_done": true,
+      "done_release_seen_after_start_deassert": true,
+      "evidence_source": "parsed_from_token_loop_axi_decoder_block_testbench_top_start_monitor"
+    }
+  ],
+  "top_loop_compact_status_axi_metadata_propagation_plan": {
+    "loop_status_bit_lsb": 48,
+    "loop_status_bit_msb": 51,
+    "loop_status_mask_hex": "0x000f000000000000",
+    "top_source": "top_fsm_axi_decoder_block_fixture.status_o[51:48]",
+    "layer_source": "layer_fsm_axi_decoder_block_fixture.status_o[51:48]",
+    "decoder_block_source": "decoder_block_axi_attention_mlp_fixture.status_o[83:80]",
+    "nested_axi_source": "q/k/v/o projection_axi_stream_integration.integration_status_o[45:42] aggregate_and"
+  },
+  "axi_projection_child_evidence_summary": {
+    "gptq_payload_probe_used": false,
+    "target_checkpoint_payload_dependency": "not_provided",
+    "gptq_probe_qweight_payload_words32_le_hex": [],
+    "expected_payload_words_hex": [
+      "0xe94fa50b",
+      "0x61c72d83",
+      "0xe94fa50b",
+      "0x61c72d83",
+      "0xe94fa50b",
+      "0x61c72d83",
+      "0xe94fa50b",
+      "0x61c72d83"
+    ],
+    "gptq_payload_probe_golden_source": {
+      "env_var": "NL2HDL_GPTQ_PAYLOAD_PROBE_JSON",
+      "artifact": "gptq_payload_probe",
+      "status": "absent",
+      "projection": "q_proj",
+      "used": false,
+      "payload_golden_source": "deterministic_fixture",
+      "fallback_reason": "NL2HDL_GPTQ_PAYLOAD_PROBE_JSON not set",
+      "target_checkpoint_payload_dependency": "not_provided",
+      "qweight_payload_words32_le_hex": [],
+      "qweight_payload_word_count": 0,
+      "expected_fixture_payload_word_count": 8,
+      "payload_words_match_gptq_probe": false
+    },
+    "projection_children": [
+      {
+        "projection": "q",
+        "instance": "u_projection_axi_stream_integration",
+        "module": "projection_axi_stream_integration"
+      },
+      {
+        "projection": "k",
+        "instance": "u_k_projection_axi_stream_integration",
+        "module": "projection_axi_stream_integration"
+      },
+      {
+        "projection": "v",
+        "instance": "u_v_projection_axi_stream_integration",
+        "module": "projection_axi_stream_integration"
+      },
+      {
+        "projection": "o",
+        "instance": "u_o_projection_axi_stream_integration",
+        "module": "projection_axi_stream_integration"
+      }
+    ],
+    "projection_output_vector": [
+      484,
+      1904
+    ],
+    "block_compact_status_propagation_plan": {
+      "child_source": "decoder_child_axi_attention_datapath.status_o[63:60]",
+      "nested_axi_source": "q/k/v/o projection_axi_stream_integration.integration_status_o[45:42] aggregate_and",
+      "block_status_bit_lsb": 80,
+      "block_status_bit_msb": 83,
+      "block_status_mask_hex": "0x00000000000000000000f000000000000000000000",
+      "bit_mapping": {
+        "rid_good": 80,
+        "rresp_good": 81,
+        "rlast_good": 82,
+        "all_metadata_good": 83
+      }
+    },
+    "does_not_expose_128b_axi_read_data": true,
+    "evidence_source": "expected_from_decoder_child_axi_attention_datapath_fixture_metadata_checked_through_block_hierarchy"
+  },
+  "static_nested_axi_projection_children_probe_evidence": {},
+  "top_level_interface_summary": {
+    "common_handshake": [
+      "aclk",
+      "aresetn",
+      "start_i",
+      "done_o"
+    ],
+    "registered_outputs": [
+      "final_output_o",
+      "status_o"
+    ],
+    "compact_top_level_io": true,
+    "no_child_full_vectors": true,
+    "no_128b_axi_read_data": true,
+    "no_axi_debug_buses": true,
+    "no_kv_debug_arrays": true,
+    "no_child_wide_status_arrays": true
+  },
+  "exposed_port_width_summary": {
+    "top_level_ports": [
+      "aclk",
+      "aresetn",
+      "start_i",
+      "done_o",
+      "final_output_o",
+      "status_o"
+    ],
+    "final_output_o_bits": 64,
+    "status_o_bits": 64,
+    "control_bits": 4,
+    "estimated_total_top_level_iob_bits": 132,
+    "prior_top_fsm_axi_decoder_block_bonded_iob_reference": 132,
+    "prior_top_fsm_axi_decoder_block_status_bits": 64,
+    "prior_top_fsm_axi_decoder_block_whs_ns": 0.005,
+    "exposes_128b_axi_read_data": false,
+    "exposes_axi_address_id_response_debug": false,
+    "exposes_full_hidden_vectors": false,
+    "exposes_full_intermediate_tensors": false,
+    "exposes_full_kv_arrays": false,
+    "exposes_child_wide_status_arrays": false
+  },
+  "per_token_output_vectors": [
+    {
+      "token": 0,
+      "output_vector": [
+        12,
+        -6,
+        18,
+        6
+      ],
+      "axi_metadata_bits_hex": "0xf",
+      "evidence_source": "parsed_from_token_loop_axi_decoder_block_testbench_captured_top_child"
+    },
+    {
+      "token": 1,
+      "output_vector": [
+        12,
+        -6,
+        18,
+        6
+      ],
+      "axi_metadata_bits_hex": "0xf",
+      "evidence_source": "parsed_from_token_loop_axi_decoder_block_testbench_captured_top_child"
+    }
+  ],
+  "fixture_output_vector": [
+    12,
+    -6,
+    18,
+    6
+  ],
+  "final_output_vector": [
+    12,
+    -6,
+    18,
+    6
+  ],
+  "expected_golden_vector": [
+    12,
+    -6,
+    18,
+    6
+  ],
+  "token_outputs_are_token_dependent": false,
+  "repeated_deterministic_fixture_outputs": true,
+  "decoder_block_consumed_attention_output_into_mlp": {
+    "observed_through_token_loop_hierarchy": true,
+    "attention_output_vector": [
+      4,
+      -2,
+      1,
+      2
+    ],
+    "mlp_attention_input_vector": [
+      4,
+      -2,
+      1,
+      2
+    ],
+    "evidence_source": "observed_through_token_loop_axi_decoder_block_hierarchy"
+  },
+  "timing_margin_note": "Prior AXI Top FSM decoder-block routed timing had WNS 1.260 ns, WHS 0.005 ns, WPWS 2.225 ns, 132 bonded IOB, and status was 64 bits. This token-loop fixture keeps status at 64 bits and avoids exposing child vectors, AXI data, AXI debug buses, or KV arrays.",
+  "implementation_stage_policy": "post-route when synthesis is enabled",
+  "verilator_status_policy": "Verilator lint result recorded when verification.enable_verilator is true",
+  "vivado_timing_status_policy": "post-route with non-NA setup/hold/pulse-width when synthesis is enabled",
+  "vivado_resource_status_policy": "utilization.rpt emitted when Vivado synthesis completes",
+  "timing_caveat": "Routed timing is fixture timing without board-level I/O delay, DDR/AXI shell, or PS/PL integration constraints; it is not board-level ZCU104 signoff.",
+  "board_io_constraints_present": false,
+  "omitted_operations": [
+    "real GPTQ checkpoint payload streaming",
+    "full DDR/AXI integration",
+    "real LLaMA token prefill/decode semantics",
+    "tokenizer or embedding lookup",
+    "logits generation and sampling",
+    "target sequence scheduling",
+    "target multi-layer LLaMA iteration",
+    "token-dependent KV-cache accumulation across full sequence length",
+    "DDR/AXI packed-weight streaming and full DDR controller integration",
+    "DDR/AXI KV-cache movement",
+    "board shell and PS/PL integration",
+    "mathematically complete Q/K/V/O projection-to-attention wiring",
+    "full sequence-length KV-cache",
+    "multi-head attention",
+    "grouped-query attention",
+    "true softmax",
+    "true exponential softmax",
+    "target-scale MLP dimensions",
+    "GPTQ INT4 packed gate/up/down streaming",
+    "true SiLU",
+    "true SiLU or exponential activation math in RTL",
+    "full LLaMA layer execution",
+    "full LLaMA model execution",
+    "board-level signoff"
+  ],
+  "does_not_claim": [
+    "real_GPTQ_checkpoint_payload_streaming",
+    "DDR_AXI_full_integration",
+    "real_LLaMA_token_prefill_decode_semantics",
+    "tokenizer_or_embedding_lookup",
+    "logits_generation_or_sampling",
+    "target_sequence_scheduling",
+    "target_multi_layer_LLaMA_iteration",
+    "token_dependent_KV_cache_accumulation_across_full_sequence_length",
+    "DDR_AXI_packed_weight_streaming_and_full_DDR_controller_integration",
+    "DDR_AXI_KV_cache_movement",
+    "board_shell_PS_PL_integration",
+    "complete_QKV_O_projection_to_attention_math",
+    "full_sequence_length_KV_cache",
+    "multi_head_attention",
+    "grouped_query_attention",
+    "true_softmax",
+    "true_exponential_softmax",
+    "target_scale_MLP_dimensions",
+    "GPTQ_INT4_packed_gate_up_down_streaming",
+    "true_SiLU",
+    "true_SiLU_or_exponential_activation_math_in_RTL",
+    "full_LLaMA_layer_execution",
+    "full_LLaMA_model_execution",
+    "board_level_signoff"
+  ],
+  "expected_token_trace": "0x64636261",
+  "expected_top_trace": "0x5453",
+  "expected_layer_trace": "0x4241",
+  "expected_block_trace": "0xb2b1a2a1",
+  "expected_attention_trace": "0x323122211211",
+  "expected_mlp_trace": "0x52514241323122211211",
+  "expected_outputs": [
+    12,
+    -6,
+    18,
+    6
+  ],
+  "golden_reference": "token_loop_axi_decoder_block_fixture_golden.json",
+  "board_level_signoff": false,
+  "simulation_token_start_done_trace": {
+    "recorded": true,
+    "trace_hex": "0x64636261",
+    "ordered_events": [
+      "token0_start",
+      "token0_done",
+      "token1_start",
+      "token1_done"
+    ],
+    "evidence_source": "parsed_from_token_loop_axi_decoder_block_integration_trace"
+  },
+  "observed_token_start_done_trace": [
+    "token0_start",
+    "token0_done",
+    "token1_start",
+    "token1_done"
+  ],
+  "token_output_vectors": [
+    [
+      12,
+      -6,
+      18,
+      6
+    ],
+    [
+      12,
+      -6,
+      18,
+      6
+    ]
+  ],
+  "top_fsm_traces": [
+    {
+      "token": 0,
+      "ordered_events": [
+        "layer_fsm_axi_decoder_block_fixture_start",
+        "layer_fsm_axi_decoder_block_fixture_done"
+      ],
+      "top_trace_hex": "0x5453",
+      "layer_trace_hex": "0x4241",
+      "block_trace_hex": "0xb2b1a2a1",
+      "axi_metadata_bits_hex": "0xf",
+      "evidence_source": "parsed_from_token_loop_axi_decoder_block_testbench_captured_top_status"
+    },
+    {
+      "token": 1,
+      "ordered_events": [
+        "layer_fsm_axi_decoder_block_fixture_start",
+        "layer_fsm_axi_decoder_block_fixture_done"
+      ],
+      "top_trace_hex": "0x5453",
+      "layer_trace_hex": "0x4241",
+      "block_trace_hex": "0xb2b1a2a1",
+      "axi_metadata_bits_hex": "0xf",
+      "evidence_source": "parsed_from_token_loop_axi_decoder_block_testbench_captured_top_status"
+    }
+  ],
+  "layer_fsm_traces": [
+    {
+      "token": 0,
+      "ordered_events": [
+        "decoder_block_axi_attention_mlp_fixture_start",
+        "decoder_block_axi_attention_mlp_fixture_done"
+      ],
+      "layer_trace_hex": "0x4241",
+      "block_trace_hex": "0xb2b1a2a1",
+      "axi_metadata_bits_hex": "0xf",
+      "evidence_source": "parsed_from_token_loop_axi_decoder_block_testbench_captured_top_status"
+    },
+    {
+      "token": 1,
+      "ordered_events": [
+        "decoder_block_axi_attention_mlp_fixture_start",
+        "decoder_block_axi_attention_mlp_fixture_done"
+      ],
+      "layer_trace_hex": "0x4241",
+      "block_trace_hex": "0xb2b1a2a1",
+      "axi_metadata_bits_hex": "0xf",
+      "evidence_source": "parsed_from_token_loop_axi_decoder_block_testbench_captured_top_status"
+    }
+  ],
+  "decoder_block_traces": [
+    {
+      "token": 0,
+      "ordered_events": [
+        "axi_attention_start",
+        "axi_attention_done",
+        "mlp_start",
+        "mlp_done"
+      ],
+      "block_trace_hex": "0xb2b1a2a1",
+      "axi_metadata_bits_hex": "0xf",
+      "evidence_source": "parsed_from_token_loop_axi_decoder_block_testbench_captured_child_hierarchy"
+    },
+    {
+      "token": 1,
+      "ordered_events": [
+        "axi_attention_start",
+        "axi_attention_done",
+        "mlp_start",
+        "mlp_done"
+      ],
+      "block_trace_hex": "0xb2b1a2a1",
+      "axi_metadata_bits_hex": "0xf",
+      "evidence_source": "parsed_from_token_loop_axi_decoder_block_testbench_captured_child_hierarchy"
+    }
+  ],
+  "child_start_hold_deassert_release_evidence": [
+    {
+      "token": 0,
+      "busy_cycles": 388,
+      "done_seen_while_start_high": true,
+      "deasserted_after_done": true,
+      "done_release_seen_after_start_deassert": true,
+      "evidence_source": "parsed_from_token_loop_axi_decoder_block_testbench_top_start_monitor"
+    },
+    {
+      "token": 1,
+      "busy_cycles": 386,
+      "done_seen_while_start_high": true,
+      "deasserted_after_done": true,
+      "done_release_seen_after_start_deassert": true,
+      "evidence_source": "parsed_from_token_loop_axi_decoder_block_testbench_top_start_monitor"
+    }
+  ],
+  "token_loop_compact_status_axi_metadata_propagation": {
+    "propagated": true,
+    "loop_status_bits_hex": "0xf",
+    "loop_bit_lsb": 48,
+    "loop_bit_msb": 51,
+    "top_status_bits_hex": "0xf",
+    "layer_status_bits_hex": "0xf",
+    "child_block_status_bits_hex": "0xf",
+    "q_status_bits_hex": "0xf",
+    "k_status_bits_hex": "0xf",
+    "v_status_bits_hex": "0xf",
+    "o_status_bits_hex": "0xf",
+    "child_source": "top_fsm_axi_decoder_block_fixture.status_o[51:48]:layer_fsm_axi_decoder_block_fixture.status_o[51:48]:decoder_block_axi_attention_mlp_fixture.status_o[83:80]:q_projection_axi_stream_integration.integration_status_o[45:42]:k_projection_axi_stream_integration.integration_status_o[45:42]:v_projection_axi_stream_integration.integration_status_o[45:42]:o_projection_axi_stream_integration.integration_status_o[45:42]:aggregate_and",
+    "compact_status_hex": "0x6a1f545364636261",
+    "evidence_source": "parsed_from_token_loop_axi_decoder_block_testbench_compact_status"
+  },
+  "observed_final_fixture_output_vector": [
+    12,
+    -6,
+    18,
+    6
+  ],
+  "observed_compact_status_hex": "0x6a1f545364636261",
+  "loop_done_output_status_stability_observed": true,
+  "compact_io_observed_trace": {
+    "estimated_iob_bits": 132,
+    "prior_top_fsm_axi_bonded_iob_reference": 132,
+    "prior_top_fsm_axi_status_bits": 64,
+    "exposes_child_vectors": false,
+    "exposes_wide_status": false,
+    "exposes_128b_axi_data": false,
+    "exposes_axi_debug_buses": false,
+    "exposes_full_kv_arrays": false,
+    "evidence_source": "parsed_from_token_loop_axi_decoder_block_testbench_compact_io_trace"
+  },
+  "axi_projection_children_observed": {
+    "q": {
+      "command_trace": {
+        "projection": "q",
+        "addr_hex": "0x120000",
+        "axi_arlen": 1,
+        "axi_arsize": 4,
+        "axi_arburst": 1,
+        "axi_arid_hex": "0x2",
+        "request_beat_count": 2,
+        "ar_ready_low_cycles": 2,
+        "instance": "u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_ar_trace"
+      },
+      "r_metadata_trace": {
+        "projection": "q",
+        "accepted_trace_hex": "0x3",
+        "rlast_trace_hex": "0x2",
+        "rid_ok": true,
+        "rresp_ok": true,
+        "rlast_ok": true,
+        "compact_status_hex": "0xc1a57c0b19080800",
+        "instance": "u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_r_metadata"
+      },
+      "payload_trace": {
+        "projection": "q",
+        "emitted_count": 8,
+        "consumed_count": 8,
+        "payload_link_match_passed": true,
+        "ready_low_trace_hex": "0x19",
+        "instance": "u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_payload_trace"
+      },
+      "output_trace": {
+        "projection": "q",
+        "projection_output_vector": [
+          484,
+          1904
+        ],
+        "integration_status_hex": "0xc1a57c0b19080800",
+        "instance": "u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_output"
+      },
+      "round_trip_evidence": {
+        "projection": "q",
+        "packed_bytes": 32,
+        "unpacked_values": 64,
+        "round_trip_passed": true,
+        "instance": "u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_round_trip"
+      }
+    },
+    "k": {
+      "command_trace": {
+        "projection": "k",
+        "addr_hex": "0x120000",
+        "axi_arlen": 1,
+        "axi_arsize": 4,
+        "axi_arburst": 1,
+        "axi_arid_hex": "0x2",
+        "request_beat_count": 2,
+        "ar_ready_low_cycles": 2,
+        "instance": "u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_k_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_ar_trace"
+      },
+      "r_metadata_trace": {
+        "projection": "k",
+        "accepted_trace_hex": "0x3",
+        "rlast_trace_hex": "0x2",
+        "rid_ok": true,
+        "rresp_ok": true,
+        "rlast_ok": true,
+        "compact_status_hex": "0xc1a57c0b19080800",
+        "instance": "u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_k_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_r_metadata"
+      },
+      "payload_trace": {
+        "projection": "k",
+        "emitted_count": 8,
+        "consumed_count": 8,
+        "payload_link_match_passed": true,
+        "ready_low_trace_hex": "0x19",
+        "instance": "u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_k_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_payload_trace"
+      },
+      "output_trace": {
+        "projection": "k",
+        "projection_output_vector": [
+          484,
+          1904
+        ],
+        "integration_status_hex": "0xc1a57c0b19080800",
+        "instance": "u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_k_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_output"
+      },
+      "round_trip_evidence": {
+        "projection": "k",
+        "packed_bytes": 32,
+        "unpacked_values": 64,
+        "round_trip_passed": true,
+        "instance": "u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_k_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_round_trip"
+      }
+    },
+    "v": {
+      "command_trace": {
+        "projection": "v",
+        "addr_hex": "0x120000",
+        "axi_arlen": 1,
+        "axi_arsize": 4,
+        "axi_arburst": 1,
+        "axi_arid_hex": "0x2",
+        "request_beat_count": 2,
+        "ar_ready_low_cycles": 2,
+        "instance": "u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_v_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_ar_trace"
+      },
+      "r_metadata_trace": {
+        "projection": "v",
+        "accepted_trace_hex": "0x3",
+        "rlast_trace_hex": "0x2",
+        "rid_ok": true,
+        "rresp_ok": true,
+        "rlast_ok": true,
+        "compact_status_hex": "0xc1a57c0b19080800",
+        "instance": "u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_v_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_r_metadata"
+      },
+      "payload_trace": {
+        "projection": "v",
+        "emitted_count": 8,
+        "consumed_count": 8,
+        "payload_link_match_passed": true,
+        "ready_low_trace_hex": "0x19",
+        "instance": "u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_v_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_payload_trace"
+      },
+      "output_trace": {
+        "projection": "v",
+        "projection_output_vector": [
+          484,
+          1904
+        ],
+        "integration_status_hex": "0xc1a57c0b19080800",
+        "instance": "u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_v_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_output"
+      },
+      "round_trip_evidence": {
+        "projection": "v",
+        "packed_bytes": 32,
+        "unpacked_values": 64,
+        "round_trip_passed": true,
+        "instance": "u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_v_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_round_trip"
+      }
+    },
+    "o": {
+      "command_trace": {
+        "projection": "o",
+        "addr_hex": "0x120000",
+        "axi_arlen": 1,
+        "axi_arsize": 4,
+        "axi_arburst": 1,
+        "axi_arid_hex": "0x2",
+        "request_beat_count": 2,
+        "ar_ready_low_cycles": 2,
+        "instance": "u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_o_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_ar_trace"
+      },
+      "r_metadata_trace": {
+        "projection": "o",
+        "accepted_trace_hex": "0x3",
+        "rlast_trace_hex": "0x2",
+        "rid_ok": true,
+        "rresp_ok": true,
+        "rlast_ok": true,
+        "compact_status_hex": "0xc1a57c0b19080800",
+        "instance": "u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_o_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_r_metadata"
+      },
+      "payload_trace": {
+        "projection": "o",
+        "emitted_count": 8,
+        "consumed_count": 8,
+        "payload_link_match_passed": true,
+        "ready_low_trace_hex": "0x19",
+        "instance": "u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_o_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_payload_trace"
+      },
+      "output_trace": {
+        "projection": "o",
+        "projection_output_vector": [
+          484,
+          1904
+        ],
+        "integration_status_hex": "0xc1a57c0b19080800",
+        "instance": "u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_o_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_output"
+      },
+      "round_trip_evidence": {
+        "projection": "o",
+        "packed_bytes": 32,
+        "unpacked_values": 64,
+        "round_trip_passed": true,
+        "instance": "u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_decoder_block_axi_attention_mlp_fixture.u_decoder_child_axi_attention_datapath.u_o_projection_axi_stream_integration",
+        "evidence_source": "parsed_from_integration_testbench_qkvo_axi_child_round_trip"
+      }
+    }
+  },
+  "captured_attention_output_vector": [
+    4,
+    -2,
+    1,
+    2
+  ],
+  "captured_attention_output_source": "hierarchical_axi_attention_child_output",
+  "mlp_hidden_input_vector": [
+    0,
+    4,
+    1,
+    1
+  ],
+  "mlp_attention_input_vector": [
+    4,
+    -2,
+    1,
+    2
+  ],
+  "mlp_input_evidence_source": "hierarchical_residual_mlp_child_inputs",
+  "current_bonded_iob_count": 132,
+  "bonded_iob_count": 132,
+  "compact_io_vivado_resource_evidence": {
+    "bonded_iob_count": 132,
+    "estimated_top_level_iob_bits": 132,
+    "status_o_bits": 64,
+    "prior_top_fsm_axi_decoder_block_status_bits": 64,
+    "prior_top_fsm_axi_decoder_block_bonded_iob": 132,
+    "prior_top_fsm_axi_decoder_block_whs_ns": 0.005,
+    "implementation_stage": "post-route",
+    "wns_ns": 1.348,
+    "whs_ns": 0.009,
+    "wpws_ns": 2.225,
+    "resource_evidence_source": "vivado_utilization_rpt"
+  }
+}

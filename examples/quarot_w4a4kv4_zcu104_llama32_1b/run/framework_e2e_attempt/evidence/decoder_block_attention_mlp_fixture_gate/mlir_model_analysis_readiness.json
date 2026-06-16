@@ -1,0 +1,114 @@
+{
+  "artifact": "mlir_model_analysis_readiness",
+  "status": "blocked",
+  "analysis_source": "synthetic_llama_block_mlir",
+  "source_kind": "synthetic_fixture",
+  "source_path": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/decoder_block_attention_mlp_fixture/synthetic_llama_block.mlir",
+  "copied_path": null,
+  "target_claim_allowed_by_source": false,
+  "coverage_level": "synthetic_decoder_block_mlir_not_exported_target_model",
+  "mlir_entry": "llama_decoder_block",
+  "mlir_op_count": 10,
+  "mlir_supported_ops": [
+    "MatMul",
+    "RMSNorm",
+    "RoPE",
+    "SiLU",
+    "Softmax"
+  ],
+  "mlir_unsupported_ops": [],
+  "mlir_node_names": [
+    "input_layernorm",
+    "q_proj",
+    "k_proj",
+    "rope_q",
+    "attention_softmax",
+    "o_proj",
+    "post_attention_layernorm",
+    "up_proj",
+    "silu",
+    "down_proj"
+  ],
+  "mlir_semantic_node_names": [
+    "attention_scores_softmax_kv",
+    "down_proj",
+    "input_layernorm",
+    "k_proj",
+    "o_proj",
+    "post_attention_layernorm",
+    "q_proj",
+    "rope_qk",
+    "silu_gate",
+    "up_proj"
+  ],
+  "mlir_semantic_alias_map": {
+    "input_layernorm": [
+      "input_layernorm"
+    ],
+    "q_proj": [
+      "q_proj"
+    ],
+    "k_proj": [
+      "k_proj"
+    ],
+    "rope_q": [
+      "rope_qk"
+    ],
+    "attention_softmax": [
+      "attention_scores_softmax_kv"
+    ],
+    "o_proj": [
+      "o_proj"
+    ],
+    "post_attention_layernorm": [
+      "post_attention_layernorm"
+    ],
+    "up_proj": [
+      "up_proj"
+    ],
+    "silu": [
+      "silu_gate"
+    ],
+    "down_proj": [
+      "down_proj"
+    ]
+  },
+  "semantic_gemm_coverage": {
+    "covered_count": 5,
+    "required_count": 7,
+    "covered": [
+      "q_proj",
+      "k_proj",
+      "o_proj",
+      "up_proj",
+      "down_proj"
+    ]
+  },
+  "semantic_non_gemm_coverage": {
+    "covered_count": 5,
+    "required_count": 8,
+    "covered": [
+      "input_layernorm",
+      "rope_qk",
+      "attention_scores_softmax_kv",
+      "post_attention_layernorm",
+      "silu_gate"
+    ]
+  },
+  "missing_semantic_gemm_ops": [
+    "v_proj",
+    "gate_proj"
+  ],
+  "missing_semantic_non_gemm_ops": [
+    "attention_residual",
+    "swiglu_multiply",
+    "mlp_residual"
+  ],
+  "blocking_reason": "inspect requires provided/exported MLIR covering every required LLaMA GEMM and non-GEMM op with no unsupported ops",
+  "next_action": "export the selected model to ONNX/ONNX-MLIR or provide an MLIR graph that covers all semantic LLaMA ops",
+  "does_not_claim": [
+    "exported_HuggingFace_model_MLIR",
+    "checkpoint_weight_loading",
+    "full_LLaMA_execution"
+  ]
+}

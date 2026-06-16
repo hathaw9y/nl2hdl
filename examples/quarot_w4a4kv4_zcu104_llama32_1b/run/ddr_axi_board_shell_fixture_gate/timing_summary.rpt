@@ -1,0 +1,382 @@
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2024 Advanced Micro Devices, Inc. All Rights Reserved.
+--------------------------------------------------------------------------------------------------------------------------------------------------
+| Tool Version      : Vivado v.2024.1 (lin64) Build 5076996 Wed May 22 18:36:09 MDT 2024
+| Date              : Tue Jun 16 09:28:18 2026
+| Host              : iamjames77-MS-7D76 running 64-bit Ubuntu 22.04.5 LTS
+| Command           : report_timing_summary -file timing_summary.rpt
+| Design            : ddr_axi_board_shell_fixture
+| Device            : xczu7ev-ffvc1156
+| Speed File        : -2  PRODUCTION 1.30 05-15-2022
+| Design State      : Routed
+| Temperature Grade : E
+--------------------------------------------------------------------------------------------------------------------------------------------------
+
+Timing Summary Report
+
+------------------------------------------------------------------------------------------------
+| Timer Settings
+| --------------
+------------------------------------------------------------------------------------------------
+
+  Enable Multi Corner Analysis               :  Yes
+  Enable Pessimism Removal                   :  Yes
+  Pessimism Removal Resolution               :  Nearest Common Node
+  Enable Input Delay Default Clock           :  No
+  Enable Preset / Clear Arcs                 :  No
+  Disable Flight Delays                      :  No
+  Ignore I/O Paths                           :  No
+  Timing Early Launch at Borrowing Latches   :  No
+  Borrow Time for Max Delay Exceptions       :  Yes
+  Merge Timing Exceptions                    :  Yes
+  Inter-SLR Compensation                     :  Conservative
+
+  Corner  Analyze    Analyze    
+  Name    Max Paths  Min Paths  
+  ------  ---------  ---------  
+  Slow    Yes        Yes        
+  Fast    Yes        Yes        
+
+
+------------------------------------------------------------------------------------------------
+| Report Methodology
+| ------------------
+------------------------------------------------------------------------------------------------
+
+No report available as report_methodology has not been run prior. Run report_methodology on the current design for the summary of methodology violations.
+
+
+
+check_timing report
+
+Table of Contents
+-----------------
+1. checking no_clock (0)
+2. checking constant_clock (0)
+3. checking pulse_width_clock (0)
+4. checking unconstrained_internal_endpoints (0)
+5. checking no_input_delay (2)
+6. checking no_output_delay (104)
+7. checking multiple_clock (0)
+8. checking generated_clocks (0)
+9. checking loops (0)
+10. checking partial_input_delay (0)
+11. checking partial_output_delay (0)
+12. checking latch_loops (0)
+
+1. checking no_clock (0)
+------------------------
+ There are 0 register/latch pins with no clock.
+
+
+2. checking constant_clock (0)
+------------------------------
+ There are 0 register/latch pins with constant_clock.
+
+
+3. checking pulse_width_clock (0)
+---------------------------------
+ There are 0 register/latch pins which need pulse_width check
+
+
+4. checking unconstrained_internal_endpoints (0)
+------------------------------------------------
+ There are 0 pins that are not constrained for maximum delay.
+
+ There are 0 pins that are not constrained for maximum delay due to constant clock.
+
+
+5. checking no_input_delay (2)
+------------------------------
+ There are 2 input ports with no input delay specified. (HIGH)
+
+ There are 0 input ports with no input delay but user has a false path constraint.
+
+
+6. checking no_output_delay (104)
+---------------------------------
+ There are 104 ports with no output delay specified. (HIGH)
+
+ There are 0 ports with no output delay but user has a false path constraint
+
+ There are 0 ports with no output delay but with a timing clock defined on it or propagating through it
+
+
+7. checking multiple_clock (0)
+------------------------------
+ There are 0 register/latch pins with multiple clocks.
+
+
+8. checking generated_clocks (0)
+--------------------------------
+ There are 0 generated clocks that are not connected to a clock source.
+
+
+9. checking loops (0)
+---------------------
+ There are 0 combinational loops in the design.
+
+
+10. checking partial_input_delay (0)
+------------------------------------
+ There are 0 input ports with partial input delay specified.
+
+
+11. checking partial_output_delay (0)
+-------------------------------------
+ There are 0 ports with partial output delay specified.
+
+
+12. checking latch_loops (0)
+----------------------------
+ There are 0 combinational latch loops in the design through latch input
+
+
+
+------------------------------------------------------------------------------------------------
+| Design Timing Summary
+| ---------------------
+------------------------------------------------------------------------------------------------
+
+    WNS(ns)      TNS(ns)  TNS Failing Endpoints  TNS Total Endpoints      WHS(ns)      THS(ns)  THS Failing Endpoints  THS Total Endpoints     WPWS(ns)     TPWS(ns)  TPWS Failing Endpoints  TPWS Total Endpoints  
+    -------      -------  ---------------------  -------------------      -------      -------  ---------------------  -------------------     --------     --------  ----------------------  --------------------  
+      1.005        0.000                      0                 2467        0.017        0.000                      0                 2467        2.225        0.000                       0                  1059  
+
+
+All user specified timing constraints are met.
+
+
+------------------------------------------------------------------------------------------------
+| Clock Summary
+| -------------
+------------------------------------------------------------------------------------------------
+
+Clock  Waveform(ns)         Period(ns)      Frequency(MHz)
+-----  ------------         ----------      --------------
+aclk   {0.000 2.500}        5.000           200.000         
+
+
+------------------------------------------------------------------------------------------------
+| Intra Clock Table
+| -----------------
+------------------------------------------------------------------------------------------------
+
+Clock             WNS(ns)      TNS(ns)  TNS Failing Endpoints  TNS Total Endpoints      WHS(ns)      THS(ns)  THS Failing Endpoints  THS Total Endpoints     WPWS(ns)     TPWS(ns)  TPWS Failing Endpoints  TPWS Total Endpoints  
+-----             -------      -------  ---------------------  -------------------      -------      -------  ---------------------  -------------------     --------     --------  ----------------------  --------------------  
+aclk                1.005        0.000                      0                 2467        0.017        0.000                      0                 2467        2.225        0.000                       0                  1059  
+
+
+------------------------------------------------------------------------------------------------
+| Inter Clock Table
+| -----------------
+------------------------------------------------------------------------------------------------
+
+From Clock    To Clock          WNS(ns)      TNS(ns)  TNS Failing Endpoints  TNS Total Endpoints      WHS(ns)      THS(ns)  THS Failing Endpoints  THS Total Endpoints  
+----------    --------          -------      -------  ---------------------  -------------------      -------      -------  ---------------------  -------------------  
+
+
+------------------------------------------------------------------------------------------------
+| Other Path Groups Table
+| -----------------------
+------------------------------------------------------------------------------------------------
+
+Path Group    From Clock    To Clock          WNS(ns)      TNS(ns)  TNS Failing Endpoints  TNS Total Endpoints      WHS(ns)      THS(ns)  THS Failing Endpoints  THS Total Endpoints  
+----------    ----------    --------          -------      -------  ---------------------  -------------------      -------      -------  ---------------------  -------------------  
+
+
+------------------------------------------------------------------------------------------------
+| Timing Details
+| --------------
+------------------------------------------------------------------------------------------------
+
+
+---------------------------------------------------------------------------------------------------
+From Clock:  aclk
+  To Clock:  aclk
+
+Setup :            0  Failing Endpoints,  Worst Slack        1.005ns,  Total Violation        0.000ns
+Hold  :            0  Failing Endpoints,  Worst Slack        0.017ns,  Total Violation        0.000ns
+PW    :            0  Failing Endpoints,  Worst Slack        2.225ns,  Total Violation        0.000ns
+---------------------------------------------------------------------------------------------------
+
+
+Max Delay Paths
+--------------------------------------------------------------------------------------
+Slack (MET) :             1.005ns  (required time - arrival time)
+  Source:                 u_model_fsm_axi_decoder_block_fixture/u_token_loop_axi_decoder_block_fixture/u_top_fsm_axi_decoder_block_fixture/u_layer_fsm_axi_decoder_block_fixture/u_decoder_block_axi_attention_mlp_fixture/u_residual_mlp_fixture/(null)[0].value_i0__0/DSP_A_B_DATA_INST/CLK
+                            (rising edge-triggered cell DSP_A_B_DATA clocked by aclk  {rise@0.000ns fall@2.500ns period=5.000ns})
+  Destination:            u_model_fsm_axi_decoder_block_fixture/u_token_loop_axi_decoder_block_fixture/u_top_fsm_axi_decoder_block_fixture/u_layer_fsm_axi_decoder_block_fixture/u_decoder_block_axi_attention_mlp_fixture/u_residual_mlp_fixture/(null)[0].value_i0__4/DSP_A_B_DATA_INST/A[28]
+                            (rising edge-triggered cell DSP_A_B_DATA clocked by aclk  {rise@0.000ns fall@2.500ns period=5.000ns})
+  Path Group:             aclk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            5.000ns  (aclk rise@5.000ns - aclk rise@0.000ns)
+  Data Path Delay:        3.541ns  (logic 2.071ns (58.483%)  route 1.470ns (41.517%))
+  Logic Levels:           9  (CARRY8=2 DSP_ALU=1 DSP_M_DATA=1 DSP_MULTIPLIER=1 DSP_OUTPUT=1 DSP_PREADD_DATA=1 LUT2=1 LUT3=1)
+  Clock Path Skew:        -0.127ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    2.972ns = ( 7.972 - 5.000 ) 
+    Source Clock Delay      (SCD):    3.829ns
+    Clock Pessimism Removal (CPR):    0.731ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+  Clock Net Delay (Source):      2.535ns (routing 1.343ns, distribution 1.192ns)
+  Clock Net Delay (Destination): 2.224ns (routing 1.221ns, distribution 1.003ns)
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock aclk rise edge)       0.000     0.000 r  
+    C3                                                0.000     0.000 r  aclk (IN)
+                         net (fo=0)                   0.000     0.000    aclk_IBUF_inst/I
+    C3                   INBUF (Prop_INBUF_HDIOB_M_PAD_O)
+                                                      1.062     1.062 r  aclk_IBUF_inst/INBUF_INST/O
+                         net (fo=1, routed)           0.000     1.062    aclk_IBUF_inst/OUT
+    C3                   IBUFCTRL (Prop_IBUFCTRL_HDIOB_M_I_O)
+                                                      0.000     1.062 r  aclk_IBUF_inst/IBUFCTRL_INST/O
+                         net (fo=1, routed)           0.204     1.266    aclk_IBUF
+    BUFGCE_HDIO_X2Y2     BUFGCE (Prop_BUFCE_BUFGCE_HDIO_I_O)
+                                                      0.028     1.294 r  aclk_IBUF_BUFG_inst/O
+    X1Y3 (CLOCK_ROOT)    net (fo=1106, routed)        2.535     3.829    u_model_fsm_axi_decoder_block_fixture/u_token_loop_axi_decoder_block_fixture/u_top_fsm_axi_decoder_block_fixture/u_layer_fsm_axi_decoder_block_fixture/u_decoder_block_axi_attention_mlp_fixture/u_residual_mlp_fixture/(null)[0].value_i0__0/CLK
+    DSP48E2_X8Y54        DSP_A_B_DATA                                 r  u_model_fsm_axi_decoder_block_fixture/u_token_loop_axi_decoder_block_fixture/u_top_fsm_axi_decoder_block_fixture/u_layer_fsm_axi_decoder_block_fixture/u_decoder_block_axi_attention_mlp_fixture/u_residual_mlp_fixture/(null)[0].value_i0__0/DSP_A_B_DATA_INST/CLK
+  -------------------------------------------------------------------    -------------------
+    DSP48E2_X8Y54        DSP_A_B_DATA (Prop_DSP_A_B_DATA_DSP48E2_CLK_B2_DATA[17])
+                                                      0.212     4.041 r  u_model_fsm_axi_decoder_block_fixture/u_token_loop_axi_decoder_block_fixture/u_top_fsm_axi_decoder_block_fixture/u_layer_fsm_axi_decoder_block_fixture/u_decoder_block_axi_attention_mlp_fixture/u_residual_mlp_fixture/(null)[0].value_i0__0/DSP_A_B_DATA_INST/B2_DATA[17]
+                         net (fo=1, routed)           0.000     4.041    u_model_fsm_axi_decoder_block_fixture/u_token_loop_axi_decoder_block_fixture/u_top_fsm_axi_decoder_block_fixture/u_layer_fsm_axi_decoder_block_fixture/u_decoder_block_axi_attention_mlp_fixture/u_residual_mlp_fixture/(null)[0].value_i0__0/DSP_A_B_DATA.B2_DATA<17>
+    DSP48E2_X8Y54        DSP_PREADD_DATA (Prop_DSP_PREADD_DATA_DSP48E2_B2_DATA[17]_B2B1[17])
+                                                      0.073     4.114 r  u_model_fsm_axi_decoder_block_fixture/u_token_loop_axi_decoder_block_fixture/u_top_fsm_axi_decoder_block_fixture/u_layer_fsm_axi_decoder_block_fixture/u_decoder_block_axi_attention_mlp_fixture/u_residual_mlp_fixture/(null)[0].value_i0__0/DSP_PREADD_DATA_INST/B2B1[17]
+                         net (fo=1, routed)           0.000     4.114    u_model_fsm_axi_decoder_block_fixture/u_token_loop_axi_decoder_block_fixture/u_top_fsm_axi_decoder_block_fixture/u_layer_fsm_axi_decoder_block_fixture/u_decoder_block_axi_attention_mlp_fixture/u_residual_mlp_fixture/(null)[0].value_i0__0/DSP_PREADD_DATA.B2B1<17>
+    DSP48E2_X8Y54        DSP_MULTIPLIER (Prop_DSP_MULTIPLIER_DSP48E2_B2B1[17]_V[26])
+                                                      0.609     4.723 f  u_model_fsm_axi_decoder_block_fixture/u_token_loop_axi_decoder_block_fixture/u_top_fsm_axi_decoder_block_fixture/u_layer_fsm_axi_decoder_block_fixture/u_decoder_block_axi_attention_mlp_fixture/u_residual_mlp_fixture/(null)[0].value_i0__0/DSP_MULTIPLIER_INST/V[26]
+                         net (fo=1, routed)           0.000     4.723    u_model_fsm_axi_decoder_block_fixture/u_token_loop_axi_decoder_block_fixture/u_top_fsm_axi_decoder_block_fixture/u_layer_fsm_axi_decoder_block_fixture/u_decoder_block_axi_attention_mlp_fixture/u_residual_mlp_fixture/(null)[0].value_i0__0/DSP_MULTIPLIER.V<26>
+    DSP48E2_X8Y54        DSP_M_DATA (Prop_DSP_M_DATA_DSP48E2_V[26]_V_DATA[26])
+                                                      0.046     4.769 r  u_model_fsm_axi_decoder_block_fixture/u_token_loop_axi_decoder_block_fixture/u_top_fsm_axi_decoder_block_fixture/u_layer_fsm_axi_decoder_block_fixture/u_decoder_block_axi_attention_mlp_fixture/u_residual_mlp_fixture/(null)[0].value_i0__0/DSP_M_DATA_INST/V_DATA[26]
+                         net (fo=1, routed)           0.000     4.769    u_model_fsm_axi_decoder_block_fixture/u_token_loop_axi_decoder_block_fixture/u_top_fsm_axi_decoder_block_fixture/u_layer_fsm_axi_decoder_block_fixture/u_decoder_block_axi_attention_mlp_fixture/u_residual_mlp_fixture/(null)[0].value_i0__0/DSP_M_DATA.V_DATA<26>
+    DSP48E2_X8Y54        DSP_ALU (Prop_DSP_ALU_DSP48E2_V_DATA[26]_ALU_OUT[26])
+                                                      0.571     5.340 r  u_model_fsm_axi_decoder_block_fixture/u_token_loop_axi_decoder_block_fixture/u_top_fsm_axi_decoder_block_fixture/u_layer_fsm_axi_decoder_block_fixture/u_decoder_block_axi_attention_mlp_fixture/u_residual_mlp_fixture/(null)[0].value_i0__0/DSP_ALU_INST/ALU_OUT[26]
+                         net (fo=1, routed)           0.000     5.340    u_model_fsm_axi_decoder_block_fixture/u_token_loop_axi_decoder_block_fixture/u_top_fsm_axi_decoder_block_fixture/u_layer_fsm_axi_decoder_block_fixture/u_decoder_block_axi_attention_mlp_fixture/u_residual_mlp_fixture/(null)[0].value_i0__0/DSP_ALU.ALU_OUT<26>
+    DSP48E2_X8Y54        DSP_OUTPUT (Prop_DSP_OUTPUT_DSP48E2_ALU_OUT[26]_P[26])
+                                                      0.109     5.449 f  u_model_fsm_axi_decoder_block_fixture/u_token_loop_axi_decoder_block_fixture/u_top_fsm_axi_decoder_block_fixture/u_layer_fsm_axi_decoder_block_fixture/u_decoder_block_axi_attention_mlp_fixture/u_residual_mlp_fixture/(null)[0].value_i0__0/DSP_OUTPUT_INST/P[26]
+                         net (fo=4, routed)           0.356     5.805    u_model_fsm_axi_decoder_block_fixture/u_token_loop_axi_decoder_block_fixture/u_top_fsm_axi_decoder_block_fixture/u_layer_fsm_axi_decoder_block_fixture/u_decoder_block_axi_attention_mlp_fixture/u_residual_mlp_fixture/(null)[0].value_i0__0_n_79
+    SLICE_X72Y139        LUT2 (Prop_E6LUT_SLICEL_I0_O)
+                                                      0.123     5.928 r  u_model_fsm_axi_decoder_block_fixture/u_token_loop_axi_decoder_block_fixture/u_top_fsm_axi_decoder_block_fixture/u_layer_fsm_axi_decoder_block_fixture/u_decoder_block_axi_attention_mlp_fixture/u_residual_mlp_fixture/(null)[0].value_i0__4_i_122/O
+                         net (fo=1, routed)           0.007     5.935    u_model_fsm_axi_decoder_block_fixture/u_token_loop_axi_decoder_block_fixture/u_top_fsm_axi_decoder_block_fixture/u_layer_fsm_axi_decoder_block_fixture/u_decoder_block_axi_attention_mlp_fixture/u_residual_mlp_fixture/(null)[0].value_i0__4_i_122_n_0
+    SLICE_X72Y139        CARRY8 (Prop_CARRY8_SLICEL_S[4]_CO[7])
+                                                      0.153     6.088 f  u_model_fsm_axi_decoder_block_fixture/u_token_loop_axi_decoder_block_fixture/u_top_fsm_axi_decoder_block_fixture/u_layer_fsm_axi_decoder_block_fixture/u_decoder_block_axi_attention_mlp_fixture/u_residual_mlp_fixture/(null)[0].value_i0__4_i_75/CO[7]
+                         net (fo=1, routed)           0.026     6.114    u_model_fsm_axi_decoder_block_fixture/u_token_loop_axi_decoder_block_fixture/u_top_fsm_axi_decoder_block_fixture/u_layer_fsm_axi_decoder_block_fixture/u_decoder_block_axi_attention_mlp_fixture/u_residual_mlp_fixture/(null)[0].value_i0__4_i_75_n_0
+    SLICE_X72Y140        CARRY8 (Prop_CARRY8_SLICEL_CI_CO[0])
+                                                      0.052     6.166 f  u_model_fsm_axi_decoder_block_fixture/u_token_loop_axi_decoder_block_fixture/u_top_fsm_axi_decoder_block_fixture/u_layer_fsm_axi_decoder_block_fixture/u_decoder_block_axi_attention_mlp_fixture/u_residual_mlp_fixture/(null)[0].value_i0__4_i_38/CO[0]
+                         net (fo=16, routed)          0.463     6.630    u_model_fsm_axi_decoder_block_fixture/u_token_loop_axi_decoder_block_fixture/u_top_fsm_axi_decoder_block_fixture/u_layer_fsm_axi_decoder_block_fixture/u_decoder_block_axi_attention_mlp_fixture/u_residual_mlp_fixture/(null)[0].value_i0__4_i_38_n_7
+    SLICE_X79Y135        LUT3 (Prop_C6LUT_SLICEM_I2_O)
+                                                      0.123     6.753 r  u_model_fsm_axi_decoder_block_fixture/u_token_loop_axi_decoder_block_fixture/u_top_fsm_axi_decoder_block_fixture/u_layer_fsm_axi_decoder_block_fixture/u_decoder_block_axi_attention_mlp_fixture/u_residual_mlp_fixture/(null)[0].value_i0__4_i_17/O
+                         net (fo=15, routed)          0.618     7.371    u_model_fsm_axi_decoder_block_fixture/u_token_loop_axi_decoder_block_fixture/u_top_fsm_axi_decoder_block_fixture/u_layer_fsm_axi_decoder_block_fixture/u_decoder_block_axi_attention_mlp_fixture/u_residual_mlp_fixture/(null)[0].value_i0__4/A[28]
+    DSP48E2_X7Y56        DSP_A_B_DATA                                 r  u_model_fsm_axi_decoder_block_fixture/u_token_loop_axi_decoder_block_fixture/u_top_fsm_axi_decoder_block_fixture/u_layer_fsm_axi_decoder_block_fixture/u_decoder_block_axi_attention_mlp_fixture/u_residual_mlp_fixture/(null)[0].value_i0__4/DSP_A_B_DATA_INST/A[28]
+  -------------------------------------------------------------------    -------------------
+
+                         (clock aclk rise edge)       5.000     5.000 r  
+    C3                                                0.000     5.000 r  aclk (IN)
+                         net (fo=0)                   0.000     5.000    aclk_IBUF_inst/I
+    C3                   INBUF (Prop_INBUF_HDIOB_M_PAD_O)
+                                                      0.555     5.555 r  aclk_IBUF_inst/INBUF_INST/O
+                         net (fo=1, routed)           0.000     5.555    aclk_IBUF_inst/OUT
+    C3                   IBUFCTRL (Prop_IBUFCTRL_HDIOB_M_I_O)
+                                                      0.000     5.555 r  aclk_IBUF_inst/IBUFCTRL_INST/O
+                         net (fo=1, routed)           0.169     5.724    aclk_IBUF
+    BUFGCE_HDIO_X2Y2     BUFGCE (Prop_BUFCE_BUFGCE_HDIO_I_O)
+                                                      0.024     5.748 r  aclk_IBUF_BUFG_inst/O
+    X1Y3 (CLOCK_ROOT)    net (fo=1106, routed)        2.224     7.972    u_model_fsm_axi_decoder_block_fixture/u_token_loop_axi_decoder_block_fixture/u_top_fsm_axi_decoder_block_fixture/u_layer_fsm_axi_decoder_block_fixture/u_decoder_block_axi_attention_mlp_fixture/u_residual_mlp_fixture/(null)[0].value_i0__4/CLK
+    DSP48E2_X7Y56        DSP_A_B_DATA                                 r  u_model_fsm_axi_decoder_block_fixture/u_token_loop_axi_decoder_block_fixture/u_top_fsm_axi_decoder_block_fixture/u_layer_fsm_axi_decoder_block_fixture/u_decoder_block_axi_attention_mlp_fixture/u_residual_mlp_fixture/(null)[0].value_i0__4/DSP_A_B_DATA_INST/CLK
+                         clock pessimism              0.731     8.702    
+                         clock uncertainty           -0.035     8.667    
+    DSP48E2_X7Y56        DSP_A_B_DATA (Setup_DSP_A_B_DATA_DSP48E2_CLK_A[28])
+                                                     -0.292     8.375    u_model_fsm_axi_decoder_block_fixture/u_token_loop_axi_decoder_block_fixture/u_top_fsm_axi_decoder_block_fixture/u_layer_fsm_axi_decoder_block_fixture/u_decoder_block_axi_attention_mlp_fixture/u_residual_mlp_fixture/(null)[0].value_i0__4/DSP_A_B_DATA_INST
+  -------------------------------------------------------------------
+                         required time                          8.375    
+                         arrival time                          -7.371    
+  -------------------------------------------------------------------
+                         slack                                  1.005    
+
+
+
+
+
+Min Delay Paths
+--------------------------------------------------------------------------------------
+Slack (MET) :             0.017ns  (arrival time - required time)
+  Source:                 u_model_fsm_axi_decoder_block_fixture/u_token_loop_axi_decoder_block_fixture/u_top_fsm_axi_decoder_block_fixture/u_layer_fsm_axi_decoder_block_fixture/u_decoder_block_axi_attention_mlp_fixture/u_residual_mlp_fixture/attention_r_reg[8]/C
+                            (rising edge-triggered cell FDRE clocked by aclk  {rise@0.000ns fall@2.500ns period=5.000ns})
+  Destination:            u_model_fsm_axi_decoder_block_fixture/u_token_loop_axi_decoder_block_fixture/u_top_fsm_axi_decoder_block_fixture/u_layer_fsm_axi_decoder_block_fixture/u_decoder_block_axi_attention_mlp_fixture/u_residual_mlp_fixture/residual0_r_reg[8]/D
+                            (rising edge-triggered cell FDRE clocked by aclk  {rise@0.000ns fall@2.500ns period=5.000ns})
+  Path Group:             aclk
+  Path Type:              Hold (Min at Slow Process Corner)
+  Requirement:            0.000ns  (aclk rise@0.000ns - aclk rise@0.000ns)
+  Data Path Delay:        0.166ns  (logic 0.060ns (36.145%)  route 0.106ns (63.855%))
+  Logic Levels:           0  
+  Clock Path Skew:        0.087ns (DCD - SCD - CPR)
+    Destination Clock Delay (DCD):    3.794ns
+    Source Clock Delay      (SCD):    2.976ns
+    Clock Pessimism Removal (CPR):    0.730ns
+  Clock Net Delay (Source):      2.229ns (routing 1.221ns, distribution 1.008ns)
+  Clock Net Delay (Destination): 2.499ns (routing 1.343ns, distribution 1.156ns)
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock aclk rise edge)       0.000     0.000 r  
+    C3                                                0.000     0.000 r  aclk (IN)
+                         net (fo=0)                   0.000     0.000    aclk_IBUF_inst/I
+    C3                   INBUF (Prop_INBUF_HDIOB_M_PAD_O)
+                                                      0.555     0.555 r  aclk_IBUF_inst/INBUF_INST/O
+                         net (fo=1, routed)           0.000     0.555    aclk_IBUF_inst/OUT
+    C3                   IBUFCTRL (Prop_IBUFCTRL_HDIOB_M_I_O)
+                                                      0.000     0.555 r  aclk_IBUF_inst/IBUFCTRL_INST/O
+                         net (fo=1, routed)           0.169     0.724    aclk_IBUF
+    BUFGCE_HDIO_X2Y2     BUFGCE (Prop_BUFCE_BUFGCE_HDIO_I_O)
+                                                      0.024     0.748 r  aclk_IBUF_BUFG_inst/O
+    X1Y3 (CLOCK_ROOT)    net (fo=1106, routed)        2.229     2.976    u_model_fsm_axi_decoder_block_fixture/u_token_loop_axi_decoder_block_fixture/u_top_fsm_axi_decoder_block_fixture/u_layer_fsm_axi_decoder_block_fixture/u_decoder_block_axi_attention_mlp_fixture/u_residual_mlp_fixture/CLK
+    SLICE_X75Y136        FDRE                                         r  u_model_fsm_axi_decoder_block_fixture/u_token_loop_axi_decoder_block_fixture/u_top_fsm_axi_decoder_block_fixture/u_layer_fsm_axi_decoder_block_fixture/u_decoder_block_axi_attention_mlp_fixture/u_residual_mlp_fixture/attention_r_reg[8]/C
+  -------------------------------------------------------------------    -------------------
+    SLICE_X75Y136        FDRE (Prop_BFF2_SLICEL_C_Q)
+                                                      0.060     3.036 r  u_model_fsm_axi_decoder_block_fixture/u_token_loop_axi_decoder_block_fixture/u_top_fsm_axi_decoder_block_fixture/u_layer_fsm_axi_decoder_block_fixture/u_decoder_block_axi_attention_mlp_fixture/u_residual_mlp_fixture/attention_r_reg[8]/Q
+                         net (fo=1, routed)           0.106     3.142    u_model_fsm_axi_decoder_block_fixture/u_token_loop_axi_decoder_block_fixture/u_top_fsm_axi_decoder_block_fixture/u_layer_fsm_axi_decoder_block_fixture/u_decoder_block_axi_attention_mlp_fixture/u_residual_mlp_fixture/attention_r_reg_n_0_[8]
+    SLICE_X77Y137        FDRE                                         r  u_model_fsm_axi_decoder_block_fixture/u_token_loop_axi_decoder_block_fixture/u_top_fsm_axi_decoder_block_fixture/u_layer_fsm_axi_decoder_block_fixture/u_decoder_block_axi_attention_mlp_fixture/u_residual_mlp_fixture/residual0_r_reg[8]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock aclk rise edge)       0.000     0.000 r  
+    C3                                                0.000     0.000 r  aclk (IN)
+                         net (fo=0)                   0.000     0.000    aclk_IBUF_inst/I
+    C3                   INBUF (Prop_INBUF_HDIOB_M_PAD_O)
+                                                      1.062     1.062 r  aclk_IBUF_inst/INBUF_INST/O
+                         net (fo=1, routed)           0.000     1.062    aclk_IBUF_inst/OUT
+    C3                   IBUFCTRL (Prop_IBUFCTRL_HDIOB_M_I_O)
+                                                      0.000     1.062 r  aclk_IBUF_inst/IBUFCTRL_INST/O
+                         net (fo=1, routed)           0.204     1.266    aclk_IBUF
+    BUFGCE_HDIO_X2Y2     BUFGCE (Prop_BUFCE_BUFGCE_HDIO_I_O)
+                                                      0.028     1.294 r  aclk_IBUF_BUFG_inst/O
+    X1Y3 (CLOCK_ROOT)    net (fo=1106, routed)        2.499     3.794    u_model_fsm_axi_decoder_block_fixture/u_token_loop_axi_decoder_block_fixture/u_top_fsm_axi_decoder_block_fixture/u_layer_fsm_axi_decoder_block_fixture/u_decoder_block_axi_attention_mlp_fixture/u_residual_mlp_fixture/CLK
+    SLICE_X77Y137        FDRE                                         r  u_model_fsm_axi_decoder_block_fixture/u_token_loop_axi_decoder_block_fixture/u_top_fsm_axi_decoder_block_fixture/u_layer_fsm_axi_decoder_block_fixture/u_decoder_block_axi_attention_mlp_fixture/u_residual_mlp_fixture/residual0_r_reg[8]/C
+                         clock pessimism             -0.730     3.063    
+    SLICE_X77Y137        FDRE (Hold_FFF2_SLICEL_C_D)
+                                                      0.062     3.125    u_model_fsm_axi_decoder_block_fixture/u_token_loop_axi_decoder_block_fixture/u_top_fsm_axi_decoder_block_fixture/u_layer_fsm_axi_decoder_block_fixture/u_decoder_block_axi_attention_mlp_fixture/u_residual_mlp_fixture/residual0_r_reg[8]
+  -------------------------------------------------------------------
+                         required time                         -3.125    
+                         arrival time                           3.142    
+  -------------------------------------------------------------------
+                         slack                                  0.017    
+
+
+
+
+
+Pulse Width Checks
+--------------------------------------------------------------------------------------
+Clock Name:         aclk
+Waveform(ns):       { 0.000 2.500 }
+Period(ns):         5.000
+Sources:            { aclk }
+
+Check Type        Corner  Lib Pin   Reference Pin  Required(ns)  Actual(ns)  Slack(ns)  Location          Pin
+Min Period        n/a     BUFGCE/I  n/a            1.290         5.000       3.710      BUFGCE_HDIO_X2Y2  aclk_IBUF_BUFG_inst/I
+Low Pulse Width   Slow    FDRE/C    n/a            0.275         2.500       2.225      SLICE_X68Y163     FSM_sequential_state_r_reg[0]/C
+High Pulse Width  Slow    FDRE/C    n/a            0.275         2.500       2.225      SLICE_X68Y163     FSM_sequential_state_r_reg[0]/C
+
+
+

@@ -1,0 +1,76 @@
+{
+  "fixture": "quarot_w4a4kv4_support",
+  "coverage_level": "bounded_quarot_support_fixture",
+  "not_full_target_implementation": true,
+  "dimensions": {
+    "N": 4,
+    "input_width_bits": 8,
+    "activation_quant_width_bits": 4,
+    "rotation_output_width_bits": 10
+  },
+  "element_order": "little-element: element idx is packed at [idx*WIDTH +: WIDTH]",
+  "rotation": {
+    "source": "explicit unnormalized H4 Hadamard-like fixture matrix",
+    "matrix": [
+      [1, 1, 1, 1],
+      [1, -1, 1, -1],
+      [1, 1, -1, -1],
+      [1, -1, -1, 1]
+    ]
+  },
+  "numeric_policy": {
+    "input": "signed int8 two's complement",
+    "rotation": "signed integer add/subtract, unnormalized",
+    "a4_saturation": "clamp rotation output to signed int4 range [-8, 7]",
+    "a4_packing": "two's-complement nibble per element, little-element order",
+    "kv4_roundtrip": "unpack each 4-bit element and repack without dequantization"
+  },
+  "vectors": [
+    {
+      "name": "saturating_mixed_sign",
+      "input_vec_i_elements": [20, -30, 10, -40],
+      "input_vec_i_packed_hex": "0xd80ae214",
+      "kv_vec0_i_elements_hex": ["0x1", "0xf", "0x8", "0x7"],
+      "kv_vec0_i_packed_hex": "0x78f1",
+      "kv_vec1_i_elements_hex": ["0x0", "0x2", "0xe", "0x9"],
+      "kv_vec1_i_packed_hex": "0x9e20",
+      "rotated_vec_o_elements": [-40, 100, 20, 0],
+      "a4_elements_signed": [-8, 7, 7, 0],
+      "a4_packed_o_hex": "0x0778",
+      "kv_vec0_roundtrip_o_hex": "0x78f1",
+      "kv_vec1_roundtrip_o_hex": "0x9e20",
+      "status_o_hex": "0x1f",
+      "status_bits": {
+        "bit0_valid_fixture_result": true,
+        "bit1_saturation_high_seen": true,
+        "bit2_saturation_low_seen": true,
+        "bit3_kv_roundtrip_match": true,
+        "bit4_negative_input_seen": true,
+        "bits7_5_reserved_zero": true
+      }
+    },
+    {
+      "name": "reuse_after_done_release",
+      "input_vec_i_elements": [1, 2, 3, 4],
+      "input_vec_i_packed_hex": "0x04030201",
+      "kv_vec0_i_elements_hex": ["0x1", "0x2", "0x3", "0x4"],
+      "kv_vec0_i_packed_hex": "0x4321",
+      "kv_vec1_i_elements_hex": ["0xa", "0xb", "0xc", "0xd"],
+      "kv_vec1_i_packed_hex": "0xdcba",
+      "rotated_vec_o_elements": [10, -2, -4, 0],
+      "a4_elements_signed": [7, -2, -4, 0],
+      "a4_packed_o_hex": "0x0ce7",
+      "kv_vec0_roundtrip_o_hex": "0x4321",
+      "kv_vec1_roundtrip_o_hex": "0xdcba",
+      "status_o_hex": "0x0b",
+      "status_bits": {
+        "bit0_valid_fixture_result": true,
+        "bit1_saturation_high_seen": true,
+        "bit2_saturation_low_seen": false,
+        "bit3_kv_roundtrip_match": true,
+        "bit4_negative_input_seen": false,
+        "bits7_5_reserved_zero": true
+      }
+    }
+  ]
+}

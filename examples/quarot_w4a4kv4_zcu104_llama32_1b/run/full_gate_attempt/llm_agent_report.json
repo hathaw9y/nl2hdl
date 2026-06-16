@@ -1,0 +1,504 @@
+{
+  "model": "meta-llama/Llama-3.2-1B",
+  "status": "unsupported_model",
+  "mode": "full",
+  "kernel": null,
+  "partition": "gemm_non_gemm",
+  "target": {
+    "board": "ZCU104",
+    "part": "xczu7ev-ffvc1156-2-e",
+    "device_lut": 230400,
+    "device_ff": 460800,
+    "device_dsp": 1728,
+    "device_bram_36k": 312,
+    "device_uram": 96,
+    "device_io": 464,
+    "quantization": "quarot_w4a4kv4_gptq_weights",
+    "optimization_brief": "Use QuaRot-style rotations so the LLaMA decode path can target W4A4KV4: 4-bit GPTQ weights, 4-bit rotated activations, and 4-bit KV-cache storage. The example assumes GPTQ weight tensors already exist and uses a local sparse metadata fixture only to exercise the parent planning flow.\n",
+    "optimization_candidates": [
+      {
+        "name": "quarot_w4a4kv4",
+        "scope": "primary example path",
+        "notes": "rotate residual/attention/MLP streams, quantize activations to 4-bit, and store KV-cache in 4-bit form"
+      },
+      {
+        "name": "w4a8kv4_fallback",
+        "scope": "fallback",
+        "notes": "keep weights and KV-cache at 4-bit but allow 8-bit activations if W4A4 timing or accuracy is unsafe"
+      },
+      {
+        "name": "mixed_precision_softmax_control",
+        "scope": "non_gemm_control",
+        "notes": "keep softmax/control accumulations wider while preserving W4A4KV4 storage boundaries"
+      }
+    ],
+    "optimization_extra_options": {
+      "weight_quantization": {
+        "method": "GPTQ",
+        "bits": 4,
+        "group_size": 128,
+        "source_assumption": "implemented_checkpoint_available",
+        "checkpoint_fixture": "sparse_header_and_payload_prefix_fixture"
+      },
+      "activation_quantization": {
+        "bits": 4,
+        "method": "QuaRot_rotated_activation_quantization",
+        "calibration_source": "assumed_offline_quarot_calibration",
+        "scale_granularity": "per_tensor_or_per_channel_to_be_selected_by_parent"
+      },
+      "kv_cache_quantization": {
+        "bits": 4,
+        "method": "QuaRot_KV4",
+        "storage": "external_ddr_or_onchip_tile_cache",
+        "dequant_location": "attention_score_value_path"
+      },
+      "rotation": {
+        "method": "QuaRot",
+        "transform": "hadamard_like_orthogonal_rotation",
+        "placement": [
+          "residual_stream_before_attention_projection",
+          "qkv_projection_input",
+          "attention_output_before_o_proj",
+          "mlp_input_before_gate_up_projection",
+          "kv_cache_write_read_boundary"
+        ],
+        "implementation_requirement": "rotation kernels must be separate non_gemm module packets unless fused by an explicit parent boundary review"
+      },
+      "numeric_policy": {
+        "weight_bits": 4,
+        "activation_bits": 4,
+        "kv_cache_bits": 4,
+        "accumulator_bits": 32,
+        "requantization": "explicit_scale_shift_saturation"
+      }
+    },
+    "design_style": "systolic_weight_stationary_llm_streaming",
+    "compute_style": "systolic_array",
+    "execution_style": "llm_decoder_streaming",
+    "memory_style": "external_ddr_streaming",
+    "control_style": "hierarchical_fsm",
+    "architecture_brief": "Use a weight-stationary systolic array for projection GEMM/GEMV tiles. GPTQ-packed W4 weights are streamed from DDR into on-chip tile buffers, unpacked/dequantized near the array edge, and reused in-place while rotated A4 activations stream through the array. Size the array from the active DSP budget rather than hardcoding a final dimension.\n",
+    "design_candidates": [
+      {
+        "name": "ws_systolic_32x32",
+        "focus": "first candidate under a 1536-DSP active compute budget",
+        "risk": "routing pressure and activation/KV4 quantization overhead may reduce timing margin"
+      },
+      {
+        "name": "ws_systolic_16x64",
+        "focus": "preserve projection throughput while easing vertical routing",
+        "risk": "less square data reuse and more edge buffering"
+      },
+      {
+        "name": "ws_systolic_24x48",
+        "focus": "middle-ground DSP use with easier BRAM banking",
+        "risk": "tile scheduler is less regular than 32x32"
+      }
+    ],
+    "design_extra_options": {
+      "systolic_array": {
+        "dataflow": "weight_stationary",
+        "initial_rows": 32,
+        "initial_cols": 32,
+        "dsp_per_cell_assumption": 1,
+        "active_dsp_budget": 1536,
+        "reserved_dsp_for_non_gemm_and_control": 192,
+        "sizing_rule": "choose rows*cols*dsp_per_cell <= active_dsp_budget after reserving non-GEMM/control DSP",
+        "allowed_shapes": [
+          [
+            16,
+            64
+          ],
+          [
+            24,
+            48
+          ],
+          [
+            32,
+            32
+          ]
+        ],
+        "selected_shape": "parent_to_select_after_module_ooc_synthesis"
+      },
+      "ddr_streaming": {
+        "stream_width_bits": 128,
+        "burst_policy": "aligned_bursts_per_projection_tile",
+        "onchip_weight_tile_buffer": "double_buffered_bram_uram",
+        "unpack_location": "array_edge",
+        "backpressure": "valid_ready"
+      },
+      "activation_path": {
+        "format": "rotated_int4",
+        "buffer_policy": "ping_pong_tile_buffer",
+        "rotation_module_boundary": "non_gemm_quarot_rotation"
+      },
+      "control": {
+        "hierarchy": [
+          "module_fsm",
+          "projection_tile_scheduler",
+          "decoder_block_fsm",
+          "model_fsm",
+          "board_wrapper_control_regs"
+        ]
+      }
+    }
+  },
+  "steps": [
+    {
+      "name": "write_llm_plan",
+      "status": "passed"
+    },
+    {
+      "name": "inspect_semantic_mlir",
+      "status": "passed",
+      "mlir": "synthetic_llama_block.mlir",
+      "analysis": "mlir_analysis.json",
+      "mlir_model_analysis_readiness": "mlir_model_analysis_readiness.json",
+      "semantic_graph": "model_semantic_graph.json",
+      "gptq_checkpoint_source_preflight": "gptq_checkpoint_source_preflight.json",
+      "gptq_checkpoint_metadata": "gptq_checkpoint_metadata.json",
+      "gptq_payload_probe": "gptq_payload_probe.json",
+      "projection_weight_stream_plan": "projection_weight_stream_plan.json",
+      "target_readiness_report": "target_readiness_report.json",
+      "target_blocker_remediation_plan": "target_blocker_remediation_plan.json",
+      "target_blocker_remediation_markdown": "target_blocker_remediation_plan.md",
+      "hdl_task_manifest": "hdl_task_manifest.json",
+      "hdl_subagent_tasks": "hdl_subagent_tasks.json",
+      "skill_update_candidate_template": "skill_update_candidate_template.json",
+      "subagent_prompts": "subagent_prompts",
+      "verification_prompts": "verification_prompts",
+      "hdl_subagent_dispatch_plan": "hdl_subagent_dispatch_plan.json",
+      "hdl_subagent_wave_status": "hdl_subagent_wave_status.json",
+      "hdl_subagent_execution_manifest": "hdl_subagent_execution_manifest.json",
+      "codex_spawn_instructions": "codex_spawn_instructions.md"
+    }
+  ],
+  "input_clarification": {
+    "artifact": "input_clarification_questions",
+    "status": "clear",
+    "requires_user_response": false,
+    "question_count": 0,
+    "questions": [],
+    "checked_fields": {
+      "optimization": {
+        "quantization": "quarot_w4a4kv4_gptq_weights",
+        "pruning": "none",
+        "pruning_threshold": 0.0,
+        "optimization_brief": "Use QuaRot-style rotations so the LLaMA decode path can target W4A4KV4: 4-bit GPTQ weights, 4-bit rotated activations, and 4-bit KV-cache storage. The example assumes GPTQ weight tensors already exist and uses a local sparse metadata fixture only to exercise the parent planning flow.\n",
+        "optimization_candidates": [
+          {
+            "name": "quarot_w4a4kv4",
+            "scope": "primary example path",
+            "notes": "rotate residual/attention/MLP streams, quantize activations to 4-bit, and store KV-cache in 4-bit form"
+          },
+          {
+            "name": "w4a8kv4_fallback",
+            "scope": "fallback",
+            "notes": "keep weights and KV-cache at 4-bit but allow 8-bit activations if W4A4 timing or accuracy is unsafe"
+          },
+          {
+            "name": "mixed_precision_softmax_control",
+            "scope": "non_gemm_control",
+            "notes": "keep softmax/control accumulations wider while preserving W4A4KV4 storage boundaries"
+          }
+        ],
+        "extra_options": {
+          "weight_quantization": {
+            "method": "GPTQ",
+            "bits": 4,
+            "group_size": 128,
+            "source_assumption": "implemented_checkpoint_available",
+            "checkpoint_fixture": "sparse_header_and_payload_prefix_fixture"
+          },
+          "activation_quantization": {
+            "bits": 4,
+            "method": "QuaRot_rotated_activation_quantization",
+            "calibration_source": "assumed_offline_quarot_calibration",
+            "scale_granularity": "per_tensor_or_per_channel_to_be_selected_by_parent"
+          },
+          "kv_cache_quantization": {
+            "bits": 4,
+            "method": "QuaRot_KV4",
+            "storage": "external_ddr_or_onchip_tile_cache",
+            "dequant_location": "attention_score_value_path"
+          },
+          "rotation": {
+            "method": "QuaRot",
+            "transform": "hadamard_like_orthogonal_rotation",
+            "placement": [
+              "residual_stream_before_attention_projection",
+              "qkv_projection_input",
+              "attention_output_before_o_proj",
+              "mlp_input_before_gate_up_projection",
+              "kv_cache_write_read_boundary"
+            ],
+            "implementation_requirement": "rotation kernels must be separate non_gemm module packets unless fused by an explicit parent boundary review"
+          },
+          "numeric_policy": {
+            "weight_bits": 4,
+            "activation_bits": 4,
+            "kv_cache_bits": 4,
+            "accumulator_bits": 32,
+            "requantization": "explicit_scale_shift_saturation"
+          }
+        }
+      },
+      "design": {
+        "style": "systolic_weight_stationary_llm_streaming",
+        "compute_style": "systolic_array",
+        "execution_style": "llm_decoder_streaming",
+        "memory_style": "external_ddr_streaming",
+        "control_style": "hierarchical_fsm",
+        "pe_count": 1024,
+        "activation_buffer": "rotated_a4_ping_pong_uram_bram",
+        "weight_storage": "external_ddr_gptq_packed_stream_to_onchip_weight_stationary_tiles",
+        "architecture_brief": "Use a weight-stationary systolic array for projection GEMM/GEMV tiles. GPTQ-packed W4 weights are streamed from DDR into on-chip tile buffers, unpacked/dequantized near the array edge, and reused in-place while rotated A4 activations stream through the array. Size the array from the active DSP budget rather than hardcoding a final dimension.\n",
+        "design_candidates": [
+          {
+            "name": "ws_systolic_32x32",
+            "focus": "first candidate under a 1536-DSP active compute budget",
+            "risk": "routing pressure and activation/KV4 quantization overhead may reduce timing margin"
+          },
+          {
+            "name": "ws_systolic_16x64",
+            "focus": "preserve projection throughput while easing vertical routing",
+            "risk": "less square data reuse and more edge buffering"
+          },
+          {
+            "name": "ws_systolic_24x48",
+            "focus": "middle-ground DSP use with easier BRAM banking",
+            "risk": "tile scheduler is less regular than 32x32"
+          }
+        ],
+        "extra_options": {
+          "systolic_array": {
+            "dataflow": "weight_stationary",
+            "initial_rows": 32,
+            "initial_cols": 32,
+            "dsp_per_cell_assumption": 1,
+            "active_dsp_budget": 1536,
+            "reserved_dsp_for_non_gemm_and_control": 192,
+            "sizing_rule": "choose rows*cols*dsp_per_cell <= active_dsp_budget after reserving non-GEMM/control DSP",
+            "allowed_shapes": [
+              [
+                16,
+                64
+              ],
+              [
+                24,
+                48
+              ],
+              [
+                32,
+                32
+              ]
+            ],
+            "selected_shape": "parent_to_select_after_module_ooc_synthesis"
+          },
+          "ddr_streaming": {
+            "stream_width_bits": 128,
+            "burst_policy": "aligned_bursts_per_projection_tile",
+            "onchip_weight_tile_buffer": "double_buffered_bram_uram",
+            "unpack_location": "array_edge",
+            "backpressure": "valid_ready"
+          },
+          "activation_path": {
+            "format": "rotated_int4",
+            "buffer_policy": "ping_pong_tile_buffer",
+            "rotation_module_boundary": "non_gemm_quarot_rotation"
+          },
+          "control": {
+            "hierarchy": [
+              "module_fsm",
+              "projection_tile_scheduler",
+              "decoder_block_fsm",
+              "model_fsm",
+              "board_wrapper_control_regs"
+            ]
+          }
+        }
+      }
+    },
+    "parent_policy": "If requires_user_response is true, stop before HDL sub-agent dispatch and ask these questions. If false, preserve the free-form fields in manifests and continue planning."
+  },
+  "target_gate_summary": {
+    "mlir_model_analysis": {
+      "artifact": "mlir_model_analysis_readiness.json",
+      "status": "blocked",
+      "analysis_source": "synthetic_llama_block_mlir",
+      "source_kind": "synthetic_fixture",
+      "target_claim_allowed_by_source": false,
+      "coverage_level": "synthetic_decoder_block_mlir_not_exported_target_model",
+      "missing_semantic_gemm_ops": [
+        "v_proj",
+        "gate_proj"
+      ],
+      "missing_semantic_non_gemm_ops": [
+        "attention_residual",
+        "swiglu_multiply",
+        "mlp_residual"
+      ]
+    },
+    "target_readiness": {
+      "artifact": "target_readiness_report.json",
+      "status": "target_blocked",
+      "safe_to_spawn_bounded_subagents": true,
+      "safe_to_claim_target_accelerator": false,
+      "blocked_target_task_count": 3
+    },
+    "target_blocker_remediation": {
+      "artifact": "target_blocker_remediation_plan.json",
+      "status": "blocked",
+      "blocked_target_task_count": 3,
+      "target_preflight_blockers": [
+        "real_mlir_model_analysis"
+      ],
+      "canonical_full_preflight_command": "python3 -m nl2hdl agent --model meta-llama/Llama-3.2-1B --spec examples/zcu104_llama32_1b_gptq.yaml --mode inspect --out examples/quarot_w4a4kv4_zcu104_llama32_1b/run/full_gate_attempt --skip-synth --mlir-graph '<exported_or_provided_model_graph.mlir>' --gptq-checkpoint '<local_gptq_int4_checkpoint_dir_or_hf_repo>'"
+    },
+    "gptq_checkpoint_metadata": {
+      "artifact": "gptq_checkpoint_metadata.json",
+      "status": "parsed",
+      "quantization_artifact_classification": "candidate_gptq_int4_checkpoint",
+      "checkpoint_quantization_dependency": "satisfied_by_gptq_quant_metadata",
+      "quantization_artifact_next_action": "run target layout and payload probes for all required LLaMA projections",
+      "source_preflight_status": "resolved_local_path",
+      "checkpoint_source_dependency": "satisfied_by_local_path",
+      "source_preflight_next_action": "run GPTQ metadata and payload probes against the resolved local checkpoint directory",
+      "metadata_source_model_name": "examples/quarot_w4a4kv4_zcu104_llama32_1b/input/assumed_gptq_checkpoint",
+      "target_model_name": "meta-llama/Llama-3.2-1B",
+      "bits": 4,
+      "group_size": 128,
+      "projection_metadata_count": 7,
+      "quantized_projection_metadata_count": 7,
+      "complete_gptq_projection_metadata_count": 7,
+      "raw_projection_key_count": 7,
+      "tensor_summary_count": 21,
+      "tensor_summary_source": "safetensors_header",
+      "weight_layout_preflight_status": "passed",
+      "weight_layout_compatible_projection_count": 7,
+      "weight_layout_required_projection_count": 7
+    },
+    "gptq_checkpoint_source_preflight": {
+      "artifact": "gptq_checkpoint_source_preflight.json",
+      "status": "resolved_local_path",
+      "checkpoint_source_dependency": "satisfied_by_local_path",
+      "next_action": "run GPTQ metadata and payload probes against the resolved local checkpoint directory"
+    },
+    "gptq_payload_probe": {
+      "artifact": "gptq_payload_probe.json",
+      "status": "sampled",
+      "projection": "q_proj",
+      "payload_probe_source": null,
+      "payload_golden_source": null,
+      "sampled_tensor_count": 3,
+      "required_tensor_count": 3,
+      "sample_bytes_requested": 64,
+      "qweight_payload_order": "safetensors_payload_prefix_32bit_little_endian_words",
+      "qweight_payload_word_count": 16,
+      "qweight_stream_probe": {
+        "source": "qweight_safetensors_payload_prefix",
+        "payload_order": "safetensors_payload_prefix_32bit_little_endian_words",
+        "memory_data_width_bits": 128,
+        "bytes_per_memory_beat": 16,
+        "words32_per_memory_beat": 4,
+        "sample_byte_count": 64,
+        "sampled_full_memory_beat_count": 4,
+        "covers_first_memory_beat": true,
+        "first_memory_beats_128b_le_hex": [
+          "0x00000000000000000000000000000000",
+          "0x00000000000000000000000000000000",
+          "0x00000000000000000000000000000000",
+          "0x00000000000000000000000000000000"
+        ],
+        "memory_beat_word_chunks32_le_hex": [
+          [
+            "0x00000000",
+            "0x00000000",
+            "0x00000000",
+            "0x00000000"
+          ],
+          [
+            "0x00000000",
+            "0x00000000",
+            "0x00000000",
+            "0x00000000"
+          ],
+          [
+            "0x00000000",
+            "0x00000000",
+            "0x00000000",
+            "0x00000000"
+          ],
+          [
+            "0x00000000",
+            "0x00000000",
+            "0x00000000",
+            "0x00000000"
+          ]
+        ],
+        "does_not_claim": [
+          "full_qweight_payload_streaming",
+          "AXI_or_DDR_burst_execution",
+          "checkpoint_specific_qweight_order_correctness"
+        ]
+      },
+      "target_checkpoint_payload_dependency": "satisfied_by_payload_probe",
+      "payload_words_match_gptq_probe": null,
+      "qweight_payload_words32_le_count": 16,
+      "projection_payload_probe_count": 7,
+      "sampled_projection_payload_probe_count": 7,
+      "required_projection_payload_probe_count": 7,
+      "all_projection_payload_dependency": "satisfied_by_payload_probe"
+    },
+    "gptq_weight_layout_preflight": {
+      "artifact": "gptq_weight_layout_preflight.json",
+      "status": "passed",
+      "target_compatible_projection_count": 7,
+      "required_projection_count": 7,
+      "blocking_reason": null
+    },
+    "projection_weight_stream_plan": {
+      "artifact": "projection_weight_stream_plan.json",
+      "projection_count": 7,
+      "target_stream_plan_valid_count": 7,
+      "payload_satisfied_projection_count": 7,
+      "all_projection_layout_dependency": "satisfied_by_header_preflight",
+      "all_projection_payload_dependency": "satisfied_by_payload_probe",
+      "target_scale_ready_for_all_projection_streaming": true
+    },
+    "blocked_target_task_count": 3,
+    "blocked_target_tasks": [
+      {
+        "task_id": "real_mlir_model_analysis",
+        "reason": "current inspect MLIR does not prove every target LLaMA GEMM/non-GEMM operation from a provided or exported model graph"
+      },
+      {
+        "task_id": "full_llama_model_execution",
+        "reason": "current gates are bounded fixtures and target planning; full multi-layer/token/DDR/AXI execution is not implemented"
+      },
+      {
+        "task_id": "board_level_zcu104_signoff",
+        "reason": "current Vivado evidence is fixture post-route timing without board I/O, DDR/AXI, or PS/PL constraints"
+      }
+    ]
+  },
+  "error": "full LLaMA-3.2-1B generation is gated until kernel and decoder-block milestones pass on ZCU104; use --mode inspect, --mode kernel, or --mode block",
+  "plan_summary": {
+    "first_rtl_milestones": [
+      "MLIR GEMM/non-GEMM partition report for the selected LLaMA checkpoint",
+      "INT4 GPTQ unpack/dequant tile reader",
+      "INT4xINT8 or INT4xINT16 projection GEMV kernel",
+      "RMSNorm kernel",
+      "single decoder block skeleton with AXI-stream-like tile handshakes",
+      "single-token decode loop for one block, then all blocks"
+    ],
+    "acceptance_gates": [
+      "MLIR/semantic graph report names every LLaMA submodule and tensor shape",
+      "GEMM ops are mapped to tiled INT4 projection kernels and non-GEMM ops are mapped to dedicated RMSNorm/RoPE/softmax/control kernels",
+      "GPTQ metadata parser round-trips packed INT4 weights for at least one projection",
+      "kernel-level RTL matches PyTorch/NumPy references for deterministic vectors",
+      "Vivado synthesis reports timing and resource usage on the ZCU104 part",
+      "agent report records attempted design knobs and final effective design"
+    ]
+  }
+}

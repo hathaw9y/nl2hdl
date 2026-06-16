@@ -1,0 +1,613 @@
+{
+  "artifact": "gptq_checkpoint_metadata",
+  "model_name": "examples/quarot_w4a4kv4_zcu104_llama32_1b/input/assumed_gptq_checkpoint",
+  "status": "parsed",
+  "checkpoint_source_preflight": {
+    "artifact": "gptq_checkpoint_source_preflight",
+    "model_name": "examples/quarot_w4a4kv4_zcu104_llama32_1b/input/assumed_gptq_checkpoint",
+    "status": "resolved_local_path",
+    "checkpoint_source_dependency": "satisfied_by_local_path",
+    "expected_file_patterns": [
+      "config.json",
+      "quantize_config.json",
+      "quant_config.json",
+      "gptq_config.json",
+      "quantization_config.json",
+      "*.safetensors.index.json",
+      "*.bin.index.json",
+      "*.safetensors"
+    ],
+    "network_snapshot_download_allowed": false,
+    "network_snapshot_download_env": "NL2HDL_ALLOW_HF_SNAPSHOT_DOWNLOAD",
+    "local_path_probe": {
+      "path": "examples/quarot_w4a4kv4_zcu104_llama32_1b/input/assumed_gptq_checkpoint",
+      "exists": true,
+      "is_dir": true,
+      "is_file": false
+    },
+    "huggingface_hub_probe": {},
+    "local_cache_probe": {},
+    "network_download_probe": {
+      "attempted": false,
+      "reason": "disabled_by_default"
+    },
+    "next_action": "run GPTQ metadata and payload probes against the resolved local checkpoint directory",
+    "does_not_claim": [
+      "permission_to_download_large_checkpoints_by_default",
+      "checkpoint_weight_loading",
+      "full_tensor_materialization",
+      "numeric_GPTQ_correctness",
+      "full_LLaMA_execution"
+    ],
+    "resolved_model_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/input/assumed_gptq_checkpoint",
+    "artifact_inventory": {
+      "model_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/input/assumed_gptq_checkpoint",
+      "file_count": 2,
+      "files": [
+        "model.safetensors",
+        "quantize_config.json"
+      ],
+      "matched_patterns": [
+        "*.safetensors",
+        "quantize_config.json"
+      ],
+      "missing_metadata_json": false,
+      "has_weight_index": false,
+      "has_safetensors": true
+    }
+  },
+  "metadata_resolution": {
+    "source": "local_path",
+    "path": "examples/quarot_w4a4kv4_zcu104_llama32_1b/input/assumed_gptq_checkpoint"
+  },
+  "network_download_allowed": false,
+  "does_not_claim": [
+    "checkpoint_weight_loading",
+    "full_tensor_materialization",
+    "numeric_GPTQ_correctness",
+    "full_LLaMA_execution"
+  ],
+  "index_files": [],
+  "indexed_safetensors_files_scanned": [],
+  "indexed_safetensors_header_errors": [],
+  "direct_safetensors_files_scanned": [
+    "model.safetensors"
+  ],
+  "direct_safetensors_header_errors": [],
+  "tensor_key_source": "safetensors_header",
+  "shard_files_referenced": [],
+  "projection_metadata": [
+    {
+      "name": "down_proj",
+      "has_qweight": true,
+      "has_qzeros": true,
+      "has_scales": true,
+      "has_g_idx": false,
+      "keys": {
+        "qweight": [
+          "model.layers.0.mlp.down_proj.qweight"
+        ],
+        "qzeros": [
+          "model.layers.0.mlp.down_proj.qzeros"
+        ],
+        "scales": [
+          "model.layers.0.mlp.down_proj.scales"
+        ],
+        "g_idx": [],
+        "other": []
+      },
+      "tensor_summaries": {
+        "model.layers.0.mlp.down_proj.qweight": {
+          "file": "model.safetensors",
+          "key": "model.layers.0.mlp.down_proj.qweight",
+          "dtype": "I32",
+          "shape": [
+            1024,
+            2048
+          ],
+          "data_offsets": [
+            22880256,
+            31268864
+          ],
+          "byte_count": 8388608,
+          "metadata_status": "header_only_no_tensor_payload"
+        },
+        "model.layers.0.mlp.down_proj.qzeros": {
+          "file": "model.safetensors",
+          "key": "model.layers.0.mlp.down_proj.qzeros",
+          "dtype": "I32",
+          "shape": [
+            64,
+            256
+          ],
+          "data_offsets": [
+            31268864,
+            31334400
+          ],
+          "byte_count": 65536,
+          "metadata_status": "header_only_no_tensor_payload"
+        },
+        "model.layers.0.mlp.down_proj.scales": {
+          "file": "model.safetensors",
+          "key": "model.layers.0.mlp.down_proj.scales",
+          "dtype": "F16",
+          "shape": [
+            64,
+            2048
+          ],
+          "data_offsets": [
+            31334400,
+            31596544
+          ],
+          "byte_count": 262144,
+          "metadata_status": "header_only_no_tensor_payload"
+        }
+      }
+    },
+    {
+      "name": "gate_proj",
+      "has_qweight": true,
+      "has_qzeros": true,
+      "has_scales": true,
+      "has_g_idx": false,
+      "keys": {
+        "qweight": [
+          "model.layers.0.mlp.gate_proj.qweight"
+        ],
+        "qzeros": [
+          "model.layers.0.mlp.gate_proj.qzeros"
+        ],
+        "scales": [
+          "model.layers.0.mlp.gate_proj.scales"
+        ],
+        "g_idx": [],
+        "other": []
+      },
+      "tensor_summaries": {
+        "model.layers.0.mlp.gate_proj.qweight": {
+          "file": "model.safetensors",
+          "key": "model.layers.0.mlp.gate_proj.qweight",
+          "dtype": "I32",
+          "shape": [
+            256,
+            8192
+          ],
+          "data_offsets": [
+            5447680,
+            13836288
+          ],
+          "byte_count": 8388608,
+          "metadata_status": "header_only_no_tensor_payload"
+        },
+        "model.layers.0.mlp.gate_proj.qzeros": {
+          "file": "model.safetensors",
+          "key": "model.layers.0.mlp.gate_proj.qzeros",
+          "dtype": "I32",
+          "shape": [
+            16,
+            1024
+          ],
+          "data_offsets": [
+            13836288,
+            13901824
+          ],
+          "byte_count": 65536,
+          "metadata_status": "header_only_no_tensor_payload"
+        },
+        "model.layers.0.mlp.gate_proj.scales": {
+          "file": "model.safetensors",
+          "key": "model.layers.0.mlp.gate_proj.scales",
+          "dtype": "F16",
+          "shape": [
+            16,
+            8192
+          ],
+          "data_offsets": [
+            13901824,
+            14163968
+          ],
+          "byte_count": 262144,
+          "metadata_status": "header_only_no_tensor_payload"
+        }
+      }
+    },
+    {
+      "name": "k_proj",
+      "has_qweight": true,
+      "has_qzeros": true,
+      "has_scales": true,
+      "has_g_idx": false,
+      "keys": {
+        "qweight": [
+          "model.layers.0.self_attn.k_proj.qweight"
+        ],
+        "qzeros": [
+          "model.layers.0.self_attn.k_proj.qzeros"
+        ],
+        "scales": [
+          "model.layers.0.self_attn.k_proj.scales"
+        ],
+        "g_idx": [],
+        "other": []
+      },
+      "tensor_summaries": {
+        "model.layers.0.self_attn.k_proj.qweight": {
+          "file": "model.safetensors",
+          "key": "model.layers.0.self_attn.k_proj.qweight",
+          "dtype": "I32",
+          "shape": [
+            256,
+            512
+          ],
+          "data_offsets": [
+            2179072,
+            2703360
+          ],
+          "byte_count": 524288,
+          "metadata_status": "header_only_no_tensor_payload"
+        },
+        "model.layers.0.self_attn.k_proj.qzeros": {
+          "file": "model.safetensors",
+          "key": "model.layers.0.self_attn.k_proj.qzeros",
+          "dtype": "I32",
+          "shape": [
+            16,
+            64
+          ],
+          "data_offsets": [
+            2703360,
+            2707456
+          ],
+          "byte_count": 4096,
+          "metadata_status": "header_only_no_tensor_payload"
+        },
+        "model.layers.0.self_attn.k_proj.scales": {
+          "file": "model.safetensors",
+          "key": "model.layers.0.self_attn.k_proj.scales",
+          "dtype": "F16",
+          "shape": [
+            16,
+            512
+          ],
+          "data_offsets": [
+            2707456,
+            2723840
+          ],
+          "byte_count": 16384,
+          "metadata_status": "header_only_no_tensor_payload"
+        }
+      }
+    },
+    {
+      "name": "o_proj",
+      "has_qweight": true,
+      "has_qzeros": true,
+      "has_scales": true,
+      "has_g_idx": false,
+      "keys": {
+        "qweight": [
+          "model.layers.0.self_attn.o_proj.qweight"
+        ],
+        "qzeros": [
+          "model.layers.0.self_attn.o_proj.qzeros"
+        ],
+        "scales": [
+          "model.layers.0.self_attn.o_proj.scales"
+        ],
+        "g_idx": [],
+        "other": []
+      },
+      "tensor_summaries": {
+        "model.layers.0.self_attn.o_proj.qweight": {
+          "file": "model.safetensors",
+          "key": "model.layers.0.self_attn.o_proj.qweight",
+          "dtype": "I32",
+          "shape": [
+            256,
+            2048
+          ],
+          "data_offsets": [
+            3268608,
+            5365760
+          ],
+          "byte_count": 2097152,
+          "metadata_status": "header_only_no_tensor_payload"
+        },
+        "model.layers.0.self_attn.o_proj.qzeros": {
+          "file": "model.safetensors",
+          "key": "model.layers.0.self_attn.o_proj.qzeros",
+          "dtype": "I32",
+          "shape": [
+            16,
+            256
+          ],
+          "data_offsets": [
+            5365760,
+            5382144
+          ],
+          "byte_count": 16384,
+          "metadata_status": "header_only_no_tensor_payload"
+        },
+        "model.layers.0.self_attn.o_proj.scales": {
+          "file": "model.safetensors",
+          "key": "model.layers.0.self_attn.o_proj.scales",
+          "dtype": "F16",
+          "shape": [
+            16,
+            2048
+          ],
+          "data_offsets": [
+            5382144,
+            5447680
+          ],
+          "byte_count": 65536,
+          "metadata_status": "header_only_no_tensor_payload"
+        }
+      }
+    },
+    {
+      "name": "q_proj",
+      "has_qweight": true,
+      "has_qzeros": true,
+      "has_scales": true,
+      "has_g_idx": false,
+      "keys": {
+        "qweight": [
+          "model.layers.0.self_attn.q_proj.qweight"
+        ],
+        "qzeros": [
+          "model.layers.0.self_attn.q_proj.qzeros"
+        ],
+        "scales": [
+          "model.layers.0.self_attn.q_proj.scales"
+        ],
+        "g_idx": [],
+        "other": []
+      },
+      "tensor_summaries": {
+        "model.layers.0.self_attn.q_proj.qweight": {
+          "file": "model.safetensors",
+          "key": "model.layers.0.self_attn.q_proj.qweight",
+          "dtype": "I32",
+          "shape": [
+            256,
+            2048
+          ],
+          "data_offsets": [
+            0,
+            2097152
+          ],
+          "byte_count": 2097152,
+          "metadata_status": "header_only_no_tensor_payload"
+        },
+        "model.layers.0.self_attn.q_proj.qzeros": {
+          "file": "model.safetensors",
+          "key": "model.layers.0.self_attn.q_proj.qzeros",
+          "dtype": "I32",
+          "shape": [
+            16,
+            256
+          ],
+          "data_offsets": [
+            2097152,
+            2113536
+          ],
+          "byte_count": 16384,
+          "metadata_status": "header_only_no_tensor_payload"
+        },
+        "model.layers.0.self_attn.q_proj.scales": {
+          "file": "model.safetensors",
+          "key": "model.layers.0.self_attn.q_proj.scales",
+          "dtype": "F16",
+          "shape": [
+            16,
+            2048
+          ],
+          "data_offsets": [
+            2113536,
+            2179072
+          ],
+          "byte_count": 65536,
+          "metadata_status": "header_only_no_tensor_payload"
+        }
+      }
+    },
+    {
+      "name": "up_proj",
+      "has_qweight": true,
+      "has_qzeros": true,
+      "has_scales": true,
+      "has_g_idx": false,
+      "keys": {
+        "qweight": [
+          "model.layers.0.mlp.up_proj.qweight"
+        ],
+        "qzeros": [
+          "model.layers.0.mlp.up_proj.qzeros"
+        ],
+        "scales": [
+          "model.layers.0.mlp.up_proj.scales"
+        ],
+        "g_idx": [],
+        "other": []
+      },
+      "tensor_summaries": {
+        "model.layers.0.mlp.up_proj.qweight": {
+          "file": "model.safetensors",
+          "key": "model.layers.0.mlp.up_proj.qweight",
+          "dtype": "I32",
+          "shape": [
+            256,
+            8192
+          ],
+          "data_offsets": [
+            14163968,
+            22552576
+          ],
+          "byte_count": 8388608,
+          "metadata_status": "header_only_no_tensor_payload"
+        },
+        "model.layers.0.mlp.up_proj.qzeros": {
+          "file": "model.safetensors",
+          "key": "model.layers.0.mlp.up_proj.qzeros",
+          "dtype": "I32",
+          "shape": [
+            16,
+            1024
+          ],
+          "data_offsets": [
+            22552576,
+            22618112
+          ],
+          "byte_count": 65536,
+          "metadata_status": "header_only_no_tensor_payload"
+        },
+        "model.layers.0.mlp.up_proj.scales": {
+          "file": "model.safetensors",
+          "key": "model.layers.0.mlp.up_proj.scales",
+          "dtype": "F16",
+          "shape": [
+            16,
+            8192
+          ],
+          "data_offsets": [
+            22618112,
+            22880256
+          ],
+          "byte_count": 262144,
+          "metadata_status": "header_only_no_tensor_payload"
+        }
+      }
+    },
+    {
+      "name": "v_proj",
+      "has_qweight": true,
+      "has_qzeros": true,
+      "has_scales": true,
+      "has_g_idx": false,
+      "keys": {
+        "qweight": [
+          "model.layers.0.self_attn.v_proj.qweight"
+        ],
+        "qzeros": [
+          "model.layers.0.self_attn.v_proj.qzeros"
+        ],
+        "scales": [
+          "model.layers.0.self_attn.v_proj.scales"
+        ],
+        "g_idx": [],
+        "other": []
+      },
+      "tensor_summaries": {
+        "model.layers.0.self_attn.v_proj.qweight": {
+          "file": "model.safetensors",
+          "key": "model.layers.0.self_attn.v_proj.qweight",
+          "dtype": "I32",
+          "shape": [
+            256,
+            512
+          ],
+          "data_offsets": [
+            2723840,
+            3248128
+          ],
+          "byte_count": 524288,
+          "metadata_status": "header_only_no_tensor_payload"
+        },
+        "model.layers.0.self_attn.v_proj.qzeros": {
+          "file": "model.safetensors",
+          "key": "model.layers.0.self_attn.v_proj.qzeros",
+          "dtype": "I32",
+          "shape": [
+            16,
+            64
+          ],
+          "data_offsets": [
+            3248128,
+            3252224
+          ],
+          "byte_count": 4096,
+          "metadata_status": "header_only_no_tensor_payload"
+        },
+        "model.layers.0.self_attn.v_proj.scales": {
+          "file": "model.safetensors",
+          "key": "model.layers.0.self_attn.v_proj.scales",
+          "dtype": "F16",
+          "shape": [
+            16,
+            512
+          ],
+          "data_offsets": [
+            3252224,
+            3268608
+          ],
+          "byte_count": 16384,
+          "metadata_status": "header_only_no_tensor_payload"
+        }
+      }
+    }
+  ],
+  "projection_metadata_count": 7,
+  "quantized_projection_metadata_count": 7,
+  "complete_gptq_projection_metadata_count": 7,
+  "tensor_summary_count": 21,
+  "tensor_summary_source": "safetensors_header",
+  "model_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/input/assumed_gptq_checkpoint",
+  "metadata_files": [
+    "quantize_config.json"
+  ],
+  "parsed_configs": [
+    {
+      "file": "quantize_config.json",
+      "quant_config": {
+        "bits": 4,
+        "group_size": 128,
+        "quant_method": "gptq",
+        "desc_act": false,
+        "sym": true,
+        "true_sequential": true,
+        "checkpoint_format": "sparse_example_fixture_not_real_weights",
+        "meta": {
+          "desc_act": false,
+          "sym": true,
+          "true_sequential": true,
+          "checkpoint_format": "sparse_example_fixture_not_real_weights"
+        }
+      }
+    }
+  ],
+  "bits": 4,
+  "group_size": 128,
+  "quant_method": "gptq",
+  "desc_act": false,
+  "sym": true,
+  "true_sequential": true,
+  "checkpoint_format": "sparse_example_fixture_not_real_weights",
+  "packing_order": "checkpoint_specific_qweight_layout_requires_loader_contract",
+  "scales_and_zero_points": {
+    "source": "tensor_key_presence",
+    "requires_tensor_loader_for_values": true
+  },
+  "checkpoint_quantization_artifact": {
+    "status": "parsed",
+    "classification": "candidate_gptq_int4_checkpoint",
+    "target_quantization": "gptq_int4",
+    "checkpoint_quantization_dependency": "satisfied_by_gptq_quant_metadata",
+    "bits": 4,
+    "group_size": 128,
+    "raw_projection_metadata_count": 7,
+    "quantized_projection_metadata_count": 7,
+    "complete_gptq_projection_metadata_count": 7,
+    "has_tensor_headers": true,
+    "has_plain_projection_weights": false,
+    "reason": null,
+    "next_action": "run target layout and payload probes for all required LLaMA projections",
+    "does_not_claim": [
+      "numeric_GPTQ_correctness",
+      "checkpoint_tensor_payload_loading",
+      "full_LLaMA_execution"
+    ]
+  },
+  "target_model_name": "meta-llama/Llama-3.2-1B",
+  "metadata_source_model_name": "examples/quarot_w4a4kv4_zcu104_llama32_1b/input/assumed_gptq_checkpoint"
+}

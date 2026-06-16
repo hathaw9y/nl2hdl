@@ -1,0 +1,148 @@
+{
+  "kernel": "attention_kv_cache_fixture",
+  "coverage_level": "attention_kv_cache_fixture",
+  "selected_non_gemm": "attention_scores_softmax_kv",
+  "selected_non_gemm_op_type": "AttentionControl",
+  "selected_non_gemm_shape": {
+    "head_dim": 64,
+    "attention_heads": 32,
+    "key_value_heads": 8,
+    "sequence_length": 2048
+  },
+  "target_source_path": "attention_kv_cache_path",
+  "target_fixture_distinction": {
+    "selected_non_gemm": "attention_scores_softmax_kv",
+    "selected_non_gemm_op_type": "AttentionControl",
+    "selected_non_gemm_shape": {
+      "head_dim": 64,
+      "attention_heads": 32,
+      "key_value_heads": 8,
+      "sequence_length": 2048
+    },
+    "target_source_path": "attention_kv_cache_path",
+    "fixture_kind": "bounded_attention_kv_cache_fixture",
+    "fixture_head_dim": 4,
+    "fixture_cache_slots": 2,
+    "fixture_score_count": 2,
+    "fixture_output_elements": 4,
+    "full_target_non_gemm_execution": false,
+    "distinction": "selected non-GEMM op is attention_scores_softmax_kv; report includes target LLaMA AttentionControl metadata plus bounded 4-lane, 2-slot attention KV-cache fixture evidence"
+  },
+  "full_target_non_gemm_execution": false,
+  "target_model": "meta-llama/Llama-3.2-1B",
+  "target_design_style": "llm_decoder_streaming",
+  "target_quantization": "int4_gptq",
+  "fixture_dimensions": {
+    "head_dim": 4,
+    "cache_slots": 2,
+    "score_count": 2,
+    "output_elements": 4
+  },
+  "query": [
+    3,
+    -2,
+    5,
+    -1
+  ],
+  "cache_initial_key_slot0": [
+    2,
+    -1,
+    4,
+    3
+  ],
+  "cache_initial_value_slot0": [
+    7,
+    -4,
+    3,
+    2
+  ],
+  "cache_write_trace": {
+    "count": 1,
+    "slot": 1,
+    "key": [
+      -3,
+      2,
+      1,
+      6
+    ],
+    "value": [
+      -2,
+      6,
+      -5,
+      4
+    ],
+    "field_stability_checked": true
+  },
+  "key_read_trace": [
+    {
+      "slot": 0,
+      "key": [
+        2,
+        -1,
+        4,
+        3
+      ]
+    },
+    {
+      "slot": 1,
+      "key": [
+        -3,
+        2,
+        1,
+        6
+      ]
+    }
+  ],
+  "value_read_trace": [
+    {
+      "slot": 0,
+      "value": [
+        7,
+        -4,
+        3,
+        2
+      ]
+    },
+    {
+      "slot": 1,
+      "value": [
+        -2,
+        6,
+        -5,
+        4
+      ]
+    }
+  ],
+  "attention_score_trace": [
+    25,
+    -14
+  ],
+  "softmax_control_trace": {
+    "policy": "two_score_winner_loser_q0_4",
+    "weights_q0_4": [
+      12,
+      4
+    ],
+    "winner_slot": 0,
+    "softmax_exp_in_rtl": false
+  },
+  "expected_output_vector": [
+    4,
+    -2,
+    1,
+    2
+  ],
+  "numeric_policy": {
+    "fixture_kind": "attention_kv_cache_fixture",
+    "query_key_value_format": "signed_int8_fixture",
+    "score_format": "signed_int32_dot_product",
+    "weight_format": "unsigned_q0_4",
+    "output_format": "signed_int16_arithmetic_shifted",
+    "score_formula": "score_i = dot(query, key_cache[i])",
+    "output_formula": "out_j = sum_i(weight_i * value_cache[i][j]) >>> output_shift",
+    "output_shift": 4,
+    "softmax_policy": "two_score_winner_loser_q0_4",
+    "rounding_mode": "arithmetic_shift_truncates_toward_negative_infinity",
+    "saturation_policy": "none_fixture_vectors_chosen_to_avoid_overflow"
+  }
+}

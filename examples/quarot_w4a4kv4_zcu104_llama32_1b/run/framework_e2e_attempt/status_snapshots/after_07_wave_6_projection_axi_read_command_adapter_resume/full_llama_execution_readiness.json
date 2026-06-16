@@ -1,0 +1,114 @@
+{
+  "artifact": "full_llama_execution_readiness",
+  "coverage_level": "parent_gate_for_full_model_execution_claim",
+  "status": "blocked_by_target_preflight",
+  "collection_root": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence",
+  "model": {
+    "name": "meta-llama/Llama-3.2-1B",
+    "metadata_source": "huggingface_auto_config_local_cache",
+    "decoder_layers": 16,
+    "hidden_size": 2048,
+    "intermediate_size": 8192
+  },
+  "target": {
+    "fpga_part": "xczu7ev-ffvc1156-2-e",
+    "quantization": "quarot_w4a4kv4_gptq_weights",
+    "design_style": "systolic_weight_stationary_llm_streaming",
+    "compute_style": "systolic_array",
+    "execution_style": "llm_decoder_streaming",
+    "memory_style": "external_ddr_streaming",
+    "control_style": "hierarchical_fsm"
+  },
+  "target_preflight": {
+    "status": "blocked",
+    "preflight_blockers": [
+      "real_mlir_model_analysis"
+    ],
+    "dispatch_target_scopes": [
+      "bounded_fixture_only"
+    ]
+  },
+  "subagent_waves": {
+    "wave_count": 20,
+    "passed_wave_count": 7,
+    "non_passed_wave_count": 13,
+    "non_passed_waves": [
+      {
+        "wave_id": "wave_7_projection_axi_read_data_channel_adapter",
+        "status": "ready_to_dispatch",
+        "reason": "one or more implementation task results are missing"
+      },
+      {
+        "wave_id": "wave_8_projection_axi_read_transaction_adapter",
+        "status": "blocked_by_dependency",
+        "reason": "waiting for waves: wave_7_projection_axi_read_data_channel_adapter"
+      },
+      {
+        "wave_id": "wave_9_projection_axi_stream_integration",
+        "status": "blocked_by_dependency",
+        "reason": "waiting for waves: wave_8_projection_axi_read_transaction_adapter"
+      },
+      {
+        "wave_id": "wave_10_decoder_child_axi_attention_datapath",
+        "status": "blocked_by_dependency",
+        "reason": "waiting for waves: wave_9_projection_axi_stream_integration"
+      },
+      {
+        "wave_id": "wave_11_layer_fsm_axi_attention_fixture",
+        "status": "blocked_by_dependency",
+        "reason": "waiting for waves: wave_10_decoder_child_axi_attention_datapath"
+      },
+      {
+        "wave_id": "wave_12_top_fsm_axi_attention_fixture",
+        "status": "blocked_by_dependency",
+        "reason": "waiting for waves: wave_11_layer_fsm_axi_attention_fixture"
+      },
+      {
+        "wave_id": "wave_13_token_loop_axi_attention_fixture",
+        "status": "blocked_by_dependency",
+        "reason": "waiting for waves: wave_12_top_fsm_axi_attention_fixture"
+      },
+      {
+        "wave_id": "wave_14_decoder_block_axi_attention_mlp_fixture",
+        "status": "blocked_by_dependency",
+        "reason": "waiting for waves: wave_13_token_loop_axi_attention_fixture"
+      },
+      {
+        "wave_id": "wave_15_layer_fsm_axi_decoder_block_fixture",
+        "status": "blocked_by_dependency",
+        "reason": "waiting for waves: wave_14_decoder_block_axi_attention_mlp_fixture"
+      },
+      {
+        "wave_id": "wave_16_top_fsm_axi_decoder_block_fixture",
+        "status": "blocked_by_dependency",
+        "reason": "waiting for waves: wave_15_layer_fsm_axi_decoder_block_fixture"
+      },
+      {
+        "wave_id": "wave_17_token_loop_axi_decoder_block_fixture",
+        "status": "blocked_by_dependency",
+        "reason": "waiting for waves: wave_16_top_fsm_axi_decoder_block_fixture"
+      },
+      {
+        "wave_id": "wave_18_model_fsm_axi_decoder_block_fixture",
+        "status": "blocked_by_dependency",
+        "reason": "waiting for waves: wave_17_token_loop_axi_decoder_block_fixture"
+      },
+      {
+        "wave_id": "wave_19_ddr_axi_board_shell_fixture",
+        "status": "blocked_by_dependency",
+        "reason": "waiting for waves: wave_18_model_fsm_axi_decoder_block_fixture"
+      }
+    ]
+  },
+  "required_evidence_file": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/full_llama_execution_evidence.json",
+  "full_execution_evidence": null,
+  "evidence_failures": [
+    "full_llama_execution_evidence.json not found"
+  ],
+  "safe_to_clear_full_llama_model_execution_blocker": false,
+  "next_action": "resolve target preflight blockers before claiming full execution",
+  "does_not_claim": [
+    "board_level_ZCU104_signoff",
+    "real_time_LLaMA_inference_performance"
+  ]
+}

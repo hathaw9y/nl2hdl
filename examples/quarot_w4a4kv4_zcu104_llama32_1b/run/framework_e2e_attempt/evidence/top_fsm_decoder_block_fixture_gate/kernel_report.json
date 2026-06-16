@@ -1,0 +1,517 @@
+{
+  "status": "passed",
+  "out": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/top_fsm_decoder_block_fixture",
+  "files": [
+    "rmsnorm_rope_source_path.sv",
+    "projection_internal_stream_shell.sv",
+    "attention_kv_cache_fixture.sv",
+    "decoder_child_attention_datapath.sv",
+    "residual_mlp_fixture.sv",
+    "decoder_block_attention_mlp_fixture.sv",
+    "layer_fsm_decoder_block_fixture.sv",
+    "top_fsm_decoder_block_fixture.sv",
+    "tb_top_fsm_decoder_block_fixture.sv"
+  ],
+  "coverage_level": "top_fsm_decoder_block_fixture",
+  "implementation_stage": "post-route",
+  "simulation": {
+    "passed": true,
+    "stage": "run",
+    "output": "TOP_DECODER_BLOCK_TRACE top_fsm_decoder_block_fixture top_trace_hex=0x5453 layer_trace_hex=0x4241 block_trace_hex=0xb2b1a2a1 events=layer_fsm_decoder_block_fixture_start,layer_fsm_decoder_block_fixture_done\nLAYER_TRACE top_fsm_decoder_block_fixture layer_trace_hex=0x4241 block_trace_hex=0xb2b1a2a1 events=decoder_block_attention_mlp_fixture_start,decoder_block_attention_mlp_fixture_done\nBLOCK_TRACE top_fsm_decoder_block_fixture block_trace_hex=0xb2b1a2a1 attention_trace_hex=0x323122211211 mlp_trace_hex=0x52514241323122211211 events=attention_start,attention_done,mlp_start,mlp_done\nATTENTION_CHILD_TRACE top_fsm_decoder_block_fixture trace_hex=0x323122211211 events=source_path_start,source_path_done,projection_shell_start,projection_shell_done,attention_kv_start,attention_kv_done\nMLP_CHILD_TRACE top_fsm_decoder_block_fixture trace_hex=0x52514241323122211211 events=residual0_start,residual0_done,gate_up_start,gate_up_done,swiglu_start,swiglu_done,down_start,down_done,residual1_start,residual1_done\nTOP_LAYER_CHILD_START_HOLD_TRACE top_fsm_decoder_block_fixture busy_cycles=329 done_seen_while_start_high=1 deasserted_after_done=1 release_seen=1\nATTENTION_OUTPUT_TRACE top_fsm_decoder_block_fixture output=4,-2,1,2 source=hierarchical_attention_child_output\nMLP_INPUT_TRACE top_fsm_decoder_block_fixture hidden=0,4,1,1 attention=4,-2,1,2 source=hierarchical_residual_mlp_child_inputs\nRESIDUAL0_TRACE top_fsm_decoder_block_fixture residual0=4,2,2,3\nMLP_FINAL_TRACE top_fsm_decoder_block_fixture output=12,-6,18,6\nLAYER_OUTPUT_TRACE top_fsm_decoder_block_fixture output=12,-6,18,6 status=0x4c01b2b1a2a14241\nFINAL_OUTPUT_TRACE top_fsm_decoder_block_fixture output=12,-6,18,6 status=0xb2b1a2a142415453\nTOP_STABILITY_TRACE top_fsm_decoder_block_fixture stable=1\nCOMPACT_IO_TRACE top_fsm_decoder_block_fixture estimated_iob_bits=132 prior_layer_bonded_iob=132 prior_layer_status_bits=64 exposed_child_vectors=0 exposed_wide_status=0 exposed_128b=0 exposed_kv_arrays=0 exposed_debug_arrays=0\nPASS top_fsm_decoder_block_fixture\n",
+    "cmd": [
+      "iverilog",
+      "-g2012",
+      "-o",
+      "kernel_sim",
+      "rmsnorm_rope_source_path.sv",
+      "projection_internal_stream_shell.sv",
+      "attention_kv_cache_fixture.sv",
+      "decoder_child_attention_datapath.sv",
+      "residual_mlp_fixture.sv",
+      "decoder_block_attention_mlp_fixture.sv",
+      "layer_fsm_decoder_block_fixture.sv",
+      "top_fsm_decoder_block_fixture.sv",
+      "tb_top_fsm_decoder_block_fixture.sv"
+    ]
+  },
+  "verilator": {
+    "passed": true,
+    "stage": "lint_only",
+    "cmd": [
+      "verilator",
+      "--lint-only",
+      "-sv",
+      "-Wno-STMTDLY",
+      "-Wno-INFINITELOOP",
+      "rmsnorm_rope_source_path.sv",
+      "projection_internal_stream_shell.sv",
+      "attention_kv_cache_fixture.sv",
+      "decoder_child_attention_datapath.sv",
+      "residual_mlp_fixture.sv",
+      "decoder_block_attention_mlp_fixture.sv",
+      "layer_fsm_decoder_block_fixture.sv",
+      "top_fsm_decoder_block_fixture.sv",
+      "tb_top_fsm_decoder_block_fixture.sv"
+    ],
+    "output": "",
+    "policy": "DUT lint must be warning-clean. Testbench-only Verilator 4.x timing-delay warnings STMTDLY and INFINITELOOP are allowed for lint-only checks because iverilog executes the timed behavioral testbench.",
+    "requested_timing_policy": null,
+    "timing_policy_supported": null,
+    "effective_timing_policy": null,
+    "allowed_warning_classes": [
+      "STMTDLY",
+      "INFINITELOOP"
+    ]
+  },
+  "synthesis": {
+    "passed": true,
+    "cmd": [
+      "vivado",
+      "-mode",
+      "batch",
+      "-source",
+      "vivado_synth.tcl"
+    ],
+    "output": "e unroutable nets such as driverless and loadless.\n  Run report_route_status for detailed report.\n  Number of Failed Nets               = 2183\n    (Failed Nets is the sum of unrouted and partially routed nets)\n  Number of Unrouted Nets             = 2011\n  Number of Partially Routed Nets     = 172\n  Number of Node Overlaps             = 0\n\nPhase 2 Router Initialization | Checksum: 246cbc096\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4802.785 ; gain = 0.000 ; free physical = 44601 ; free virtual = 53731\n\nPhase 3 Global Routing\nPhase 3 Global Routing | Checksum: 246cbc096\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4802.785 ; gain = 0.000 ; free physical = 44601 ; free virtual = 53731\n\nPhase 4 Initial Routing\n\nPhase 4.1 Initial Net Routing Pass\nPhase 4.1 Initial Net Routing Pass | Checksum: 1b4258953\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4802.785 ; gain = 0.000 ; free physical = 44601 ; free virtual = 53731\nPhase 4 Initial Routing | Checksum: 14df07989\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4802.785 ; gain = 0.000 ; free physical = 44601 ; free virtual = 53731\n\nPhase 5 Rip-up And Reroute\n\nPhase 5.1 Global Iteration 0\n Number of Nodes with overlaps = 185\n Number of Nodes with overlaps = 5\n Number of Nodes with overlaps = 0\nINFO: [Route 35-416] Intermediate Timing Summary | WNS=1.264  | TNS=0.000  | WHS=0.018  | THS=0.000  |\n\nPhase 5.1 Global Iteration 0 | Checksum: 1cf83608b\n\nTime (s): cpu = 00:00:06 ; elapsed = 00:00:03 . Memory (MB): peak = 4802.785 ; gain = 0.000 ; free physical = 44601 ; free virtual = 53731\n\nPhase 5.2 Additional Iteration for Hold\nPhase 5.2 Additional Iteration for Hold | Checksum: 1cced233c\n\nTime (s): cpu = 00:00:06 ; elapsed = 00:00:03 . Memory (MB): peak = 4802.785 ; gain = 0.000 ; free physical = 44601 ; free virtual = 53731\nPhase 5 Rip-up And Reroute | Checksum: 1cced233c\n\nTime (s): cpu = 00:00:06 ; elapsed = 00:00:03 . Memory (MB): peak = 4802.785 ; gain = 0.000 ; free physical = 44601 ; free virtual = 53731\n\nPhase 6 Delay and Skew Optimization\n\nPhase 6.1 Delay CleanUp\nPhase 6.1 Delay CleanUp | Checksum: 277208014\n\nTime (s): cpu = 00:00:06 ; elapsed = 00:00:04 . Memory (MB): peak = 4802.785 ; gain = 0.000 ; free physical = 44601 ; free virtual = 53731\n\nPhase 6.2 Clock Skew Optimization\nPhase 6.2 Clock Skew Optimization | Checksum: 277208014\n\nTime (s): cpu = 00:00:06 ; elapsed = 00:00:04 . Memory (MB): peak = 4802.785 ; gain = 0.000 ; free physical = 44601 ; free virtual = 53731\nPhase 6 Delay and Skew Optimization | Checksum: 277208014\n\nTime (s): cpu = 00:00:06 ; elapsed = 00:00:04 . Memory (MB): peak = 4802.785 ; gain = 0.000 ; free physical = 44601 ; free virtual = 53731\n\nPhase 7 Post Hold Fix\n\nPhase 7.1 Hold Fix Iter\nINFO: [Route 35-416] Intermediate Timing Summary | WNS=1.264  | TNS=0.000  | WHS=0.018  | THS=0.000  |\n\nPhase 7.1 Hold Fix Iter | Checksum: 2949876f4\n\nTime (s): cpu = 00:00:07 ; elapsed = 00:00:04 . Memory (MB): peak = 4802.785 ; gain = 0.000 ; free physical = 44601 ; free virtual = 53731\nPhase 7 Post Hold Fix | Checksum: 2949876f4\n\nTime (s): cpu = 00:00:07 ; elapsed = 00:00:04 . Memory (MB): peak = 4802.785 ; gain = 0.000 ; free physical = 44601 ; free virtual = 53731\n\nPhase 8 Route finalize\n\nRouter Utilization Summary\n  Global Vertical Routing Utilization    = 0.138751 %\n  Global Horizontal Routing Utilization  = 0.105322 %\n  Routable Net Status*\n  *Does not include unroutable nets such as driverless and loadless.\n  Run report_route_status for detailed report.\n  Number of Failed Nets               = 0\n    (Failed Nets is the sum of unrouted and partially routed nets)\n  Number of Unrouted Nets             = 0\n  Number of Partially Routed Nets     = 0\n  Number of Node Overlaps             = 0\n\nPhase 8 Route finalize | Checksum: 2949876f4\n\nTime (s): cpu = 00:00:07 ; elapsed = 00:00:04 . Memory (MB): peak = 4802.785 ; gain = 0.000 ; free physical = 44601 ; free virtual = 53731\n\nPhase 9 Verifying routed nets\n\n Verification completed successfully\nPhase 9 Verifying routed nets | Checksum: 2949876f4\n\nTime (s): cpu = 00:00:07 ; elapsed = 00:00:04 . Memory (MB): peak = 4802.785 ; gain = 0.000 ; free physical = 44601 ; free virtual = 53731\n\nPhase 10 Depositing Routes\nPhase 10 Depositing Routes | Checksum: 2949876f4\n\nTime (s): cpu = 00:00:07 ; elapsed = 00:00:04 . Memory (MB): peak = 4802.785 ; gain = 0.000 ; free physical = 44601 ; free virtual = 53731\n\nPhase 11 Resolve XTalk\nPhase 11 Resolve XTalk | Checksum: 2949876f4\n\nTime (s): cpu = 00:00:07 ; elapsed = 00:00:04 . Memory (MB): peak = 4802.785 ; gain = 0.000 ; free physical = 44601 ; free virtual = 53731\n\nPhase 12 Post Process Routing\nPhase 12 Post Process Routing | Checksum: 2949876f4\n\nTime (s): cpu = 00:00:07 ; elapsed = 00:00:04 . Memory (MB): peak = 4802.785 ; gain = 0.000 ; free physical = 44601 ; free virtual = 53731\n\nPhase 13 Post Router Timing\nINFO: [Route 35-57] Estimated Timing Summary | WNS=1.264  | TNS=0.000  | WHS=0.018  | THS=0.000  |\n\nINFO: [Route 35-327] The final timing numbers are based on the router estimated timing analysis. For a complete and accurate timing signoff, please run report_timing_summary.\nPhase 13 Post Router Timing | Checksum: 2949876f4\n\nTime (s): cpu = 00:00:07 ; elapsed = 00:00:04 . Memory (MB): peak = 4802.785 ; gain = 0.000 ; free physical = 44601 ; free virtual = 53731\nTotal Elapsed time in route_design: 3.68 secs\n\nPhase 14 Post-Route Event Processing\nPhase 14 Post-Route Event Processing | Checksum: 1a4704788\n\nTime (s): cpu = 00:00:07 ; elapsed = 00:00:04 . Memory (MB): peak = 4802.785 ; gain = 0.000 ; free physical = 44601 ; free virtual = 53731\nINFO: [Route 35-16] Router Completed Successfully\nEnding Routing Task | Checksum: 1a4704788\n\nTime (s): cpu = 00:00:07 ; elapsed = 00:00:04 . Memory (MB): peak = 4802.785 ; gain = 0.000 ; free physical = 44601 ; free virtual = 53731\n\nRouting Is Done.\nINFO: [Common 17-83] Releasing license: Implementation\n12 Infos, 0 Warnings, 0 Critical Warnings and 0 Errors encountered.\nroute_design completed successfully\n# report_utilization -file utilization.rpt\n# report_timing_summary -file timing_summary.rpt\nINFO: [Timing 38-91] UpdateTimingParams: Speed grade: -2, Temperature grade: E, Delay Type: min_max.\nINFO: [Timing 38-191] Multithreading enabled for timing update using a maximum of 8 CPUs\n# write_checkpoint -force post_route.dcp\nINFO: [Timing 38-480] Writing timing data to binary archive.\nWrite ShapeDB Complete: Time (s): cpu = 00:00:00.02 ; elapsed = 00:00:00 . Memory (MB): peak = 4802.785 ; gain = 0.000 ; free physical = 44570 ; free virtual = 53701\nWrote PlaceDB: Time (s): cpu = 00:00:00.15 ; elapsed = 00:00:00.06 . Memory (MB): peak = 4802.785 ; gain = 0.000 ; free physical = 44569 ; free virtual = 53704\nWrote PulsedLatchDB: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 4802.785 ; gain = 0.000 ; free physical = 44569 ; free virtual = 53704\nWriting XDEF routing.\nWriting XDEF routing logical nets.\nWriting XDEF routing special nets.\nWrote RouteStorage: Time (s): cpu = 00:00:00.05 ; elapsed = 00:00:00.04 . Memory (MB): peak = 4802.785 ; gain = 0.000 ; free physical = 44569 ; free virtual = 53704\nWrote Netlist Cache: Time (s): cpu = 00:00:00.01 ; elapsed = 00:00:00.01 . Memory (MB): peak = 4802.785 ; gain = 0.000 ; free physical = 44569 ; free virtual = 53704\nWrote Device Cache: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.01 . Memory (MB): peak = 4802.785 ; gain = 0.000 ; free physical = 44569 ; free virtual = 53707\nWrite Physdb Complete: Time (s): cpu = 00:00:00.22 ; elapsed = 00:00:00.12 . Memory (MB): peak = 4802.785 ; gain = 0.000 ; free physical = 44569 ; free virtual = 53707\nINFO: [Common 17-1381] The checkpoint '/home/iamjames77/Nlp2Verilog/examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/top_fsm_decoder_block_fixture/post_route.dcp' has been generated.\nINFO: [Common 17-206] Exiting Vivado at Tue Jun 16 09:44:33 2026...\n",
+    "timing": {
+      "setup_worst_slack_ns": 1.265,
+      "hold_worst_slack_ns": 0.018,
+      "pulse_width_worst_slack_ns": 2.225,
+      "constraints_met": true,
+      "worst_slack_ns": 1.265,
+      "parse_status": "parsed"
+    },
+    "implementation_stage": "post-route",
+    "timing_report": "timing_summary.rpt",
+    "timing_report_available": true,
+    "utilization_report": "utilization.rpt",
+    "utilization_report_available": true,
+    "resource_status": "available",
+    "resource_utilization": {
+      "lut_as_logic": {
+        "used": 1504,
+        "available": 230400,
+        "utilization_percent": 0.65
+      },
+      "clb_registers": {
+        "used": 843,
+        "available": 460800,
+        "utilization_percent": 0.18
+      },
+      "block_ram_tile": {
+        "used": 0,
+        "available": 312,
+        "utilization_percent": 0.0
+      },
+      "dsps": {
+        "used": 8,
+        "available": 1728,
+        "utilization_percent": 0.46
+      },
+      "bonded_iob": {
+        "used": 132,
+        "available": 360,
+        "utilization_percent": 36.67
+      }
+    }
+  },
+  "contract_gate": {
+    "verilator_enforced": true,
+    "synthesis_enforced": true
+  },
+  "numeric_policy": {
+    "fixture_kind": "top_fsm_decoder_block_fixture",
+    "datapath_composition": "instantiated_layer_fsm_decoder_block_fixture",
+    "child_sequence": "layer_fsm_decoder_block_fixture",
+    "fixture_layer_count": 1,
+    "full_token_scheduling": false,
+    "multi_layer_target_scheduling": false,
+    "full_llama_layer": false,
+    "full_llama_model": false,
+    "board_level_signoff": false
+  },
+  "kernel": "top_fsm_decoder_block_fixture",
+  "top_fsm_decoder_block_fixture": true,
+  "fixture_layer_count": 1,
+  "child_modules": [
+    {
+      "name": "layer_fsm_decoder_block_fixture",
+      "coverage_level": "layer_fsm_decoder_block_fixture",
+      "instantiated": true,
+      "input_source": "top_fsm_decoder_block_fixture_layer_start",
+      "output_consumed_by": "top_fsm_decoder_block_fixture.final_output_o",
+      "nested_child_modules": [
+        {
+          "name": "decoder_block_attention_mlp_fixture",
+          "coverage_level": "decoder_block_attention_mlp_fixture",
+          "instantiated": true
+        },
+        {
+          "name": "decoder_child_attention_datapath",
+          "coverage_level": "decoder_child_attention_datapath_fixture",
+          "instantiated": true
+        },
+        {
+          "name": "residual_mlp_fixture",
+          "coverage_level": "residual_mlp_fixture",
+          "instantiated": true
+        },
+        {
+          "name": "rmsnorm_rope_source_path",
+          "coverage_level": "rmsnorm_rope_source_path_fixture",
+          "instantiated": true
+        },
+        {
+          "name": "projection_internal_stream_shell",
+          "coverage_level": "projection_internal_stream_shell_fixture",
+          "instantiated": true
+        },
+        {
+          "name": "attention_kv_cache_fixture",
+          "coverage_level": "attention_kv_cache_fixture",
+          "instantiated": true
+        }
+      ]
+    }
+  ],
+  "nested_layer_decoder_block_child_coverage_summary": [
+    {
+      "name": "layer_fsm_decoder_block_fixture",
+      "coverage_level": "layer_fsm_decoder_block_fixture",
+      "instantiated": true
+    },
+    {
+      "name": "decoder_block_attention_mlp_fixture",
+      "coverage_level": "decoder_block_attention_mlp_fixture",
+      "instantiated": true
+    },
+    {
+      "name": "decoder_child_attention_datapath",
+      "coverage_level": "decoder_child_attention_datapath_fixture",
+      "instantiated": true
+    },
+    {
+      "name": "residual_mlp_fixture",
+      "coverage_level": "residual_mlp_fixture",
+      "instantiated": true
+    },
+    {
+      "name": "rmsnorm_rope_source_path",
+      "coverage_level": "rmsnorm_rope_source_path_fixture",
+      "instantiated": true
+    },
+    {
+      "name": "projection_internal_stream_shell",
+      "coverage_level": "projection_internal_stream_shell_fixture",
+      "instantiated": true
+    },
+    {
+      "name": "attention_kv_cache_fixture",
+      "coverage_level": "attention_kv_cache_fixture",
+      "instantiated": true
+    }
+  ],
+  "fsm_state_order": [
+    "IDLE",
+    "LAYER_START",
+    "LAYER_BUSY",
+    "LAYER_RELEASE",
+    "DONE"
+  ],
+  "ordered_top_trace": [
+    "layer_fsm_decoder_block_fixture_start",
+    "layer_fsm_decoder_block_fixture_done"
+  ],
+  "expected_top_trace_hex": "0x5453",
+  "layer_trace": {
+    "recorded": true,
+    "layer_trace_hex": "0x4241",
+    "block_trace_hex": "0xb2b1a2a1",
+    "ordered_events": [
+      "decoder_block_attention_mlp_fixture_start",
+      "decoder_block_attention_mlp_fixture_done"
+    ],
+    "evidence_source": "observed_through_top_fsm_decoder_block_layer_hierarchy"
+  },
+  "decoder_block_trace": {
+    "recorded": true,
+    "block_trace_hex": "0xb2b1a2a1",
+    "attention_trace_hex": "0x323122211211",
+    "mlp_trace_hex": "0x52514241323122211211",
+    "ordered_events": [
+      "attention_start",
+      "attention_done",
+      "mlp_start",
+      "mlp_done"
+    ],
+    "evidence_source": "observed_through_top_fsm_decoder_block_hierarchy"
+  },
+  "attention_child_trace": {
+    "trace_hex": "0x323122211211",
+    "ordered_events": [
+      "source_path_start",
+      "source_path_done",
+      "projection_shell_start",
+      "projection_shell_done",
+      "attention_kv_start",
+      "attention_kv_done"
+    ],
+    "evidence_source": "observed_through_top_fsm_decoder_block_hierarchy"
+  },
+  "mlp_child_trace": {
+    "trace_hex": "0x52514241323122211211",
+    "ordered_events": [
+      "residual0_start",
+      "residual0_done",
+      "gate_up_start",
+      "gate_up_done",
+      "swiglu_start",
+      "swiglu_done",
+      "down_start",
+      "down_done",
+      "residual1_start",
+      "residual1_done"
+    ],
+    "evidence_source": "observed_through_top_fsm_decoder_block_hierarchy"
+  },
+  "top_to_layer_child_start_hold_deassert_release_evidence": {
+    "busy_cycles": 329,
+    "done_seen_while_start_high": true,
+    "start_deasserted_after_done": true,
+    "done_release_seen_after_start_deassert": true,
+    "evidence_source": "observed_in_top_fsm_decoder_block_testbench"
+  },
+  "layer_child_output_vector": [
+    12,
+    -6,
+    18,
+    6
+  ],
+  "final_top_output_vector": [
+    12,
+    -6,
+    18,
+    6
+  ],
+  "expected_golden_vector": [
+    12,
+    -6,
+    18,
+    6
+  ],
+  "decoder_block_consumed_attention_output_into_mlp": {
+    "observed_through_top_hierarchy": true,
+    "attention_output_vector": [
+      4,
+      -2,
+      1,
+      2
+    ],
+    "mlp_attention_input_vector": [
+      4,
+      -2,
+      1,
+      2
+    ],
+    "evidence_source": "observed_through_top_fsm_decoder_block_hierarchy"
+  },
+  "top_level_interface_summary": {
+    "common_handshake": [
+      "aclk",
+      "aresetn",
+      "start_i",
+      "done_o"
+    ],
+    "registered_outputs": [
+      "final_output_o",
+      "status_o"
+    ],
+    "compact_top_level_io": true,
+    "no_layer_child_full_vectors": true,
+    "no_decoder_block_child_full_vectors": true,
+    "no_attention_kv_debug_arrays": true,
+    "no_residual_mlp_child_vectors": true,
+    "no_128b_memory_response_ports": true,
+    "no_child_wide_status_arrays": true
+  },
+  "exposed_port_width_summary": {
+    "top_level_ports": [
+      "aclk",
+      "aresetn",
+      "start_i",
+      "done_o",
+      "final_output_o",
+      "status_o"
+    ],
+    "final_output_o_bits": 64,
+    "status_o_bits": 64,
+    "control_bits": 4,
+    "estimated_total_top_level_iob_bits": 132,
+    "prior_layer_fsm_bonded_iob_reference": 132,
+    "prior_layer_fsm_status_bits": 64,
+    "exposes_128b_memory_response": false,
+    "exposes_full_hidden_vectors": false,
+    "exposes_full_intermediate_tensors": false,
+    "exposes_full_kv_arrays": false,
+    "exposes_full_debug_arrays": false,
+    "exposes_child_wide_status_arrays": false
+  },
+  "package_io_mitigation_summary": {
+    "prior_layer_fsm_bonded_iob": 132,
+    "prior_layer_fsm_status_bits": 64,
+    "top_fsm_estimated_iob_bits": 132,
+    "top_fsm_status_bits": 64,
+    "mitigations": [
+      "kept layer final vector internal except the registered 64-bit top fixture output",
+      "compressed top-level status to top trace, layer trace, and decoder-block trace",
+      "kept nested attention, KV-cache, projection, residual, and MLP traces in simulation hierarchy",
+      "did not expose 128-bit memory response words, child package vectors, or debug arrays at the top boundary"
+    ]
+  },
+  "timing_margin_note": "Prior Layer FSM WHS was 0.021 ns and status was 64 bits; this Top FSM keeps status at 64 bits and avoids exposing child vectors/debug arrays to preserve routed hold margin.",
+  "implementation_stage_policy": "post-route when synthesis is enabled",
+  "verilator_status_policy": "Verilator lint result recorded when verification.enable_verilator is true",
+  "vivado_timing_status_policy": "post-route with non-NA setup/hold/pulse-width when synthesis is enabled",
+  "vivado_resource_status_policy": "utilization.rpt emitted when Vivado synthesis completes",
+  "timing_caveat": "Routed timing is fixture timing without board-level I/O delay, DDR/AXI shell, or PS/PL integration constraints; it is not board-level ZCU104 signoff.",
+  "timing_scope_caveat": "post-route fixture timing only; no board-level I/O delay constraints, DDR/AXI shell constraints, or PS/PL integration constraints are applied; not board-level I/O, DDR/AXI, or PS/PL timing signoff",
+  "board_io_constraints_present": false,
+  "omitted_operations": [
+    "real LLaMA token prefill/decode semantics",
+    "target sequence scheduling",
+    "target multi-layer LLaMA iteration",
+    "tokenizer or embedding lookup",
+    "logits generation and sampling",
+    "target-scale decoder block dimensions",
+    "complete Q/K/V/O attention math",
+    "full sequence-length KV-cache",
+    "multi-head attention and grouped-query attention",
+    "true exponential softmax",
+    "target-scale MLP dimensions",
+    "GPTQ INT4 packed gate/up/down streaming",
+    "DDR/AXI packed-weight movement",
+    "DDR/AXI KV-cache movement",
+    "true SiLU or exponential activation math in RTL",
+    "full LLaMA layer execution",
+    "full LLaMA model execution",
+    "board shell and PS/PL integration",
+    "board-level signoff"
+  ],
+  "does_not_claim": [
+    "real_LLaMA_token_prefill_decode_semantics",
+    "target_sequence_scheduling",
+    "target_multi_layer_LLaMA_iteration",
+    "tokenizer_or_embedding_lookup",
+    "logits_generation_or_sampling",
+    "target_scale_decoder_block_dimensions",
+    "complete_QKV_O_attention_math",
+    "full_sequence_length_KV_cache",
+    "multi_head_attention",
+    "grouped_query_attention",
+    "true_exponential_softmax",
+    "target_scale_MLP_dimensions",
+    "GPTQ_INT4_packed_gate_up_down_streaming",
+    "DDR_AXI_packed_weight_movement",
+    "DDR_AXI_KV_cache_movement",
+    "true_SiLU_or_exponential_activation_math_in_RTL",
+    "full_LLaMA_layer_execution",
+    "full_LLaMA_model_execution",
+    "board_shell_PS_PL_integration",
+    "board_level_signoff"
+  ],
+  "expected_top_trace": "0x5453",
+  "expected_layer_trace": "0x4241",
+  "expected_block_trace": "0xb2b1a2a1",
+  "expected_attention_trace": "0x323122211211",
+  "expected_mlp_trace": "0x52514241323122211211",
+  "expected_outputs": [
+    12,
+    -6,
+    18,
+    6
+  ],
+  "golden_reference": "top_fsm_decoder_block_fixture_golden.json",
+  "board_level_signoff": false,
+  "simulation_top_trace": {
+    "recorded": true,
+    "top_trace_hex": "0x5453",
+    "layer_trace_hex": "0x4241",
+    "block_trace_hex": "0xb2b1a2a1",
+    "ordered_events": [
+      "layer_fsm_decoder_block_fixture_start",
+      "layer_fsm_decoder_block_fixture_done"
+    ],
+    "evidence_source": "parsed_from_top_fsm_decoder_block_testbench_status"
+  },
+  "ordered_layer_trace": [
+    "decoder_block_attention_mlp_fixture_start",
+    "decoder_block_attention_mlp_fixture_done"
+  ],
+  "ordered_block_trace": [
+    "attention_start",
+    "attention_done",
+    "mlp_start",
+    "mlp_done"
+  ],
+  "captured_attention_output_vector": [
+    4,
+    -2,
+    1,
+    2
+  ],
+  "captured_attention_output_source": "hierarchical_attention_child_output",
+  "mlp_hidden_input_vector": [
+    0,
+    4,
+    1,
+    1
+  ],
+  "mlp_attention_input_vector": [
+    4,
+    -2,
+    1,
+    2
+  ],
+  "mlp_input_evidence_source": "hierarchical_residual_mlp_child_inputs",
+  "observed_residual0_vector": [
+    4,
+    2,
+    2,
+    3
+  ],
+  "mlp_final_output_vector": [
+    12,
+    -6,
+    18,
+    6
+  ],
+  "layer_child_status_hex": "0x4c01b2b1a2a14241",
+  "observed_final_fixture_output_vector": [
+    12,
+    -6,
+    18,
+    6
+  ],
+  "observed_compact_status_hex": "0xb2b1a2a142415453",
+  "top_done_output_status_stability_observed": true,
+  "compact_io_observed_trace": {
+    "estimated_iob_bits": 132,
+    "prior_layer_bonded_iob_reference": 132,
+    "prior_layer_status_bits": 64,
+    "exposes_child_vectors": false,
+    "exposes_wide_status": false,
+    "exposes_128b_memory_response": false,
+    "exposes_full_kv_arrays": false,
+    "exposes_full_debug_arrays": false,
+    "evidence_source": "parsed_from_top_fsm_decoder_block_testbench_compact_io_trace"
+  },
+  "current_bonded_iob_count": 132,
+  "bonded_iob_count": 132,
+  "compact_io_vivado_resource_evidence": {
+    "bonded_iob_count": 132,
+    "estimated_top_level_iob_bits": 132,
+    "prior_layer_fsm_status_bits": 64,
+    "prior_layer_fsm_whs_ns": 0.021,
+    "resource_evidence_source": "vivado_utilization_rpt"
+  }
+}

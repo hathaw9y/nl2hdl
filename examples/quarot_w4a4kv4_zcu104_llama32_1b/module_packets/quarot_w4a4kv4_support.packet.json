@@ -1,0 +1,139 @@
+{
+  "artifact": "module_packet",
+  "task_id": "quarot_w4a4kv4_support",
+  "agent_role": "hdl_module_implementation_agent",
+  "semantic_op": "quarot_rotation_a4_kv4_support",
+  "module_family": "non_gemm_quantization_rotation_support",
+  "target_coverage_level": "bounded_quarot_support_fixture",
+  "source_scope": {
+    "owned_files": [
+      "../rtl/quarot_support/quarot_w4a4kv4_support.sv",
+      "../rtl/quarot_support/tb_quarot_w4a4kv4_support.sv",
+      "../rtl/quarot_support/golden_vectors.json",
+      "../rtl/quarot_support/kernel_report.json",
+      "../rtl/quarot_support/subagent_result.json",
+      "../rtl/quarot_support/README.md"
+    ],
+    "must_not_edit": [
+      "../../../nl2hdl/llm_kernels.py",
+      "../../../nl2hdl/subagent_tasks.py",
+      "../../../nl2hdl/cli.py",
+      "../../../tests",
+      "../run/inspect"
+    ]
+  },
+  "target_context": {
+    "board": "AMD ZCU104",
+    "fpga_part": "xczu7ev-ffvc1156-2-e",
+    "target_clock_mhz": 200,
+    "model": "meta-llama/Llama-3.2-1B",
+    "optimization": "QuaRot W4A4KV4",
+    "rotation": "bounded H4-style integer rotation fixture",
+    "activation_quantization": "signed A4 saturation",
+    "kv_cache_quantization": "KV4 packed round-trip fixture"
+  },
+  "interface_contract": {
+    "clock": "aclk",
+    "reset": {
+      "name": "aresetn",
+      "polarity": "active_low",
+      "style": "synchronous"
+    },
+    "common_handshake": {
+      "start": "start_i",
+      "done": "done_o",
+      "rules": [
+        "start_i is sampled only while the module is idle",
+        "done_o remains high until start_i is deasserted",
+        "outputs are registered and remain stable while done_o is high"
+      ]
+    },
+    "packed_vector_order": "little_element_order_idx_times_width_plus_width",
+    "ports": {
+      "input_vec_i": "signed INT8 packed input vector",
+      "rotated_vec_o": "signed ROT_WIDTH packed rotated vector",
+      "a4_packed_o": "signed A4 packed quantized vector",
+      "kv_vec0_i": "KV4 packed fixture input vector 0",
+      "kv_vec1_i": "KV4 packed fixture input vector 1",
+      "kv_vec0_roundtrip_o": "KV4 packed round-trip output vector 0",
+      "kv_vec1_roundtrip_o": "KV4 packed round-trip output vector 1",
+      "status_o": "compact 8-bit status/debug word"
+    }
+  },
+  "memory_contract": {
+    "activation_storage_behavior": "registered outputs capture combinational rotation/quantization result on start",
+    "kv_cache_storage_behavior": "bounded pack/unpack identity fixture only",
+    "external_memory_boundary": "not_implemented_in_this_packet",
+    "future_requirement": "target KV-cache path needs explicit address, bank, DDR/on-chip storage, dequant, and bandwidth contracts"
+  },
+  "numeric_contract": {
+    "input_bits": 8,
+    "rotation_output_bits": 10,
+    "activation_output_bits": 4,
+    "kv_cache_bits": 4,
+    "rotation_matrix": "unnormalized H4 fixture",
+    "quantization": "saturating clamp to signed A4 range [-8, 7]",
+    "kv4_dequantization": "not_implemented_in_this_packet"
+  },
+  "resource_budget": {
+    "active_dsp_budget_for_full_design": 1536,
+    "fixture_expected_dsp": 0,
+    "resource_objective": "bounded correctness and interface compatibility; target rotation/KV4 datapath needs OOC synthesis before integration",
+    "low_utilization_policy": "acceptable because this packet is fixture-level"
+  },
+  "allowed_tuning_knobs": {
+    "N": [4],
+    "I8_WIDTH": [8],
+    "A4_WIDTH": [4],
+    "ROT_WIDTH": [10, 12, 16],
+    "pipeline_stages": "may be added by retry agent",
+    "rotation_source": [
+      "hardcoded_H4_fixture",
+      "table_driven_hadamard_tile",
+      "streamed_rotation_metadata"
+    ]
+  },
+  "verification_contract": {
+    "golden_source": "../rtl/quarot_support/golden_vectors.json",
+    "testbench": "../rtl/quarot_support/tb_quarot_w4a4kv4_support.sv",
+    "required_checks": [
+      "rotation result",
+      "A4 saturation",
+      "A4 packing",
+      "KV4 round trip",
+      "done_o hold/release",
+      "output stability while done_o is high",
+      "reuse after release"
+    ],
+    "required_evidence_files": [
+      "../rtl/quarot_support/kernel_report.json",
+      "../rtl/quarot_support/subagent_result.json"
+    ],
+    "observed_parent_verification": {
+      "iverilog_vvp": "passed",
+      "dut_verilator_lint": "passed",
+      "vivado_xvlog_frontend": "passed",
+      "json_validation": "passed",
+      "vivado_ooc_timing_resource": "not_run"
+    }
+  },
+  "blocked_target_dependencies": [
+    "target_scale_quarot_rotation_policy",
+    "activation_calibration_and_scale_policy",
+    "full_kv_cache_storage_layout",
+    "module_ooc_synthesis_for_target_non_gemm_datapath",
+    "full_llama_model_execution",
+    "board_level_zcu104_signoff"
+  ],
+  "forbidden_claims": [
+    "full_QuaRot_implementation",
+    "target_scale_LLaMA_numeric_accuracy",
+    "real_GPTQ_checkpoint_numeric_correctness",
+    "full_KV_cache_behavior",
+    "DDR_or_AXI_integration",
+    "ZCU104_board_level_signoff"
+  ],
+  "pre_integration_status": "requires_parent_boundary_review",
+  "integration_note": "Integration may consume this as a bounded child only after preserving the fixture scope and explicit W4A4KV4 blocked dependencies."
+}
+

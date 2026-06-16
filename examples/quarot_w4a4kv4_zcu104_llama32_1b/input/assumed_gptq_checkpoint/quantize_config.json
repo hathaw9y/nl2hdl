@@ -1,0 +1,9 @@
+{
+  "quant_method": "gptq",
+  "bits": 4,
+  "group_size": 128,
+  "desc_act": false,
+  "sym": true,
+  "true_sequential": true,
+  "checkpoint_format": "sparse_example_fixture_not_real_weights"
+}

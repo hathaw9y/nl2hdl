@@ -1,0 +1,77 @@
+{
+  "artifact": "full_llama_execution_evidence_template",
+  "write_to": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/full_llama_execution_evidence.json",
+  "purpose": "Evidence required before clearing full_llama_model_execution.",
+  "required_fields": [
+    "artifact",
+    "status",
+    "model",
+    "target_preflight_status",
+    "full_model_layers_executed",
+    "executed_layer_count",
+    "token_loop_evidence",
+    "model_fsm_evidence",
+    "checkpoint_payload_evidence",
+    "python_reference_comparison",
+    "board_level_signoff"
+  ],
+  "template": {
+    "artifact": "full_llama_execution_evidence",
+    "status": "<passed>",
+    "model": "meta-llama/Llama-3.2-1B",
+    "target_preflight_status": "<passed>",
+    "full_model_layers_executed": "<true>",
+    "executed_layer_count": 16,
+    "token_loop_evidence": {
+      "passed": "<true>",
+      "source_wave_id": "wave_17_token_loop_axi_decoder_block_fixture",
+      "report": "<path to token-loop/model execution report>"
+    },
+    "model_fsm_evidence": {
+      "passed": "<true>",
+      "source_wave_id": "wave_18_model_fsm_axi_decoder_block_fixture",
+      "report": "<path to model FSM execution report>"
+    },
+    "checkpoint_payload_evidence": {
+      "passed": "<true>",
+      "source": "gptq_payload_probe.json",
+      "projection_payloads_verified": "<all required projections>"
+    },
+    "python_reference_comparison": {
+      "passed": "<true>",
+      "tolerance_lsb": "<configured tolerance>",
+      "reference_artifact": "<path to Python/NumPy reference output>",
+      "rtl_artifact": "<path to RTL/model output>"
+    },
+    "board_level_signoff": false
+  },
+  "current_wave_context": {
+    "passed_wave_ids": [],
+    "non_passed_wave_ids": [
+      "wave_1_projection_kernels",
+      "wave_1_non_gemm_kernels",
+      "wave_2_decoder_block",
+      "wave_3_layer_fsm",
+      "wave_4_top_fsm",
+      "wave_5_token_loop",
+      "wave_6_projection_axi_read_command_adapter",
+      "wave_7_projection_axi_read_data_channel_adapter",
+      "wave_8_projection_axi_read_transaction_adapter",
+      "wave_9_projection_axi_stream_integration",
+      "wave_10_decoder_child_axi_attention_datapath",
+      "wave_11_layer_fsm_axi_attention_fixture",
+      "wave_12_top_fsm_axi_attention_fixture",
+      "wave_13_token_loop_axi_attention_fixture",
+      "wave_14_decoder_block_axi_attention_mlp_fixture",
+      "wave_15_layer_fsm_axi_decoder_block_fixture",
+      "wave_16_top_fsm_axi_decoder_block_fixture",
+      "wave_17_token_loop_axi_decoder_block_fixture",
+      "wave_18_model_fsm_axi_decoder_block_fixture",
+      "wave_19_ddr_axi_board_shell_fixture"
+    ]
+  },
+  "does_not_claim": [
+    "board_level_ZCU104_signoff",
+    "hardware_lab_runtime_validation"
+  ]
+}

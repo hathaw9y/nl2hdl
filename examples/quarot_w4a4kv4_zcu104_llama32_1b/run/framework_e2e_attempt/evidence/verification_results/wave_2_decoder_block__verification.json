@@ -1,0 +1,19 @@
+{
+  "artifact": "read_only_wave_verification_report",
+  "wave_id": "wave_2_decoder_block",
+  "status": "passed",
+  "findings": [],
+  "commands_inspected_or_run": [
+    "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/decoder_block_attention_mlp_fixture_gate/kernel_report.json",
+    "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/decoder_block_attention_mlp_fixture_gate/subagent_result.json"
+  ],
+  "required_evidence_presence": {
+    "kernel_report_json": true,
+    "subagent_result_json": true,
+    "verification_scope": "bounded_fixture_only"
+  },
+  "residual_risk": [
+    "Bounded fixture verification does not clear target-scale LLaMA or board-signoff blockers."
+  ],
+  "skill_update_candidate": null
+}

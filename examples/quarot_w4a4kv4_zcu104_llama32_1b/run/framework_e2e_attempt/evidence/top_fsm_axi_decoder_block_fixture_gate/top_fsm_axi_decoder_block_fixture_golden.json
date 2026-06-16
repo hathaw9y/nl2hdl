@@ -1,0 +1,487 @@
+{
+  "kernel": "top_fsm_axi_decoder_block_fixture",
+  "coverage_level": "top_fsm_axi_decoder_block_fixture",
+  "top_fsm_axi_decoder_block_fixture": true,
+  "uses_axi_layer_child": true,
+  "fixture_layer_count": 1,
+  "child_modules": [
+    {
+      "name": "layer_fsm_axi_decoder_block_fixture",
+      "coverage_level": "layer_fsm_axi_decoder_block_fixture",
+      "instantiated": true,
+      "input_source": "top_fsm_axi_decoder_block_fixture_layer_start",
+      "output_consumed_by": "top_fsm_axi_decoder_block_fixture.final_output_o",
+      "nested_child_modules": [
+        {
+          "name": "decoder_child_axi_attention_datapath",
+          "coverage_level": "decoder_child_axi_attention_datapath_fixture",
+          "instantiated": true
+        },
+        {
+          "name": "rmsnorm_rope_source_path",
+          "coverage_level": "rmsnorm_rope_source_path_fixture",
+          "instantiated": true
+        },
+        {
+          "name": "q_projection_axi_stream_integration",
+          "coverage_level": "projection_axi_stream_integration_fixture",
+          "instantiated": true,
+          "projection": "q",
+          "instance": "u_projection_axi_stream_integration"
+        },
+        {
+          "name": "k_projection_axi_stream_integration",
+          "coverage_level": "projection_axi_stream_integration_fixture",
+          "instantiated": true,
+          "projection": "k",
+          "instance": "u_k_projection_axi_stream_integration"
+        },
+        {
+          "name": "v_projection_axi_stream_integration",
+          "coverage_level": "projection_axi_stream_integration_fixture",
+          "instantiated": true,
+          "projection": "v",
+          "instance": "u_v_projection_axi_stream_integration"
+        },
+        {
+          "name": "o_projection_axi_stream_integration",
+          "coverage_level": "projection_axi_stream_integration_fixture",
+          "instantiated": true,
+          "projection": "o",
+          "instance": "u_o_projection_axi_stream_integration"
+        },
+        {
+          "name": "attention_kv_cache_fixture",
+          "coverage_level": "attention_kv_cache_fixture",
+          "instantiated": true
+        },
+        {
+          "name": "residual_mlp_fixture",
+          "coverage_level": "residual_mlp_fixture",
+          "instantiated": true
+        }
+      ]
+    }
+  ],
+  "nested_layer_decoder_block_child_coverage_summary": [
+    {
+      "name": "layer_fsm_axi_decoder_block_fixture",
+      "coverage_level": "layer_fsm_axi_decoder_block_fixture",
+      "instantiated": true
+    },
+    {
+      "name": "decoder_block_axi_attention_mlp_fixture",
+      "coverage_level": "decoder_block_axi_attention_mlp_fixture",
+      "instantiated": true
+    },
+    {
+      "name": "decoder_child_axi_attention_datapath",
+      "coverage_level": "decoder_child_axi_attention_datapath_fixture",
+      "instantiated": true
+    },
+    {
+      "name": "rmsnorm_rope_source_path",
+      "coverage_level": "rmsnorm_rope_source_path_fixture",
+      "instantiated": true
+    },
+    {
+      "name": "q_projection_axi_stream_integration",
+      "coverage_level": "projection_axi_stream_integration_fixture",
+      "instantiated": true,
+      "projection": "q",
+      "instance": "u_projection_axi_stream_integration"
+    },
+    {
+      "name": "k_projection_axi_stream_integration",
+      "coverage_level": "projection_axi_stream_integration_fixture",
+      "instantiated": true,
+      "projection": "k",
+      "instance": "u_k_projection_axi_stream_integration"
+    },
+    {
+      "name": "v_projection_axi_stream_integration",
+      "coverage_level": "projection_axi_stream_integration_fixture",
+      "instantiated": true,
+      "projection": "v",
+      "instance": "u_v_projection_axi_stream_integration"
+    },
+    {
+      "name": "o_projection_axi_stream_integration",
+      "coverage_level": "projection_axi_stream_integration_fixture",
+      "instantiated": true,
+      "projection": "o",
+      "instance": "u_o_projection_axi_stream_integration"
+    },
+    {
+      "name": "attention_kv_cache_fixture",
+      "coverage_level": "attention_kv_cache_fixture",
+      "instantiated": true
+    },
+    {
+      "name": "residual_mlp_fixture",
+      "coverage_level": "residual_mlp_fixture",
+      "instantiated": true
+    }
+  ],
+  "nested_decoder_block_child_coverage_summary": [
+    {
+      "name": "decoder_child_axi_attention_datapath",
+      "coverage_level": "decoder_child_axi_attention_datapath_fixture",
+      "instantiated": true
+    },
+    {
+      "name": "rmsnorm_rope_source_path",
+      "coverage_level": "rmsnorm_rope_source_path_fixture",
+      "instantiated": true
+    },
+    {
+      "name": "q_projection_axi_stream_integration",
+      "coverage_level": "projection_axi_stream_integration_fixture",
+      "instantiated": true,
+      "projection": "q",
+      "instance": "u_projection_axi_stream_integration"
+    },
+    {
+      "name": "k_projection_axi_stream_integration",
+      "coverage_level": "projection_axi_stream_integration_fixture",
+      "instantiated": true,
+      "projection": "k",
+      "instance": "u_k_projection_axi_stream_integration"
+    },
+    {
+      "name": "v_projection_axi_stream_integration",
+      "coverage_level": "projection_axi_stream_integration_fixture",
+      "instantiated": true,
+      "projection": "v",
+      "instance": "u_v_projection_axi_stream_integration"
+    },
+    {
+      "name": "o_projection_axi_stream_integration",
+      "coverage_level": "projection_axi_stream_integration_fixture",
+      "instantiated": true,
+      "projection": "o",
+      "instance": "u_o_projection_axi_stream_integration"
+    },
+    {
+      "name": "attention_kv_cache_fixture",
+      "coverage_level": "attention_kv_cache_fixture",
+      "instantiated": true
+    },
+    {
+      "name": "residual_mlp_fixture",
+      "coverage_level": "residual_mlp_fixture",
+      "instantiated": true
+    }
+  ],
+  "fsm_state_order": [
+    "IDLE",
+    "LAYER_START",
+    "LAYER_BUSY",
+    "LAYER_RELEASE",
+    "DONE"
+  ],
+  "ordered_top_trace": [
+    "layer_fsm_axi_decoder_block_fixture_start",
+    "layer_fsm_axi_decoder_block_fixture_done"
+  ],
+  "expected_top_trace_hex": "0x5453",
+  "layer_trace": {
+    "ordered_events": [
+      "decoder_block_axi_attention_mlp_fixture_start",
+      "decoder_block_axi_attention_mlp_fixture_done"
+    ],
+    "trace_hex": "0x4241",
+    "evidence_source": "expected_from_layer_fsm_axi_decoder_block_fixture_metadata_checked_through_top_hierarchy"
+  },
+  "decoder_block_trace": {
+    "ordered_events": [
+      "axi_attention_start",
+      "axi_attention_done",
+      "mlp_start",
+      "mlp_done"
+    ],
+    "trace_hex": "0xb2b1a2a1",
+    "evidence_source": "expected_from_layer_fsm_axi_decoder_block_fixture_metadata_checked_through_top_hierarchy"
+  },
+  "axi_attention_child_trace": {
+    "ordered_events": [
+      "source_path_start",
+      "source_path_done",
+      "projection_axi_start",
+      "projection_axi_done",
+      "attention_kv_start",
+      "attention_kv_done"
+    ],
+    "trace_hex": "0x323122211211",
+    "evidence_source": "expected_from_layer_fsm_axi_decoder_block_fixture_metadata_checked_through_top_hierarchy"
+  },
+  "mlp_child_trace": {
+    "ordered_events": [
+      "residual0_start",
+      "residual0_done",
+      "gate_up_start",
+      "gate_up_done",
+      "swiglu_start",
+      "swiglu_done",
+      "down_start",
+      "down_done",
+      "residual1_start",
+      "residual1_done"
+    ],
+    "trace_hex": "0x52514241323122211211",
+    "evidence_source": "expected_from_layer_fsm_axi_decoder_block_fixture_metadata_checked_through_top_hierarchy"
+  },
+  "top_to_layer_child_start_hold_deassert_release_evidence": "populated_from_top_fsm_axi_decoder_block_simulation",
+  "top_compact_status_axi_metadata_propagation_plan": {
+    "top_status_bit_lsb": 48,
+    "top_status_bit_msb": 51,
+    "top_status_mask_hex": "0x000f000000000000",
+    "layer_source": "layer_fsm_axi_decoder_block_fixture.status_o[51:48]",
+    "decoder_block_source": "decoder_block_axi_attention_mlp_fixture.status_o[83:80]",
+    "nested_axi_source": "q/k/v/o projection_axi_stream_integration.integration_status_o[45:42] aggregate_and",
+    "bit_mapping": {
+      "rid_good": 48,
+      "rresp_good": 49,
+      "rlast_good": 50,
+      "all_metadata_good": 51
+    }
+  },
+  "axi_projection_child_evidence_summary": {
+    "gptq_payload_probe_used": false,
+    "target_checkpoint_payload_dependency": "not_provided",
+    "gptq_probe_qweight_payload_words32_le_hex": [],
+    "expected_payload_words_hex": [
+      "0xe94fa50b",
+      "0x61c72d83",
+      "0xe94fa50b",
+      "0x61c72d83",
+      "0xe94fa50b",
+      "0x61c72d83",
+      "0xe94fa50b",
+      "0x61c72d83"
+    ],
+    "gptq_payload_probe_golden_source": {
+      "env_var": "NL2HDL_GPTQ_PAYLOAD_PROBE_JSON",
+      "artifact": "gptq_payload_probe",
+      "status": "absent",
+      "projection": "q_proj",
+      "used": false,
+      "payload_golden_source": "deterministic_fixture",
+      "fallback_reason": "NL2HDL_GPTQ_PAYLOAD_PROBE_JSON not set",
+      "target_checkpoint_payload_dependency": "not_provided",
+      "qweight_payload_words32_le_hex": [],
+      "qweight_payload_word_count": 0,
+      "expected_fixture_payload_word_count": 8,
+      "payload_words_match_gptq_probe": false
+    },
+    "projection_children": [
+      {
+        "projection": "q",
+        "instance": "u_projection_axi_stream_integration",
+        "module": "projection_axi_stream_integration"
+      },
+      {
+        "projection": "k",
+        "instance": "u_k_projection_axi_stream_integration",
+        "module": "projection_axi_stream_integration"
+      },
+      {
+        "projection": "v",
+        "instance": "u_v_projection_axi_stream_integration",
+        "module": "projection_axi_stream_integration"
+      },
+      {
+        "projection": "o",
+        "instance": "u_o_projection_axi_stream_integration",
+        "module": "projection_axi_stream_integration"
+      }
+    ],
+    "projection_output_vector": [
+      484,
+      1904
+    ],
+    "block_compact_status_propagation_plan": {
+      "child_source": "decoder_child_axi_attention_datapath.status_o[63:60]",
+      "nested_axi_source": "q/k/v/o projection_axi_stream_integration.integration_status_o[45:42] aggregate_and",
+      "block_status_bit_lsb": 80,
+      "block_status_bit_msb": 83,
+      "block_status_mask_hex": "0x00000000000000000000f000000000000000000000",
+      "bit_mapping": {
+        "rid_good": 80,
+        "rresp_good": 81,
+        "rlast_good": 82,
+        "all_metadata_good": 83
+      }
+    },
+    "does_not_expose_128b_axi_read_data": true,
+    "evidence_source": "expected_from_decoder_child_axi_attention_datapath_fixture_metadata_checked_through_block_hierarchy"
+  },
+  "static_nested_axi_projection_children_probe_evidence": {},
+  "layer_child_output_vector": [
+    12,
+    -6,
+    18,
+    6
+  ],
+  "final_top_output_vector": [
+    12,
+    -6,
+    18,
+    6
+  ],
+  "expected_golden_vector": [
+    12,
+    -6,
+    18,
+    6
+  ],
+  "decoder_block_consumed_attention_output_into_mlp": {
+    "observed_through_top_hierarchy": true,
+    "attention_output_vector": [
+      4,
+      -2,
+      1,
+      2
+    ],
+    "mlp_attention_input_vector": [
+      4,
+      -2,
+      1,
+      2
+    ],
+    "evidence_source": "observed_through_top_fsm_axi_decoder_block_hierarchy"
+  },
+  "top_level_interface_summary": {
+    "common_handshake": [
+      "aclk",
+      "aresetn",
+      "start_i",
+      "done_o"
+    ],
+    "registered_outputs": [
+      "final_output_o",
+      "status_o"
+    ],
+    "compact_top_level_io": true,
+    "no_128b_axi_read_data": true,
+    "no_axi_debug_buses": true,
+    "no_layer_child_full_vectors": true,
+    "no_decoder_block_child_full_vectors": true,
+    "no_child_vector_ports": true,
+    "no_full_kv_arrays": true,
+    "no_child_wide_status_arrays": true
+  },
+  "exposed_port_width_summary": {
+    "top_level_ports": [
+      "aclk",
+      "aresetn",
+      "start_i",
+      "done_o",
+      "final_output_o",
+      "status_o"
+    ],
+    "final_output_o_bits": 64,
+    "status_o_bits": 64,
+    "control_bits": 4,
+    "estimated_total_top_level_iob_bits": 132,
+    "prior_layer_fsm_bonded_iob_reference": 132,
+    "prior_layer_fsm_status_bits": 64,
+    "exposes_128b_axi_read_data": false,
+    "exposes_axi_address_id_response_debug": false,
+    "exposes_full_hidden_vectors": false,
+    "exposes_full_intermediate_tensors": false,
+    "exposes_full_kv_arrays": false,
+    "exposes_child_wide_status_arrays": false
+  },
+  "package_io_mitigation_summary": {
+    "prior_axi_layer_fsm_bonded_iob": 132,
+    "prior_axi_layer_fsm_status_bits": 64,
+    "top_fsm_estimated_iob_bits": 132,
+    "top_fsm_status_bits": 64,
+    "mitigations": [
+      "kept only the registered 64-bit final fixture output at top level",
+      "compressed top status to top trace, layer trace, partial block trace, and q/k/v/o metadata-good bits",
+      "kept nested AXI read data, debug, KV-cache, projection, residual, and MLP signals inside hierarchy",
+      "reported q/k/v/o evidence through simulation hierarchy without widening the top interface"
+    ]
+  },
+  "timing_margin_note": "Prior AXI Layer FSM WHS was 0.012 ns and status was 64 bits; this Top FSM keeps status at 64 bits and does not expose child vectors, AXI data, AXI debug buses, or KV arrays at the top boundary.",
+  "implementation_stage_policy": "post-route when synthesis is enabled",
+  "verilator_status_policy": "Verilator lint result recorded when verification.enable_verilator is true",
+  "vivado_timing_status_policy": "post-route with non-NA setup/hold/pulse-width when synthesis is enabled",
+  "vivado_resource_status_policy": "utilization.rpt emitted when Vivado synthesis completes",
+  "timing_caveat": "Routed timing is fixture timing without board-level I/O delay, DDR/AXI shell, or PS/PL integration constraints; it is not board-level ZCU104 signoff.",
+  "timing_scope_caveat": "post-route fixture timing only; no board-level I/O delay constraints, DDR/AXI shell constraints, or PS/PL integration constraints are applied; not board-level I/O, DDR/AXI, or PS/PL timing signoff",
+  "board_io_constraints_present": false,
+  "omitted_operations": [
+    "real GPTQ checkpoint payload streaming",
+    "DDR/AXI full integration",
+    "DDR controller integration",
+    "multi-burst or outstanding AXI master",
+    "token loop",
+    "real LLaMA token prefill/decode semantics",
+    "target sequence scheduling",
+    "target multi-layer LLaMA",
+    "target multi-layer LLaMA iteration",
+    "tokenizer or embedding lookup",
+    "logits generation and sampling",
+    "target-scale decoder block dimensions",
+    "complete Q/K/V/O attention math",
+    "full sequence-length KV-cache",
+    "multi-head attention and grouped-query attention",
+    "true softmax",
+    "true exponential softmax",
+    "target-scale MLP dimensions",
+    "GPTQ INT4 packed gate/up/down streaming",
+    "DDR/AXI packed-weight movement",
+    "DDR/AXI KV-cache movement",
+    "true SiLU",
+    "true SiLU or exponential activation math in RTL",
+    "full LLaMA layer execution",
+    "full LLaMA model execution",
+    "board shell and PS/PL integration",
+    "board-level signoff"
+  ],
+  "does_not_claim": [
+    "real_GPTQ_checkpoint_payload_streaming",
+    "DDR_AXI_full_integration",
+    "DDR_controller_integration",
+    "multi_burst_or_outstanding_AXI_master",
+    "token_loop",
+    "real_LLaMA_token_prefill_decode_semantics",
+    "target_sequence_scheduling",
+    "target_multi_layer_LLaMA",
+    "target_multi_layer_LLaMA_iteration",
+    "tokenizer_or_embedding_lookup",
+    "logits_generation_or_sampling",
+    "target_scale_decoder_block_dimensions",
+    "complete_QKV_O_attention_math",
+    "full_sequence_length_KV_cache",
+    "multi_head_attention",
+    "grouped_query_attention",
+    "true_softmax",
+    "true_exponential_softmax",
+    "target_scale_MLP_dimensions",
+    "GPTQ_INT4_packed_gate_up_down_streaming",
+    "DDR_AXI_packed_weight_movement",
+    "DDR_AXI_KV_cache_movement",
+    "true_SiLU",
+    "true_SiLU_or_exponential_activation_math_in_RTL",
+    "full_LLaMA_layer_execution",
+    "full_LLaMA_model_execution",
+    "board_shell_PS_PL_integration",
+    "board_level_signoff"
+  ],
+  "numeric_policy": {
+    "fixture_kind": "top_fsm_axi_decoder_block_fixture",
+    "datapath_composition": "instantiated_layer_fsm_axi_decoder_block_fixture",
+    "child_sequence": "layer_fsm_axi_decoder_block_fixture",
+    "fixture_layer_count": 1,
+    "uses_axi_layer_child": true,
+    "full_token_scheduling": false,
+    "multi_layer_target_scheduling": false,
+    "full_llama_layer": false,
+    "full_llama_model": false,
+    "board_level_signoff": false
+  }
+}

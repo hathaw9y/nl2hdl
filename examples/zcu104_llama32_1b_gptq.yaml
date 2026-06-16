@@ -1,0 +1,80 @@
+model:
+  input_shape: [1, 1]
+  dummy_input_seed: 7
+  sequence_length: 2048
+  gptq_checkpoint: null
+  mlir_graph: null
+
+hardware:
+  fpga_part: xczu7ev-ffvc1156-2-e
+  target_clock_mhz: 200
+  device_logic_cells: 504000
+  device_lut: 230400
+  device_ff: 460800
+  device_dsp: 1728
+  device_bram_36k: 312
+  device_uram: 96
+  device_io: 464
+  device_distributed_ram_mb: 6.2
+  device_bram_mb: 11.0
+  device_uram_mb: 27.0
+  device_ps_gtr: 4
+  device_gth: 20
+  resource_reference: AMD ZCU104 UG1267 v1.1 and XCZU7EV board resource tables
+  max_dsp: 1728
+  max_bram: 312
+  max_lut: 230400
+  max_ff: 460800
+  max_uram: 96
+  max_io: 464
+  memory_data_width: 128
+
+optimization:
+  quantization: int4_gptq
+  pruning: none
+  pruning_threshold: 0.0
+  optimization_brief: >
+    Start with GPTQ-style INT4 weight-only acceleration, but keep the parent
+    agent free to compare mixed-precision attention, activation-aware scaling,
+    and structured sparsity as future candidates before assigning HDL packets.
+  optimization_candidates:
+    - name: gptq_int4_weight_streaming
+      scope: first target path
+      notes: packed INT4 weights streamed from external memory with groupwise scales and zero-points
+    - name: mixed_precision_attention
+      scope: exploration
+      notes: allow wider precision for attention score/control paths if INT4-only quality or timing is unsafe
+    - name: structured_mlp_sparsity
+      scope: future
+      notes: only after dense INT4 module evidence and accuracy gates exist
+
+design:
+  style: llm_decoder_streaming
+  compute_style: simd_vector_mac
+  execution_style: llm_decoder_streaming
+  memory_style: external_ddr_gptq_packed
+  control_style: hierarchical_fsm
+  architecture_brief: >
+    Use SIMD vector MAC streaming as the first concrete implementation path,
+    but let the parent agent compare systolic projection tiles, time-multiplexed
+    PE arrays, and microcoded token scheduling before final module allocation.
+    The selected design must still be decomposed into minimal verified packets.
+  design_candidates:
+    - name: simd_vector_mac_streaming
+      focus: fastest kernel-level bring-up
+      risk: external memory bandwidth may dominate
+    - name: narrow_systolic_projection_tiles
+      focus: higher PE utilization for projection-heavy paths
+      risk: routing and buffering pressure on ZCU104
+    - name: time_multiplexed_pe_array
+      focus: conservative timing closure
+      risk: lower token throughput
+  pe_count: 64
+  activation_buffer: tiled_ping_pong_uram_bram
+  weight_storage: external_ddr_gptq_packed
+
+verification:
+  enable_verilator: true
+  enable_vivado_synth: true
+  tolerance_lsb: 2
+  vivado_timeout_sec: 900

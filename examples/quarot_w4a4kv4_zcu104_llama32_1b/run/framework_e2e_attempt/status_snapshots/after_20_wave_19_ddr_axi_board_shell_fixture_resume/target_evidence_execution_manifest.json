@@ -1,0 +1,34 @@
+{
+  "artifact": "target_evidence_execution_manifest",
+  "coverage_level": "target_readiness_gap_to_codex_evidence_agent_spawn",
+  "parent_agent_runtime_boundary": "Package code emits target-evidence spawn instructions only; the interactive Codex parent or an external runner must call the sub-agent and collect evidence.",
+  "spawn_entry_count": 0,
+  "implementation_spawn_count": 0,
+  "verification_spawn_count": 0,
+  "target_evidence_spawn_count": 0,
+  "spawn_batch_count": 0,
+  "parallel_spawn_allowed": false,
+  "max_parallel_batch_size": 0,
+  "skill_update_required": false,
+  "missing_skill_update_candidate": false,
+  "spawn_batches": [],
+  "spawn_entries": [],
+  "blocked_waves": [],
+  "blocked_target_evidence_tasks": [
+    {
+      "task_id": "full_llama_execution_evidence",
+      "status": "blocked_by_precondition",
+      "precondition_failures": [
+        "target_preflight.status must be passed",
+        "model_level_execution_harness_report must prove full decoder-layer execution and Python reference comparison"
+      ],
+      "next_action": "resolve preconditions before spawning target-evidence agent"
+    }
+  ],
+  "does_not_claim": [
+    "sub-agent execution occurred",
+    "automatic sub-agent spawning inside package runtime",
+    "generated RTL completeness",
+    "board-level ZCU104 signoff"
+  ]
+}

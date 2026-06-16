@@ -1,0 +1,4 @@
+{
+  "status": "passed",
+  "out": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/decoder_block_attention_mlp_fixture"
+}

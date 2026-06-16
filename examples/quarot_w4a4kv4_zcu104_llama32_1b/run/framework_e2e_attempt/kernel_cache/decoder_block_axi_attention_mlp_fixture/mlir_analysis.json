@@ -1,0 +1,186 @@
+{
+  "entry": "llama_decoder_block",
+  "inputs": [
+    {
+      "name": "%arg0",
+      "shape": [
+        1,
+        4
+      ],
+      "dtype": "i8"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "return",
+      "shape": [
+        1,
+        4
+      ],
+      "dtype": "i8"
+    }
+  ],
+  "ops": [
+    {
+      "result": "%0",
+      "op_type": "RMSNorm",
+      "operands": [
+        "%arg0"
+      ],
+      "result_shape": [
+        1,
+        4
+      ],
+      "result_dtype": "i8",
+      "node_name": "input_layernorm"
+    },
+    {
+      "result": "%1",
+      "op_type": "MatMul",
+      "operands": [
+        "%0",
+        "%q_weight"
+      ],
+      "result_shape": [
+        1,
+        4
+      ],
+      "result_dtype": "i32",
+      "node_name": "q_proj"
+    },
+    {
+      "result": "%2",
+      "op_type": "MatMul",
+      "operands": [
+        "%0",
+        "%k_weight"
+      ],
+      "result_shape": [
+        1,
+        4
+      ],
+      "result_dtype": "i32",
+      "node_name": "k_proj"
+    },
+    {
+      "result": "%3",
+      "op_type": "RoPE",
+      "operands": [
+        "%1"
+      ],
+      "result_shape": [
+        1,
+        4
+      ],
+      "result_dtype": "i32",
+      "node_name": "rope_q"
+    },
+    {
+      "result": "%4",
+      "op_type": "Softmax",
+      "operands": [
+        "%3",
+        "%2"
+      ],
+      "result_shape": [
+        1,
+        4
+      ],
+      "result_dtype": "i8",
+      "node_name": "attention_softmax"
+    },
+    {
+      "result": "%5",
+      "op_type": "MatMul",
+      "operands": [
+        "%4",
+        "%o_weight"
+      ],
+      "result_shape": [
+        1,
+        4
+      ],
+      "result_dtype": "i32",
+      "node_name": "o_proj"
+    },
+    {
+      "result": "%6",
+      "op_type": "RMSNorm",
+      "operands": [
+        "%5"
+      ],
+      "result_shape": [
+        1,
+        4
+      ],
+      "result_dtype": "i8",
+      "node_name": "post_attention_layernorm"
+    },
+    {
+      "result": "%7",
+      "op_type": "MatMul",
+      "operands": [
+        "%6",
+        "%up_weight"
+      ],
+      "result_shape": [
+        1,
+        8
+      ],
+      "result_dtype": "i32",
+      "node_name": "up_proj"
+    },
+    {
+      "result": "%8",
+      "op_type": "SiLU",
+      "operands": [
+        "%7"
+      ],
+      "result_shape": [
+        1,
+        8
+      ],
+      "result_dtype": "i32",
+      "node_name": "silu"
+    },
+    {
+      "result": "%9",
+      "op_type": "MatMul",
+      "operands": [
+        "%8",
+        "%down_weight"
+      ],
+      "result_shape": [
+        1,
+        4
+      ],
+      "result_dtype": "i32",
+      "node_name": "down_proj"
+    }
+  ],
+  "constants": 0,
+  "supported_ops": [
+    "MatMul",
+    "RMSNorm",
+    "RoPE",
+    "SiLU",
+    "Softmax"
+  ],
+  "unsupported_ops": [],
+  "op_partition": {
+    "gemm": [
+      "MatMul",
+      "MatMul",
+      "MatMul",
+      "MatMul",
+      "MatMul"
+    ],
+    "non_gemm": [
+      "RMSNorm",
+      "RoPE",
+      "Softmax",
+      "RMSNorm",
+      "SiLU"
+    ]
+  }
+}

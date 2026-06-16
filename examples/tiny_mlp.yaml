@@ -1,0 +1,32 @@
+model:
+  input_shape: [1, 4]
+  dummy_input_seed: 7
+
+hardware:
+  fpga_part: xc7z020clg400-1
+  target_clock_mhz: 50
+  max_dsp: 90
+  max_bram: 50
+  max_lut: 20000
+  memory_data_width: 32
+
+optimization:
+  quantization: int8_static
+  pruning: magnitude_unstructured
+  pruning_threshold: 0.10
+
+design:
+  style: layer_fsm
+  compute_style: scalar_fsm
+  execution_style: layer_by_layer
+  memory_style: onchip_weight_storage
+  control_style: layer_fsm
+  pe_count: 4
+  activation_buffer: register_ping_pong
+  weight_storage: case_rom
+
+verification:
+  enable_verilator: true
+  enable_vivado_synth: true
+  tolerance_lsb: 1
+  vivado_timeout_sec: 300

@@ -1,0 +1,75 @@
+{
+  "status": "passed_with_vivado_timing_skipped",
+  "changed_files": [
+    "w4a4_ws_systolic_tile.sv",
+    "tb_w4a4_ws_systolic_tile.sv",
+    "golden_vectors.json",
+    "kernel_report.json",
+    "subagent_result.json",
+    "README.md"
+  ],
+  "commands_run": [
+    {
+      "cmd": "command -v iverilog && iverilog -V | sed -n '1,8p'",
+      "result": "available: /usr/bin/iverilog, Icarus Verilog version 11.0"
+    },
+    {
+      "cmd": "command -v verilator && verilator --version",
+      "result": "available: /usr/bin/verilator, Verilator 4.038 2020-07-11"
+    },
+    {
+      "cmd": "command -v vivado && vivado -version | sed -n '1,6p'",
+      "result": "available: /tools/Xilinx/Vivado/2024.1/bin/vivado, Vivado v2024.1"
+    },
+    {
+      "cmd": "iverilog -g2012 -o kernel_sim w4a4_ws_systolic_tile.sv tb_w4a4_ws_systolic_tile.sv && vvp ./kernel_sim",
+      "result": "initial attempts caught and fixed a testbench int4 packing bug, status bit ordering mismatch, and done-hold status stability issue; final run passed with PASS w4a4_ws_systolic_tile"
+    },
+    {
+      "cmd": "verilator --lint-only -sv w4a4_ws_systolic_tile.sv",
+      "result": "passed with no output"
+    },
+    {
+      "cmd": "verilator --lint-only -sv -Wno-STMTDLY -Wno-INFINITELOOP w4a4_ws_systolic_tile.sv tb_w4a4_ws_systolic_tile.sv",
+      "result": "failed because Verilator 4.038 does not support the timed/event-controlled self-checking testbench structure"
+    },
+    {
+      "cmd": "verilator --lint-only --timing -sv -Wno-STMTDLY -Wno-INFINITELOOP w4a4_ws_systolic_tile.sv tb_w4a4_ws_systolic_tile.sv",
+      "result": "failed because installed Verilator 4.038 does not support --timing"
+    },
+    {
+      "cmd": "xvlog -sv w4a4_ws_systolic_tile.sv tb_w4a4_ws_systolic_tile.sv",
+      "result": "passed; Vivado VRFC analyzed both modules"
+    },
+    {
+      "cmd": "python3 -m json.tool golden_vectors.json >/dev/null && python3 -m json.tool kernel_report.json >/dev/null && python3 -m json.tool subagent_result.json >/dev/null",
+      "result": "passed; all JSON artifacts are valid"
+    }
+  ],
+  "simulation_evidence": {
+    "passed": true,
+    "command": "iverilog -g2012 -o kernel_sim w4a4_ws_systolic_tile.sv tb_w4a4_ws_systolic_tile.sv && vvp ./kernel_sim",
+    "output": "PASS w4a4_ws_systolic_tile"
+  },
+  "verilator_evidence": {
+    "available": true,
+    "dut_lint_passed": true,
+    "dut_lint_command": "verilator --lint-only -sv w4a4_ws_systolic_tile.sv",
+    "testbench_lint_passed": false,
+    "testbench_lint_unavailable_reason": "Installed Verilator 4.038 rejects timed testbench event controls and lacks --timing; DUT-only lint passed, and Icarus executed the self-checking timed testbench."
+  },
+  "vivado_timing_resource_evidence": {
+    "available": false,
+    "skipped": true,
+    "frontend_syntax_available": true,
+    "frontend_syntax_command": "xvlog -sv w4a4_ws_systolic_tile.sv tb_w4a4_ws_systolic_tile.sv",
+    "frontend_syntax_passed": true,
+    "reason": "Vivado post-synthesis/place/route timing and resource implementation was skipped for this bounded tile packet; no timing/resource signoff is claimed."
+  },
+  "remaining_risks": [
+    "This is a bounded tile fixture, not a full projection engine.",
+    "No real GPTQ checkpoint metadata layout compatibility is claimed.",
+    "No DDR, AXI, double-buffered BRAM, requantization, or ZCU104 board signoff is included."
+  ],
+  "skill_update_candidate": null
+}

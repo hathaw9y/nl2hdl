@@ -1,0 +1,203 @@
+{
+  "task_id": "decoder_block_attention_mlp_fixture",
+  "kernel": "decoder_block_attention_mlp_fixture",
+  "changed_files": [
+    "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/decoder_block_attention_mlp_fixture_gate/rmsnorm_rope_source_path.sv",
+    "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/decoder_block_attention_mlp_fixture_gate/projection_internal_stream_shell.sv",
+    "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/decoder_block_attention_mlp_fixture_gate/attention_kv_cache_fixture.sv",
+    "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/decoder_block_attention_mlp_fixture_gate/decoder_child_attention_datapath.sv",
+    "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/decoder_block_attention_mlp_fixture_gate/residual_mlp_fixture.sv",
+    "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/decoder_block_attention_mlp_fixture_gate/decoder_block_attention_mlp_fixture.sv",
+    "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/decoder_block_attention_mlp_fixture_gate/tb_decoder_block_attention_mlp_fixture.sv"
+  ],
+  "commands_run": [
+    {
+      "cmd": [
+        "python3",
+        "-m",
+        "nl2hdl",
+        "agent",
+        "--model",
+        "meta-llama/Llama-3.2-1B",
+        "--spec",
+        "examples/quarot_w4a4kv4_zcu104_llama32_1b/input.yaml",
+        "--mode",
+        "kernel",
+        "--kernel",
+        "decoder_block_attention_mlp_fixture",
+        "--out",
+        "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/decoder_block_attention_mlp_fixture"
+      ],
+      "returncode": 0,
+      "elapsed_sec": 52.03,
+      "log": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/decoder_block_attention_mlp_fixture/runner_command.log"
+    },
+    {
+      "cmd": [
+        "iverilog",
+        "-g2012",
+        "-o",
+        "kernel_sim",
+        "rmsnorm_rope_source_path.sv",
+        "projection_internal_stream_shell.sv",
+        "attention_kv_cache_fixture.sv",
+        "decoder_child_attention_datapath.sv",
+        "residual_mlp_fixture.sv",
+        "decoder_block_attention_mlp_fixture.sv",
+        "tb_decoder_block_attention_mlp_fixture.sv"
+      ],
+      "source": "kernel_report.simulation"
+    },
+    {
+      "cmd": [
+        "verilator",
+        "--lint-only",
+        "-sv",
+        "-Wno-STMTDLY",
+        "-Wno-INFINITELOOP",
+        "rmsnorm_rope_source_path.sv",
+        "projection_internal_stream_shell.sv",
+        "attention_kv_cache_fixture.sv",
+        "decoder_child_attention_datapath.sv",
+        "residual_mlp_fixture.sv",
+        "decoder_block_attention_mlp_fixture.sv",
+        "tb_decoder_block_attention_mlp_fixture.sv"
+      ],
+      "source": "kernel_report.verilator"
+    },
+    {
+      "cmd": [
+        "vivado",
+        "-mode",
+        "batch",
+        "-source",
+        "vivado_synth.tcl"
+      ],
+      "source": "kernel_report.synthesis"
+    }
+  ],
+  "simulation_evidence": {
+    "passed": true,
+    "stage": "run",
+    "output": "BLOCK_TRACE decoder_block_attention_mlp_fixture block_trace_hex=0xb2b1a2a1 attention_trace_hex=0x323122211211 mlp_trace_hex=0x52514241323122211211 events=attention_start,attention_done,mlp_start,mlp_done\nATTENTION_CHILD_TRACE decoder_block_attention_mlp_fixture trace_hex=0x323122211211 events=source_path_start,source_path_done,projection_shell_start,projection_shell_done,attention_kv_start,attention_kv_done\nMLP_CHILD_TRACE decoder_block_attention_mlp_fixture trace_hex=0x52514241323122211211 events=residual0_start,residual0_done,gate_up_start,gate_up_done,swiglu_start,swiglu_done,down_start,down_done,residual1_start,residual1_done\nATTENTION_CHILD_START_HOLD_TRACE decoder_block_attention_mlp_fixture busy_cycles=307 done_seen_while_start_high=1 deasserted_after_done=1 release_seen=1\nMLP_CHILD_START_HOLD_TRACE decoder_block_attention_mlp_fixture busy_cycles=8 done_seen_while_start_high=1 deasserted_after_done=1 release_seen=1\nATTENTION_OUTPUT_TRACE decoder_block_attention_mlp_fixture output=4,-2,1,2 source=hierarchical_attention_child_output\nMLP_INPUT_TRACE decoder_block_attention_mlp_fixture hidden=0,4,1,1 attention=4,-2,1,2 source=hierarchical_residual_mlp_child_inputs\nRESIDUAL0_TRACE decoder_block_attention_mlp_fixture residual0=4,2,2,3\nGATE_UP_TRACE decoder_block_attention_mlp_fixture gate=8,5,-3,5 up=9,2,1,0 source=hierarchical_residual_mlp_fixture_constant_matrices\nSWIGLU_TRACE decoder_block_attention_mlp_fixture policy=bounded_silu_linear_gate_times_up_shift swiglu=9,1,-1,0 true_silu_exp=0\nDOWN_TRACE decoder_block_attention_mlp_fixture down=8,-8,16,3 source=hierarchical_residual_mlp_fixture_constant_matrix\nMLP_FINAL_TRACE decoder_block_attention_mlp_fixture output=12,-6,18,6\nFINAL_OUTPUT_TRACE decoder_block_attention_mlp_fixture output=12,-6,18,6 status=0x52514241323122211211323122211211b2b1a2a1\nDECODER_BLOCK_STABILITY_TRACE decoder_block_attention_mlp_fixture stable=1\nCOMPACT_IO_TRACE decoder_block_attention_mlp_fixture estimated_iob_bits=228 residual_standalone_iob_reference=292 exposed_128b=0 exposed_kv_arrays=0 exposed_hidden_ports=0 exposed_child_status_arrays=0\nPASS decoder_block_attention_mlp_fixture\n",
+    "cmd": [
+      "iverilog",
+      "-g2012",
+      "-o",
+      "kernel_sim",
+      "rmsnorm_rope_source_path.sv",
+      "projection_internal_stream_shell.sv",
+      "attention_kv_cache_fixture.sv",
+      "decoder_child_attention_datapath.sv",
+      "residual_mlp_fixture.sv",
+      "decoder_block_attention_mlp_fixture.sv",
+      "tb_decoder_block_attention_mlp_fixture.sv"
+    ]
+  },
+  "verilator_evidence": {
+    "passed": true,
+    "stage": "lint_only",
+    "cmd": [
+      "verilator",
+      "--lint-only",
+      "-sv",
+      "-Wno-STMTDLY",
+      "-Wno-INFINITELOOP",
+      "rmsnorm_rope_source_path.sv",
+      "projection_internal_stream_shell.sv",
+      "attention_kv_cache_fixture.sv",
+      "decoder_child_attention_datapath.sv",
+      "residual_mlp_fixture.sv",
+      "decoder_block_attention_mlp_fixture.sv",
+      "tb_decoder_block_attention_mlp_fixture.sv"
+    ],
+    "output": "",
+    "policy": "DUT lint must be warning-clean. Testbench-only Verilator 4.x timing-delay warnings STMTDLY and INFINITELOOP are allowed for lint-only checks because iverilog executes the timed behavioral testbench.",
+    "requested_timing_policy": null,
+    "timing_policy_supported": null,
+    "effective_timing_policy": null,
+    "allowed_warning_classes": [
+      "STMTDLY",
+      "INFINITELOOP"
+    ]
+  },
+  "vivado_timing_resource_evidence": {
+    "passed": true,
+    "cmd": [
+      "vivado",
+      "-mode",
+      "batch",
+      "-source",
+      "vivado_synth.tcl"
+    ],
+    "output": "utable nets such as driverless and loadless.\n  Run report_route_status for detailed report.\n  Number of Failed Nets               = 2080\n    (Failed Nets is the sum of unrouted and partially routed nets)\n  Number of Unrouted Nets             = 1907\n  Number of Partially Routed Nets     = 173\n  Number of Node Overlaps             = 0\n\nPhase 2 Router Initialization | Checksum: 165f90592\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4803.988 ; gain = 0.000 ; free physical = 44565 ; free virtual = 53670\n\nPhase 3 Global Routing\nPhase 3 Global Routing | Checksum: 165f90592\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4803.988 ; gain = 0.000 ; free physical = 44569 ; free virtual = 53673\n\nPhase 4 Initial Routing\n\nPhase 4.1 Initial Net Routing Pass\nPhase 4.1 Initial Net Routing Pass | Checksum: 154967c88\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4803.988 ; gain = 0.000 ; free physical = 44585 ; free virtual = 53690\nPhase 4 Initial Routing | Checksum: 18b97ceb8\n\nTime (s): cpu = 00:00:06 ; elapsed = 00:00:03 . Memory (MB): peak = 4803.988 ; gain = 0.000 ; free physical = 44583 ; free virtual = 53687\n\nPhase 5 Rip-up And Reroute\n\nPhase 5.1 Global Iteration 0\n Number of Nodes with overlaps = 188\n Number of Nodes with overlaps = 4\n Number of Nodes with overlaps = 0\nINFO: [Route 35-416] Intermediate Timing Summary | WNS=1.057  | TNS=0.000  | WHS=0.004  | THS=0.000  |\n\nPhase 5.1 Global Iteration 0 | Checksum: 2efb35359\n\nTime (s): cpu = 00:00:07 ; elapsed = 00:00:04 . Memory (MB): peak = 4803.988 ; gain = 0.000 ; free physical = 44513 ; free virtual = 53618\n\nPhase 5.2 Additional Iteration for Hold\nPhase 5.2 Additional Iteration for Hold | Checksum: 2176e55c7\n\nTime (s): cpu = 00:00:07 ; elapsed = 00:00:04 . Memory (MB): peak = 4803.988 ; gain = 0.000 ; free physical = 44513 ; free virtual = 53618\nPhase 5 Rip-up And Reroute | Checksum: 2176e55c7\n\nTime (s): cpu = 00:00:07 ; elapsed = 00:00:04 . Memory (MB): peak = 4803.988 ; gain = 0.000 ; free physical = 44513 ; free virtual = 53618\n\nPhase 6 Delay and Skew Optimization\n\nPhase 6.1 Delay CleanUp\nPhase 6.1 Delay CleanUp | Checksum: 2363def55\n\nTime (s): cpu = 00:00:07 ; elapsed = 00:00:04 . Memory (MB): peak = 4803.988 ; gain = 0.000 ; free physical = 44513 ; free virtual = 53618\n\nPhase 6.2 Clock Skew Optimization\nPhase 6.2 Clock Skew Optimization | Checksum: 2363def55\n\nTime (s): cpu = 00:00:07 ; elapsed = 00:00:04 . Memory (MB): peak = 4803.988 ; gain = 0.000 ; free physical = 44513 ; free virtual = 53618\nPhase 6 Delay and Skew Optimization | Checksum: 2363def55\n\nTime (s): cpu = 00:00:07 ; elapsed = 00:00:04 . Memory (MB): peak = 4803.988 ; gain = 0.000 ; free physical = 44513 ; free virtual = 53618\n\nPhase 7 Post Hold Fix\n\nPhase 7.1 Hold Fix Iter\nINFO: [Route 35-416] Intermediate Timing Summary | WNS=1.057  | TNS=0.000  | WHS=0.004  | THS=0.000  |\n\nPhase 7.1 Hold Fix Iter | Checksum: 2d98bf855\n\nTime (s): cpu = 00:00:07 ; elapsed = 00:00:04 . Memory (MB): peak = 4803.988 ; gain = 0.000 ; free physical = 44510 ; free virtual = 53615\nPhase 7 Post Hold Fix | Checksum: 2d98bf855\n\nTime (s): cpu = 00:00:07 ; elapsed = 00:00:04 . Memory (MB): peak = 4803.988 ; gain = 0.000 ; free physical = 44510 ; free virtual = 53615\n\nPhase 8 Route finalize\n\nRouter Utilization Summary\n  Global Vertical Routing Utilization    = 0.156397 %\n  Global Horizontal Routing Utilization  = 0.127311 %\n  Routable Net Status*\n  *Does not include unroutable nets such as driverless and loadless.\n  Run report_route_status for detailed report.\n  Number of Failed Nets               = 0\n    (Failed Nets is the sum of unrouted and partially routed nets)\n  Number of Unrouted Nets             = 0\n  Number of Partially Routed Nets     = 0\n  Number of Node Overlaps             = 0\n\nPhase 8 Route finalize | Checksum: 2d98bf855\n\nTime (s): cpu = 00:00:07 ; elapsed = 00:00:04 . Memory (MB): peak = 4803.988 ; gain = 0.000 ; free physical = 44510 ; free virtual = 53615\n\nPhase 9 Verifying routed nets\n\n Verification completed successfully\nPhase 9 Verifying routed nets | Checksum: 2d98bf855\n\nTime (s): cpu = 00:00:07 ; elapsed = 00:00:04 . Memory (MB): peak = 4803.988 ; gain = 0.000 ; free physical = 44510 ; free virtual = 53615\n\nPhase 10 Depositing Routes\nPhase 10 Depositing Routes | Checksum: 2d98bf855\n\nTime (s): cpu = 00:00:07 ; elapsed = 00:00:04 . Memory (MB): peak = 4803.988 ; gain = 0.000 ; free physical = 44510 ; free virtual = 53615\n\nPhase 11 Resolve XTalk\nPhase 11 Resolve XTalk | Checksum: 2d98bf855\n\nTime (s): cpu = 00:00:07 ; elapsed = 00:00:04 . Memory (MB): peak = 4803.988 ; gain = 0.000 ; free physical = 44510 ; free virtual = 53615\n\nPhase 12 Post Process Routing\nPhase 12 Post Process Routing | Checksum: 2d98bf855\n\nTime (s): cpu = 00:00:07 ; elapsed = 00:00:04 . Memory (MB): peak = 4803.988 ; gain = 0.000 ; free physical = 44510 ; free virtual = 53615\n\nPhase 13 Post Router Timing\nINFO: [Route 35-57] Estimated Timing Summary | WNS=1.057  | TNS=0.000  | WHS=0.004  | THS=0.000  |\n\nINFO: [Route 35-327] The final timing numbers are based on the router estimated timing analysis. For a complete and accurate timing signoff, please run report_timing_summary.\nPhase 13 Post Router Timing | Checksum: 2d98bf855\n\nTime (s): cpu = 00:00:07 ; elapsed = 00:00:04 . Memory (MB): peak = 4803.988 ; gain = 0.000 ; free physical = 44510 ; free virtual = 53615\nTotal Elapsed time in route_design: 3.76 secs\n\nPhase 14 Post-Route Event Processing\nPhase 14 Post-Route Event Processing | Checksum: 1e88e0d54\n\nTime (s): cpu = 00:00:07 ; elapsed = 00:00:04 . Memory (MB): peak = 4803.988 ; gain = 0.000 ; free physical = 44510 ; free virtual = 53615\nINFO: [Route 35-16] Router Completed Successfully\nEnding Routing Task | Checksum: 1e88e0d54\n\nTime (s): cpu = 00:00:07 ; elapsed = 00:00:04 . Memory (MB): peak = 4803.988 ; gain = 0.000 ; free physical = 44511 ; free virtual = 53615\n\nRouting Is Done.\nINFO: [Common 17-83] Releasing license: Implementation\n12 Infos, 0 Warnings, 0 Critical Warnings and 0 Errors encountered.\nroute_design completed successfully\n# report_utilization -file utilization.rpt\n# report_timing_summary -file timing_summary.rpt\nINFO: [Timing 38-91] UpdateTimingParams: Speed grade: -2, Temperature grade: E, Delay Type: min_max.\nINFO: [Timing 38-191] Multithreading enabled for timing update using a maximum of 8 CPUs\n# write_checkpoint -force post_route.dcp\nINFO: [Timing 38-480] Writing timing data to binary archive.\nWrite ShapeDB Complete: Time (s): cpu = 00:00:00.02 ; elapsed = 00:00:00.01 . Memory (MB): peak = 4803.988 ; gain = 0.000 ; free physical = 44500 ; free virtual = 53605\nWrote PlaceDB: Time (s): cpu = 00:00:00.14 ; elapsed = 00:00:00.05 . Memory (MB): peak = 4803.988 ; gain = 0.000 ; free physical = 44498 ; free virtual = 53607\nWrote PulsedLatchDB: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 4803.988 ; gain = 0.000 ; free physical = 44498 ; free virtual = 53607\nWriting XDEF routing.\nWriting XDEF routing logical nets.\nWriting XDEF routing special nets.\nWrote RouteStorage: Time (s): cpu = 00:00:00.06 ; elapsed = 00:00:00.05 . Memory (MB): peak = 4803.988 ; gain = 0.000 ; free physical = 44496 ; free virtual = 53606\nWrote Netlist Cache: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 4803.988 ; gain = 0.000 ; free physical = 44496 ; free virtual = 53606\nWrote Device Cache: Time (s): cpu = 00:00:00.01 ; elapsed = 00:00:00.01 . Memory (MB): peak = 4803.988 ; gain = 0.000 ; free physical = 44490 ; free virtual = 53602\nWrite Physdb Complete: Time (s): cpu = 00:00:00.21 ; elapsed = 00:00:00.13 . Memory (MB): peak = 4803.988 ; gain = 0.000 ; free physical = 44490 ; free virtual = 53602\nINFO: [Common 17-1381] The checkpoint '/home/iamjames77/Nlp2Verilog/examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/decoder_block_attention_mlp_fixture/post_route.dcp' has been generated.\nINFO: [Common 17-206] Exiting Vivado at Tue Jun 16 09:42:48 2026...\n",
+    "timing": {
+      "setup_worst_slack_ns": 1.057,
+      "hold_worst_slack_ns": 0.005,
+      "pulse_width_worst_slack_ns": 2.225,
+      "constraints_met": true,
+      "worst_slack_ns": 1.057,
+      "parse_status": "parsed"
+    },
+    "implementation_stage": "post-route",
+    "timing_report": "timing_summary.rpt",
+    "timing_report_available": true,
+    "utilization_report": "utilization.rpt",
+    "utilization_report_available": true,
+    "resource_status": "available",
+    "resource_utilization": {
+      "lut_as_logic": {
+        "used": 1446,
+        "available": 230400,
+        "utilization_percent": 0.63
+      },
+      "clb_registers": {
+        "used": 743,
+        "available": 460800,
+        "utilization_percent": 0.16
+      },
+      "block_ram_tile": {
+        "used": 0,
+        "available": 312,
+        "utilization_percent": 0.0
+      },
+      "dsps": {
+        "used": 8,
+        "available": 1728,
+        "utilization_percent": 0.46
+      },
+      "bonded_iob": {
+        "used": 228,
+        "available": 360,
+        "utilization_percent": 63.33
+      }
+    }
+  },
+  "module_ooc_synthesis_evidence": {
+    "status": "not_required_or_not_produced"
+  },
+  "remaining_risks": [
+    "target_scale_LLaMA_decoder_block_dimensions",
+    "complete_QKV_O_projection_to_attention_math",
+    "full_sequence_length_KV_cache",
+    "multi_head_attention",
+    "grouped_query_attention",
+    "true_exponential_softmax",
+    "target_scale_MLP_dimensions",
+    "GPTQ_INT4_packed_gate_up_down_weight_streaming",
+    "DDR_AXI_packed_weight_movement",
+    "DDR_AXI_KV_cache_movement",
+    "true_SiLU_or_exponential_activation_math_in_RTL",
+    "full_hidden_size_RMSNorm_before_MLP",
+    "token_dependent_full_sequence_KV_cache_accumulation",
+    "target_multi_layer_LLaMA_iteration",
+    "logits_generation_or_sampling",
+    "full_LLaMA_layer_execution",
+    "full_LLaMA_model_execution",
+    "board_shell_PS_PL_integration",
+    "board_level_signoff"
+  ],
+  "skill_update_candidate": null,
+  "final_response_complete": true,
+  "parent_note": "Generated by framework_e2e_attempt runner from kernel evidence; parent did not hand-write HDL."
+}

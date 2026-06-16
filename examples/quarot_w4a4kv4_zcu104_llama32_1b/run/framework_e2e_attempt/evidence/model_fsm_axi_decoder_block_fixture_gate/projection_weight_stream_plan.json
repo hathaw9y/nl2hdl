@@ -1,0 +1,649 @@
+{
+  "artifact": "projection_weight_stream_plan",
+  "coverage_level": "all_projection_checkpoint_qweight_stream_planning",
+  "model": {
+    "name": "meta-llama/Llama-3.2-1B",
+    "decoder_layers": 16,
+    "hidden_size": 2048,
+    "intermediate_size": 8192
+  },
+  "hardware": {
+    "fpga_part": "xczu7ev-ffvc1156-2-e",
+    "memory_data_width_bits": 128
+  },
+  "projection_count": 7,
+  "attention_projection_order": [
+    "q_proj",
+    "k_proj",
+    "v_proj",
+    "o_proj"
+  ],
+  "mlp_projection_order": [
+    "gate_proj",
+    "up_proj",
+    "down_proj"
+  ],
+  "target_stream_plan_valid_count": 7,
+  "payload_satisfied_projection_count": 7,
+  "layout_blocked_projection_count": 0,
+  "payload_blocked_projection_count": 0,
+  "layout_blocked_projections": [],
+  "payload_blocked_projections": [],
+  "all_projection_layout_dependency": "satisfied_by_header_preflight",
+  "all_projection_payload_dependency": "satisfied_by_payload_probe",
+  "target_scale_ready_for_all_projection_streaming": true,
+  "projections": [
+    {
+      "name": "q_proj",
+      "decoder_use": "attention",
+      "rows": 2048,
+      "cols": 2048,
+      "packed_int4_bytes": 2097152,
+      "memory_beats": 131072,
+      "target_weight_stream_plan": {
+        "source": "checkpoint_safetensors_header",
+        "qweight_file": "model.safetensors",
+        "qweight_key": "model.layers.0.self_attn.q_proj.qweight",
+        "qweight_byte_offset": 0,
+        "qweight_byte_end_exclusive": 2097152,
+        "qweight_byte_count": 2097152,
+        "memory_data_width_bits": 128,
+        "bytes_per_memory_beat": 16,
+        "raw_qweight_memory_beats": 131072,
+        "observed_memory_beats": 131072,
+        "request_byte_addr": 0,
+        "request_beat_start_index": 0,
+        "request_beat_count": 131072,
+        "first_beat_byte_offset": 0,
+        "last_beat_valid_bytes": 16,
+        "request_covers_unaligned_qweight_range": true,
+        "stream_plan_valid": true,
+        "does_not_claim": [
+          "checkpoint_tensor_payload_loading",
+          "AXI_or_DDR_burst_execution",
+          "checkpoint_specific_qweight_order_correctness"
+        ]
+      },
+      "target_checkpoint_layout_dependency": "satisfied_by_header_preflight",
+      "target_checkpoint_payload_dependency": "satisfied_by_payload_probe",
+      "qweight_payload_word_count": 16,
+      "qweight_payload_words32_le_hex": [
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000"
+      ],
+      "qweight_first_memory_beats_128b_le_hex": [
+        "0x00000000000000000000000000000000",
+        "0x00000000000000000000000000000000",
+        "0x00000000000000000000000000000000",
+        "0x00000000000000000000000000000000"
+      ],
+      "qweight_memory_beat_word_chunks32_le_hex": [
+        [
+          "0x00000000",
+          "0x00000000",
+          "0x00000000",
+          "0x00000000"
+        ],
+        [
+          "0x00000000",
+          "0x00000000",
+          "0x00000000",
+          "0x00000000"
+        ],
+        [
+          "0x00000000",
+          "0x00000000",
+          "0x00000000",
+          "0x00000000"
+        ],
+        [
+          "0x00000000",
+          "0x00000000",
+          "0x00000000",
+          "0x00000000"
+        ]
+      ],
+      "qweight_payload_covers_first_memory_beat": true
+    },
+    {
+      "name": "k_proj",
+      "decoder_use": "attention",
+      "rows": 512,
+      "cols": 2048,
+      "packed_int4_bytes": 524288,
+      "memory_beats": 32768,
+      "target_weight_stream_plan": {
+        "source": "checkpoint_safetensors_header",
+        "qweight_file": "model.safetensors",
+        "qweight_key": "model.layers.0.self_attn.k_proj.qweight",
+        "qweight_byte_offset": 2179072,
+        "qweight_byte_end_exclusive": 2703360,
+        "qweight_byte_count": 524288,
+        "memory_data_width_bits": 128,
+        "bytes_per_memory_beat": 16,
+        "raw_qweight_memory_beats": 32768,
+        "observed_memory_beats": 32768,
+        "request_byte_addr": 2179072,
+        "request_beat_start_index": 136192,
+        "request_beat_count": 32768,
+        "first_beat_byte_offset": 0,
+        "last_beat_valid_bytes": 16,
+        "request_covers_unaligned_qweight_range": true,
+        "stream_plan_valid": true,
+        "does_not_claim": [
+          "checkpoint_tensor_payload_loading",
+          "AXI_or_DDR_burst_execution",
+          "checkpoint_specific_qweight_order_correctness"
+        ]
+      },
+      "target_checkpoint_layout_dependency": "satisfied_by_header_preflight",
+      "target_checkpoint_payload_dependency": "satisfied_by_payload_probe",
+      "qweight_payload_word_count": 16,
+      "qweight_payload_words32_le_hex": [
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000"
+      ],
+      "qweight_first_memory_beats_128b_le_hex": [
+        "0x00000000000000000000000000000000",
+        "0x00000000000000000000000000000000",
+        "0x00000000000000000000000000000000",
+        "0x00000000000000000000000000000000"
+      ],
+      "qweight_memory_beat_word_chunks32_le_hex": [
+        [
+          "0x00000000",
+          "0x00000000",
+          "0x00000000",
+          "0x00000000"
+        ],
+        [
+          "0x00000000",
+          "0x00000000",
+          "0x00000000",
+          "0x00000000"
+        ],
+        [
+          "0x00000000",
+          "0x00000000",
+          "0x00000000",
+          "0x00000000"
+        ],
+        [
+          "0x00000000",
+          "0x00000000",
+          "0x00000000",
+          "0x00000000"
+        ]
+      ],
+      "qweight_payload_covers_first_memory_beat": true
+    },
+    {
+      "name": "v_proj",
+      "decoder_use": "attention",
+      "rows": 512,
+      "cols": 2048,
+      "packed_int4_bytes": 524288,
+      "memory_beats": 32768,
+      "target_weight_stream_plan": {
+        "source": "checkpoint_safetensors_header",
+        "qweight_file": "model.safetensors",
+        "qweight_key": "model.layers.0.self_attn.v_proj.qweight",
+        "qweight_byte_offset": 2723840,
+        "qweight_byte_end_exclusive": 3248128,
+        "qweight_byte_count": 524288,
+        "memory_data_width_bits": 128,
+        "bytes_per_memory_beat": 16,
+        "raw_qweight_memory_beats": 32768,
+        "observed_memory_beats": 32768,
+        "request_byte_addr": 2723840,
+        "request_beat_start_index": 170240,
+        "request_beat_count": 32768,
+        "first_beat_byte_offset": 0,
+        "last_beat_valid_bytes": 16,
+        "request_covers_unaligned_qweight_range": true,
+        "stream_plan_valid": true,
+        "does_not_claim": [
+          "checkpoint_tensor_payload_loading",
+          "AXI_or_DDR_burst_execution",
+          "checkpoint_specific_qweight_order_correctness"
+        ]
+      },
+      "target_checkpoint_layout_dependency": "satisfied_by_header_preflight",
+      "target_checkpoint_payload_dependency": "satisfied_by_payload_probe",
+      "qweight_payload_word_count": 16,
+      "qweight_payload_words32_le_hex": [
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000"
+      ],
+      "qweight_first_memory_beats_128b_le_hex": [
+        "0x00000000000000000000000000000000",
+        "0x00000000000000000000000000000000",
+        "0x00000000000000000000000000000000",
+        "0x00000000000000000000000000000000"
+      ],
+      "qweight_memory_beat_word_chunks32_le_hex": [
+        [
+          "0x00000000",
+          "0x00000000",
+          "0x00000000",
+          "0x00000000"
+        ],
+        [
+          "0x00000000",
+          "0x00000000",
+          "0x00000000",
+          "0x00000000"
+        ],
+        [
+          "0x00000000",
+          "0x00000000",
+          "0x00000000",
+          "0x00000000"
+        ],
+        [
+          "0x00000000",
+          "0x00000000",
+          "0x00000000",
+          "0x00000000"
+        ]
+      ],
+      "qweight_payload_covers_first_memory_beat": true
+    },
+    {
+      "name": "o_proj",
+      "decoder_use": "attention",
+      "rows": 2048,
+      "cols": 2048,
+      "packed_int4_bytes": 2097152,
+      "memory_beats": 131072,
+      "target_weight_stream_plan": {
+        "source": "checkpoint_safetensors_header",
+        "qweight_file": "model.safetensors",
+        "qweight_key": "model.layers.0.self_attn.o_proj.qweight",
+        "qweight_byte_offset": 3268608,
+        "qweight_byte_end_exclusive": 5365760,
+        "qweight_byte_count": 2097152,
+        "memory_data_width_bits": 128,
+        "bytes_per_memory_beat": 16,
+        "raw_qweight_memory_beats": 131072,
+        "observed_memory_beats": 131072,
+        "request_byte_addr": 3268608,
+        "request_beat_start_index": 204288,
+        "request_beat_count": 131072,
+        "first_beat_byte_offset": 0,
+        "last_beat_valid_bytes": 16,
+        "request_covers_unaligned_qweight_range": true,
+        "stream_plan_valid": true,
+        "does_not_claim": [
+          "checkpoint_tensor_payload_loading",
+          "AXI_or_DDR_burst_execution",
+          "checkpoint_specific_qweight_order_correctness"
+        ]
+      },
+      "target_checkpoint_layout_dependency": "satisfied_by_header_preflight",
+      "target_checkpoint_payload_dependency": "satisfied_by_payload_probe",
+      "qweight_payload_word_count": 16,
+      "qweight_payload_words32_le_hex": [
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000"
+      ],
+      "qweight_first_memory_beats_128b_le_hex": [
+        "0x00000000000000000000000000000000",
+        "0x00000000000000000000000000000000",
+        "0x00000000000000000000000000000000",
+        "0x00000000000000000000000000000000"
+      ],
+      "qweight_memory_beat_word_chunks32_le_hex": [
+        [
+          "0x00000000",
+          "0x00000000",
+          "0x00000000",
+          "0x00000000"
+        ],
+        [
+          "0x00000000",
+          "0x00000000",
+          "0x00000000",
+          "0x00000000"
+        ],
+        [
+          "0x00000000",
+          "0x00000000",
+          "0x00000000",
+          "0x00000000"
+        ],
+        [
+          "0x00000000",
+          "0x00000000",
+          "0x00000000",
+          "0x00000000"
+        ]
+      ],
+      "qweight_payload_covers_first_memory_beat": true
+    },
+    {
+      "name": "gate_proj",
+      "decoder_use": "mlp",
+      "rows": 8192,
+      "cols": 2048,
+      "packed_int4_bytes": 8388608,
+      "memory_beats": 524288,
+      "target_weight_stream_plan": {
+        "source": "checkpoint_safetensors_header",
+        "qweight_file": "model.safetensors",
+        "qweight_key": "model.layers.0.mlp.gate_proj.qweight",
+        "qweight_byte_offset": 5447680,
+        "qweight_byte_end_exclusive": 13836288,
+        "qweight_byte_count": 8388608,
+        "memory_data_width_bits": 128,
+        "bytes_per_memory_beat": 16,
+        "raw_qweight_memory_beats": 524288,
+        "observed_memory_beats": 524288,
+        "request_byte_addr": 5447680,
+        "request_beat_start_index": 340480,
+        "request_beat_count": 524288,
+        "first_beat_byte_offset": 0,
+        "last_beat_valid_bytes": 16,
+        "request_covers_unaligned_qweight_range": true,
+        "stream_plan_valid": true,
+        "does_not_claim": [
+          "checkpoint_tensor_payload_loading",
+          "AXI_or_DDR_burst_execution",
+          "checkpoint_specific_qweight_order_correctness"
+        ]
+      },
+      "target_checkpoint_layout_dependency": "satisfied_by_header_preflight",
+      "target_checkpoint_payload_dependency": "satisfied_by_payload_probe",
+      "qweight_payload_word_count": 16,
+      "qweight_payload_words32_le_hex": [
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000"
+      ],
+      "qweight_first_memory_beats_128b_le_hex": [
+        "0x00000000000000000000000000000000",
+        "0x00000000000000000000000000000000",
+        "0x00000000000000000000000000000000",
+        "0x00000000000000000000000000000000"
+      ],
+      "qweight_memory_beat_word_chunks32_le_hex": [
+        [
+          "0x00000000",
+          "0x00000000",
+          "0x00000000",
+          "0x00000000"
+        ],
+        [
+          "0x00000000",
+          "0x00000000",
+          "0x00000000",
+          "0x00000000"
+        ],
+        [
+          "0x00000000",
+          "0x00000000",
+          "0x00000000",
+          "0x00000000"
+        ],
+        [
+          "0x00000000",
+          "0x00000000",
+          "0x00000000",
+          "0x00000000"
+        ]
+      ],
+      "qweight_payload_covers_first_memory_beat": true
+    },
+    {
+      "name": "up_proj",
+      "decoder_use": "mlp",
+      "rows": 8192,
+      "cols": 2048,
+      "packed_int4_bytes": 8388608,
+      "memory_beats": 524288,
+      "target_weight_stream_plan": {
+        "source": "checkpoint_safetensors_header",
+        "qweight_file": "model.safetensors",
+        "qweight_key": "model.layers.0.mlp.up_proj.qweight",
+        "qweight_byte_offset": 14163968,
+        "qweight_byte_end_exclusive": 22552576,
+        "qweight_byte_count": 8388608,
+        "memory_data_width_bits": 128,
+        "bytes_per_memory_beat": 16,
+        "raw_qweight_memory_beats": 524288,
+        "observed_memory_beats": 524288,
+        "request_byte_addr": 14163968,
+        "request_beat_start_index": 885248,
+        "request_beat_count": 524288,
+        "first_beat_byte_offset": 0,
+        "last_beat_valid_bytes": 16,
+        "request_covers_unaligned_qweight_range": true,
+        "stream_plan_valid": true,
+        "does_not_claim": [
+          "checkpoint_tensor_payload_loading",
+          "AXI_or_DDR_burst_execution",
+          "checkpoint_specific_qweight_order_correctness"
+        ]
+      },
+      "target_checkpoint_layout_dependency": "satisfied_by_header_preflight",
+      "target_checkpoint_payload_dependency": "satisfied_by_payload_probe",
+      "qweight_payload_word_count": 16,
+      "qweight_payload_words32_le_hex": [
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000"
+      ],
+      "qweight_first_memory_beats_128b_le_hex": [
+        "0x00000000000000000000000000000000",
+        "0x00000000000000000000000000000000",
+        "0x00000000000000000000000000000000",
+        "0x00000000000000000000000000000000"
+      ],
+      "qweight_memory_beat_word_chunks32_le_hex": [
+        [
+          "0x00000000",
+          "0x00000000",
+          "0x00000000",
+          "0x00000000"
+        ],
+        [
+          "0x00000000",
+          "0x00000000",
+          "0x00000000",
+          "0x00000000"
+        ],
+        [
+          "0x00000000",
+          "0x00000000",
+          "0x00000000",
+          "0x00000000"
+        ],
+        [
+          "0x00000000",
+          "0x00000000",
+          "0x00000000",
+          "0x00000000"
+        ]
+      ],
+      "qweight_payload_covers_first_memory_beat": true
+    },
+    {
+      "name": "down_proj",
+      "decoder_use": "mlp",
+      "rows": 2048,
+      "cols": 8192,
+      "packed_int4_bytes": 8388608,
+      "memory_beats": 524288,
+      "target_weight_stream_plan": {
+        "source": "checkpoint_safetensors_header",
+        "qweight_file": "model.safetensors",
+        "qweight_key": "model.layers.0.mlp.down_proj.qweight",
+        "qweight_byte_offset": 22880256,
+        "qweight_byte_end_exclusive": 31268864,
+        "qweight_byte_count": 8388608,
+        "memory_data_width_bits": 128,
+        "bytes_per_memory_beat": 16,
+        "raw_qweight_memory_beats": 524288,
+        "observed_memory_beats": 524288,
+        "request_byte_addr": 22880256,
+        "request_beat_start_index": 1430016,
+        "request_beat_count": 524288,
+        "first_beat_byte_offset": 0,
+        "last_beat_valid_bytes": 16,
+        "request_covers_unaligned_qweight_range": true,
+        "stream_plan_valid": true,
+        "does_not_claim": [
+          "checkpoint_tensor_payload_loading",
+          "AXI_or_DDR_burst_execution",
+          "checkpoint_specific_qweight_order_correctness"
+        ]
+      },
+      "target_checkpoint_layout_dependency": "satisfied_by_header_preflight",
+      "target_checkpoint_payload_dependency": "satisfied_by_payload_probe",
+      "qweight_payload_word_count": 16,
+      "qweight_payload_words32_le_hex": [
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000",
+        "0x00000000"
+      ],
+      "qweight_first_memory_beats_128b_le_hex": [
+        "0x00000000000000000000000000000000",
+        "0x00000000000000000000000000000000",
+        "0x00000000000000000000000000000000",
+        "0x00000000000000000000000000000000"
+      ],
+      "qweight_memory_beat_word_chunks32_le_hex": [
+        [
+          "0x00000000",
+          "0x00000000",
+          "0x00000000",
+          "0x00000000"
+        ],
+        [
+          "0x00000000",
+          "0x00000000",
+          "0x00000000",
+          "0x00000000"
+        ],
+        [
+          "0x00000000",
+          "0x00000000",
+          "0x00000000",
+          "0x00000000"
+        ],
+        [
+          "0x00000000",
+          "0x00000000",
+          "0x00000000",
+          "0x00000000"
+        ]
+      ],
+      "qweight_payload_covers_first_memory_beat": true
+    }
+  ],
+  "next_memory_agent_scaling_input": "use this artifact to scale q_proj-only AXI fixtures to q/k/v/o and MLP projection streams",
+  "does_not_claim": [
+    "DDR_controller_integration",
+    "AXI_master_implementation",
+    "full_qweight_payload_streaming",
+    "numeric_GPTQ_correctness",
+    "full_target_projection_execution",
+    "full_LLaMA_model_execution",
+    "board_level_ZCU104_signoff"
+  ]
+}

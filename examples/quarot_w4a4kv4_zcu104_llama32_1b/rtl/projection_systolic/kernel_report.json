@@ -1,0 +1,110 @@
+{
+  "kernel": "w4a4_ws_systolic_tile",
+  "status": "passed_with_vivado_timing_skipped",
+  "coverage_level": "projection_systolic_w4a4_weight_stationary_tile_fixture",
+  "implementation_stage": "rtl_simulation_and_frontend_syntax",
+  "fixture_scope": "bounded_projection_tile_not_full_llama",
+  "numeric_policy": {
+    "activation_format": "signed_int4_twos_complement",
+    "weight_format": "signed_int4_twos_complement_gptq_weight_payload_fixture",
+    "accumulator_format": "signed_int32",
+    "rounding_mode": "none_exact_integer_accumulation",
+    "saturation_policy": "none_vectors_and_parameters_must_fit_ACC_BITS",
+    "packed_order": "little_element_order_element_idx_is_idx_times_width",
+    "output_order": "row_major_row_times_COLS_plus_col"
+  },
+  "dimensions": {
+    "ROWS": 2,
+    "COLS": 3,
+    "K": 4,
+    "W_BITS": 4,
+    "A_BITS": 4,
+    "ACC_BITS": 32
+  },
+  "datapath": {
+    "dataflow": "weight_stationary",
+    "weight_loading": "weight_tile_i is sampled into weight_hold_r on start_i while idle and held unchanged through RUN and DONE",
+    "activation_loading": "activation_tile_i is sampled into activation_hold_r on start_i while idle",
+    "schedule": "one k slice per cycle; all ROWS*COLS output elements receive a true signed int4 product each RUN cycle",
+    "products_per_cycle": 6,
+    "parallel_products_per_cycle": 6,
+    "true_parallel_datapath_lanes": 6,
+    "parallel_stage": "STATE_RUN multiply-accumulate across ROWS by COLS for current k_idx_r",
+    "latency_cycles_start_sample_to_done_high": 5
+  },
+  "products_per_cycle": 6,
+  "true_parallel_datapath_lanes": 6,
+  "handshake": {
+    "common_ports": ["aclk", "aresetn", "start_i", "done_o"],
+    "start_sampled_only_when_idle": true,
+    "done_o_remains_high_until_start_i_deasserted": true,
+    "outputs_stable_while_done_o_high": true
+  },
+  "debug_status": {
+    "status_o_width_bits": 32,
+    "fields": {
+      "bit0": "running",
+      "bit1": "products_valid_previous_cycle",
+      "bit2": "weights_loaded",
+      "bit3": "done",
+      "bits7_4": "k_idx",
+      "bits15_8": "K",
+      "bits23_16": "ROWS_times_COLS_true_parallel_lanes",
+      "bits31_24": "state"
+    }
+  },
+  "golden_vector": {
+    "file": "golden_vectors.json",
+    "round_trip_passed": true,
+    "expected_acc_int32": [[14, 48, -98], [59, -13, -6]]
+  },
+  "simulation": {
+    "command": "iverilog -g2012 -o kernel_sim w4a4_ws_systolic_tile.sv tb_w4a4_ws_systolic_tile.sv && vvp ./kernel_sim",
+    "passed": true,
+    "result": "PASS w4a4_ws_systolic_tile",
+    "checks": [
+      "signed int4 activation and weight packed decode",
+      "INT32 accumulation for deterministic 2x3x4 tile",
+      "weight_hold_r remains equal to sampled weight_tile_i during compute",
+      "done_o hold while start_i remains high",
+      "acc_tile_o and status_o stable while done_o is high",
+      "done_o release after start_i deassertion"
+    ]
+  },
+  "verilator": {
+    "available": true,
+    "version": "Verilator 4.038 2020-07-11",
+    "dut_lint_command": "verilator --lint-only -sv w4a4_ws_systolic_tile.sv",
+    "dut_lint_passed": true,
+    "testbench_lint_command": "verilator --lint-only -sv -Wno-STMTDLY -Wno-INFINITELOOP w4a4_ws_systolic_tile.sv tb_w4a4_ws_systolic_tile.sv",
+    "testbench_lint_passed": false,
+    "testbench_lint_unavailable_reason": "Installed Verilator 4.038 rejects timed/event-controlled testbench statements in this style and does not support --timing; Icarus executed the timed self-checking testbench.",
+    "passed": true,
+    "result": "DUT lint passed; timed testbench lint unsupported by installed Verilator"
+  },
+  "vivado_frontend": {
+    "available": true,
+    "version": "Vivado v2024.1",
+    "command": "xvlog -sv w4a4_ws_systolic_tile.sv tb_w4a4_ws_systolic_tile.sv",
+    "passed": true,
+    "result": "VRFC analyzed w4a4_ws_systolic_tile and tb_w4a4_ws_systolic_tile"
+  },
+  "vivado_timing_resource_evidence": {
+    "implementation_stage": "not_run",
+    "available": false,
+    "skipped": true,
+    "reason": "Vivado timing/resource implementation was intentionally skipped for this bounded module packet; no post-synth, post-place, or post-route timing/resource claim is made."
+  },
+  "forbidden_claims": {
+    "does_not_claim": [
+      "full_LLaMA_projection_coverage",
+      "real_GPTQ_checkpoint_layout_compatibility",
+      "QuaRot_end_to_end_numeric_signoff",
+      "DDR_or_AXI_streaming_integration",
+      "ZCU104_board_level_signoff",
+      "final_systolic_array_shape_selection"
+    ],
+    "gptq_layout_preflight": "not_performed_for_this_bounded_tile",
+    "real_gptq_checkpoint_layout_compatible": false
+  }
+}

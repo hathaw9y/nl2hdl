@@ -1,0 +1,80 @@
+{
+  "subagent": "hdl_implementation",
+  "task": "Generate bounded SystemVerilog support modules for QuaRot W4A4KV4 example",
+  "status": "pass",
+  "changed_files": [
+    "examples/quarot_w4a4kv4_zcu104_llama32_1b/rtl/quarot_support/quarot_w4a4kv4_support.sv",
+    "examples/quarot_w4a4kv4_zcu104_llama32_1b/rtl/quarot_support/tb_quarot_w4a4kv4_support.sv",
+    "examples/quarot_w4a4kv4_zcu104_llama32_1b/rtl/quarot_support/golden_vectors.json",
+    "examples/quarot_w4a4kv4_zcu104_llama32_1b/rtl/quarot_support/kernel_report.json",
+    "examples/quarot_w4a4kv4_zcu104_llama32_1b/rtl/quarot_support/subagent_result.json",
+    "examples/quarot_w4a4kv4_zcu104_llama32_1b/rtl/quarot_support/README.md"
+  ],
+  "commands_run": [
+    {
+      "command": "iverilog -g2012 -Wall -o /tmp/tb_quarot_w4a4kv4_support.vvp examples/quarot_w4a4kv4_zcu104_llama32_1b/rtl/quarot_support/quarot_w4a4kv4_support.sv examples/quarot_w4a4kv4_zcu104_llama32_1b/rtl/quarot_support/tb_quarot_w4a4kv4_support.sv && vvp /tmp/tb_quarot_w4a4kv4_support.vvp",
+      "result": "pass",
+      "evidence": "PASS tb_quarot_w4a4kv4_support"
+    },
+    {
+      "command": "verilator --lint-only --timing -Wall examples/quarot_w4a4kv4_zcu104_llama32_1b/rtl/quarot_support/quarot_w4a4kv4_support.sv examples/quarot_w4a4kv4_zcu104_llama32_1b/rtl/quarot_support/tb_quarot_w4a4kv4_support.sv",
+      "result": "unavailable",
+      "evidence": "%Error: Invalid option: --timing"
+    },
+    {
+      "command": "verilator --version",
+      "result": "pass",
+      "evidence": "Verilator 4.038 2020-07-11 rev v4.036-114-g0cd4a57ad"
+    },
+    {
+      "command": "verilator --lint-only -Wall --top-module quarot_w4a4kv4_support examples/quarot_w4a4kv4_zcu104_llama32_1b/rtl/quarot_support/quarot_w4a4kv4_support.sv",
+      "result": "pass",
+      "evidence": "No diagnostics emitted"
+    },
+    {
+      "command": "mkdir -p /tmp/quarot_w4a4kv4_support_xsim && cd /tmp/quarot_w4a4kv4_support_xsim && /tools/Xilinx/Vivado/2024.1/bin/xvlog -sv /home/iamjames77/Nlp2Verilog/examples/quarot_w4a4kv4_zcu104_llama32_1b/rtl/quarot_support/quarot_w4a4kv4_support.sv /home/iamjames77/Nlp2Verilog/examples/quarot_w4a4kv4_zcu104_llama32_1b/rtl/quarot_support/tb_quarot_w4a4kv4_support.sv && /tools/Xilinx/Vivado/2024.1/bin/xelab tb_quarot_w4a4kv4_support -s tb_quarot_w4a4kv4_support_sim && /tools/Xilinx/Vivado/2024.1/bin/xsim tb_quarot_w4a4kv4_support_sim -runall",
+      "result": "pass",
+      "evidence": "Vivado Simulator v2024.1; PASS tb_quarot_w4a4kv4_support"
+    },
+    {
+      "command": "jq empty examples/quarot_w4a4kv4_zcu104_llama32_1b/rtl/quarot_support/golden_vectors.json examples/quarot_w4a4kv4_zcu104_llama32_1b/rtl/quarot_support/kernel_report.json examples/quarot_w4a4kv4_zcu104_llama32_1b/rtl/quarot_support/subagent_result.json",
+      "result": "unavailable",
+      "evidence": "zsh:1: command not found: jq"
+    },
+    {
+      "command": "python3 -m json.tool examples/quarot_w4a4kv4_zcu104_llama32_1b/rtl/quarot_support/golden_vectors.json >/dev/null && python3 -m json.tool examples/quarot_w4a4kv4_zcu104_llama32_1b/rtl/quarot_support/kernel_report.json >/dev/null && python3 -m json.tool examples/quarot_w4a4kv4_zcu104_llama32_1b/rtl/quarot_support/subagent_result.json >/dev/null",
+      "result": "pass",
+      "evidence": "JSON parsed successfully"
+    }
+  ],
+  "simulation_evidence": {
+    "iverilog": "pass",
+    "xsim": "pass",
+    "checked_behaviors": [
+      "rotation result",
+      "A4 saturation and packing",
+      "KV4 round trip for two vectors",
+      "done_o hold while start_i high",
+      "done_o release after start_i deassert",
+      "output stability while done_o high",
+      "second transaction after release"
+    ]
+  },
+  "verilator_evidence": {
+    "available": true,
+    "dut_lint": "pass",
+    "testbench_lint": "unavailable",
+    "unavailable_reason": "Installed Verilator 4.038 rejects --timing, so timing-aware lint of the delay-based testbench was not available."
+  },
+  "vivado_timing_resource_evidence": {
+    "available": false,
+    "skipped": true,
+    "reason": "Skipped OOC synthesis/timing/resource collection because this packet is a bounded fixture-only support module and not a target datapath signoff artifact. Vivado XSIM simulation was run and passed."
+  },
+  "remaining_risks": [
+    "Internal H4 datapath is fixed to N=4 despite parameterized port sizing; larger N would require explicit matrix/datapath extension.",
+    "No real QuaRot scaling, RMSNorm fusion, GPTQ checkpoint layout, DDR/AXI, or ZCU104 timing/resource claim is made.",
+    "DUT-only Verilator lint passed, but timing-aware testbench lint was unavailable with installed Verilator 4.038."
+  ],
+  "skill_update_candidate": null
+}

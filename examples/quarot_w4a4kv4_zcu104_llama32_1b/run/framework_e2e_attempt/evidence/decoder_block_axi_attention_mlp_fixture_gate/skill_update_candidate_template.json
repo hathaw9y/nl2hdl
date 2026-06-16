@@ -1,0 +1,22 @@
+{
+  "artifact": "skill_update_candidate_template",
+  "required_before_retry": true,
+  "use_when": "an HDL implementation sub-agent cannot pass its assigned simulation, lint, synthesis, timing, or evidence gate",
+  "required_fields": [
+    "failing_command",
+    "symptom",
+    "root_cause_hypothesis",
+    "prevention_rule",
+    "minimal_regression_check"
+  ],
+  "candidate": {
+    "task_id": "<task_id>",
+    "failing_command": "<exact command that failed>",
+    "symptom": "<concise simulator/lint/Vivado/test symptom with log path>",
+    "root_cause_hypothesis": "<why this failure likely happened>",
+    "prevention_rule": "<reusable rule to add to a SKILL before retry>",
+    "minimal_regression_check": "<smallest test/sim/synth check that catches this failure>",
+    "evidence_dir": "build/<task_id>_gate",
+    "suggested_skill": "fpga-vivado-systemverilog or hdl-kernel-contract-gates or hdl-vivado-timing-closure"
+  }
+}

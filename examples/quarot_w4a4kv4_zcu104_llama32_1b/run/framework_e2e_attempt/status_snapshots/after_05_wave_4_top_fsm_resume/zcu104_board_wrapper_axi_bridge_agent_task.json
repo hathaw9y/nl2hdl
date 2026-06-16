@@ -1,0 +1,33 @@
+{
+  "artifact": "zcu104_board_wrapper_axi_bridge_agent_task",
+  "task_id": "zcu104_board_wrapper_axi_bridge",
+  "spawn_kind": "target_evidence_implementation_agent",
+  "agent": "Codex",
+  "mode": "read_write_board_wrapper_vivado_implementation",
+  "ready_to_spawn": false,
+  "spawn_precondition_failures": [
+    "full_llama_execution_readiness must be passed before board-wrapper implementation",
+    "board signoff readiness must still be blocked on board evidence",
+    "zcu104 pre-signoff constraints package must exist before board-wrapper implementation"
+  ],
+  "prompt_file": "board_implementation_prompts/zcu104_board_wrapper_axi_bridge_agent.md",
+  "expected_evidence_file": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/board_zcu104_signoff_gate/zcu104_board_wrapper_axi_bridge_implementation_report.json",
+  "expected_subagent_result": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/board_zcu104_signoff_gate/zcu104_board_wrapper_axi_bridge_subagent_result.json",
+  "source_readiness_status": "blocked_by_full_llama_execution",
+  "prior_board_signoff_gap_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/board_zcu104_signoff_gate/evidence_gap_report.json",
+  "prior_board_signoff_gap_status": null,
+  "prior_board_signoff_skill_update_candidate": null,
+  "required_commands": [
+    "python3 -m compileall nl2hdl/llm_kernels.py nl2hdl/subagent_tasks.py nl2hdl/cli.py",
+    "python3 -m pytest -q tests/test_llm_kernels.py",
+    "vivado -version",
+    "python3 -m nl2hdl subagents status --dispatch-plan examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/00_parent_inspect/hdl_subagent_dispatch_plan.json --evidence-root examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence --out build/board_zcu104_signoff_gate/status_after_board_wrapper"
+  ],
+  "parent_must_not_write_hdl": true,
+  "failure_to_skill_required": true,
+  "does_not_claim": [
+    "board_level_ZCU104_signoff",
+    "hardware_lab_runtime_validation",
+    "real_time_LLaMA_inference_performance"
+  ]
+}

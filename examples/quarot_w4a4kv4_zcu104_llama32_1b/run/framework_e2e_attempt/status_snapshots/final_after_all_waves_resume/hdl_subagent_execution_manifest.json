@@ -1,0 +1,200 @@
+{
+  "artifact": "hdl_subagent_execution_manifest",
+  "coverage_level": "dispatch_wave_status_to_codex_spawn_instructions",
+  "model": {
+    "name": "meta-llama/Llama-3.2-1B",
+    "metadata_source": "huggingface_auto_config_local_cache",
+    "decoder_layers": 16,
+    "hidden_size": 2048,
+    "intermediate_size": 8192
+  },
+  "hardware": {
+    "fpga_part": "xczu7ev-ffvc1156-2-e",
+    "target_clock_mhz": 200,
+    "memory_data_width_bits": 128,
+    "memory_data_width": 128,
+    "max_lut": 207360,
+    "max_dsp": 1536,
+    "max_bram": 280,
+    "max_ff": 414720,
+    "max_uram": 80,
+    "max_io": 420,
+    "device_logic_cells": 504000,
+    "device_lut": 230400,
+    "device_ff": 460800,
+    "device_dsp": 1728,
+    "device_bram_36k": 312,
+    "device_uram": 96,
+    "device_io": 464,
+    "device_distributed_ram_mb": 6.2,
+    "device_bram_mb": 11.0,
+    "device_uram_mb": 27.0,
+    "device_ps_gtr": 4,
+    "device_gth": 20,
+    "resource_reference": "AMD ZCU104 UG1267 v1.1 and XCZU7EV resource tables"
+  },
+  "optimization": {
+    "quantization": "quarot_w4a4kv4_gptq_weights",
+    "optimization_brief": "Use QuaRot-style rotations so the LLaMA decode path can target W4A4KV4: 4-bit GPTQ weights, 4-bit rotated activations, and 4-bit KV-cache storage. The example assumes GPTQ weight tensors already exist and uses a local sparse metadata fixture only to exercise the parent planning flow.\n",
+    "optimization_candidates": [
+      {
+        "name": "quarot_w4a4kv4",
+        "scope": "primary example path",
+        "notes": "rotate residual/attention/MLP streams, quantize activations to 4-bit, and store KV-cache in 4-bit form"
+      },
+      {
+        "name": "w4a8kv4_fallback",
+        "scope": "fallback",
+        "notes": "keep weights and KV-cache at 4-bit but allow 8-bit activations if W4A4 timing or accuracy is unsafe"
+      },
+      {
+        "name": "mixed_precision_softmax_control",
+        "scope": "non_gemm_control",
+        "notes": "keep softmax/control accumulations wider while preserving W4A4KV4 storage boundaries"
+      }
+    ],
+    "optimization_extra_options": {
+      "weight_quantization": {
+        "method": "GPTQ",
+        "bits": 4,
+        "group_size": 128,
+        "source_assumption": "implemented_checkpoint_available",
+        "checkpoint_fixture": "sparse_header_and_payload_prefix_fixture"
+      },
+      "activation_quantization": {
+        "bits": 4,
+        "method": "QuaRot_rotated_activation_quantization",
+        "calibration_source": "assumed_offline_quarot_calibration",
+        "scale_granularity": "per_tensor_or_per_channel_to_be_selected_by_parent"
+      },
+      "kv_cache_quantization": {
+        "bits": 4,
+        "method": "QuaRot_KV4",
+        "storage": "external_ddr_or_onchip_tile_cache",
+        "dequant_location": "attention_score_value_path"
+      },
+      "rotation": {
+        "method": "QuaRot",
+        "transform": "hadamard_like_orthogonal_rotation",
+        "placement": [
+          "residual_stream_before_attention_projection",
+          "qkv_projection_input",
+          "attention_output_before_o_proj",
+          "mlp_input_before_gate_up_projection",
+          "kv_cache_write_read_boundary"
+        ],
+        "implementation_requirement": "rotation kernels must be separate non_gemm module packets unless fused by an explicit parent boundary review"
+      },
+      "numeric_policy": {
+        "weight_bits": 4,
+        "activation_bits": 4,
+        "kv_cache_bits": 4,
+        "accumulator_bits": 32,
+        "requantization": "explicit_scale_shift_saturation"
+      }
+    },
+    "weight_storage": "external_ddr_gptq_packed_stream_to_onchip_weight_stationary_tiles",
+    "design_style": "systolic_weight_stationary_llm_streaming",
+    "compute_style": "systolic_array",
+    "execution_style": "llm_decoder_streaming",
+    "memory_style": "external_ddr_streaming",
+    "control_style": "hierarchical_fsm",
+    "architecture_brief": "Use a weight-stationary systolic array for projection GEMM/GEMV tiles. GPTQ-packed W4 weights are streamed from DDR into on-chip tile buffers, unpacked/dequantized near the array edge, and reused in-place while rotated A4 activations stream through the array. Size the array from the active DSP budget rather than hardcoding a final dimension.\n",
+    "design_candidates": [
+      {
+        "name": "ws_systolic_32x32",
+        "focus": "first candidate under a 1536-DSP active compute budget",
+        "risk": "routing pressure and activation/KV4 quantization overhead may reduce timing margin"
+      },
+      {
+        "name": "ws_systolic_16x64",
+        "focus": "preserve projection throughput while easing vertical routing",
+        "risk": "less square data reuse and more edge buffering"
+      },
+      {
+        "name": "ws_systolic_24x48",
+        "focus": "middle-ground DSP use with easier BRAM banking",
+        "risk": "tile scheduler is less regular than 32x32"
+      }
+    ],
+    "design_extra_options": {
+      "systolic_array": {
+        "dataflow": "weight_stationary",
+        "initial_rows": 32,
+        "initial_cols": 32,
+        "dsp_per_cell_assumption": 1,
+        "active_dsp_budget": 1536,
+        "reserved_dsp_for_non_gemm_and_control": 192,
+        "sizing_rule": "choose rows*cols*dsp_per_cell <= active_dsp_budget after reserving non-GEMM/control DSP",
+        "allowed_shapes": [
+          [
+            16,
+            64
+          ],
+          [
+            24,
+            48
+          ],
+          [
+            32,
+            32
+          ]
+        ],
+        "selected_shape": "parent_to_select_after_module_ooc_synthesis"
+      },
+      "ddr_streaming": {
+        "stream_width_bits": 128,
+        "burst_policy": "aligned_bursts_per_projection_tile",
+        "onchip_weight_tile_buffer": "double_buffered_bram_uram",
+        "unpack_location": "array_edge",
+        "backpressure": "valid_ready"
+      },
+      "activation_path": {
+        "format": "rotated_int4",
+        "buffer_policy": "ping_pong_tile_buffer",
+        "rotation_module_boundary": "non_gemm_quarot_rotation"
+      },
+      "control": {
+        "hierarchy": [
+          "module_fsm",
+          "projection_tile_scheduler",
+          "decoder_block_fsm",
+          "model_fsm",
+          "board_wrapper_control_regs"
+        ]
+      }
+    },
+    "pe_count": 1024
+  },
+  "dispatch_policy": {
+    "parent_must_not_write_hdl": true,
+    "one_subagent_per_hdl_packet": true,
+    "module_agents_run_own_simulation_and_synthesis": true,
+    "spawn_implementation_agents_from_prompt_files": true,
+    "spawn_verification_agent_after_each_wave": true,
+    "spawn_read_only_verification_agent_after_each_wave": true,
+    "integration_verification_agents_run_synthesis": true,
+    "layer_fsm_and_top_fsm_are_separate_implementation_agents": true,
+    "failed_hdl_attempt_updates_skill_before_retry": true,
+    "do_not_advance_to_dependent_wave_until_current_wave_verification_passes": true
+  },
+  "parent_agent_runtime_boundary": "Package code emits spawn instructions only; the interactive Codex parent or an external runner must call sub-agents and collect evidence.",
+  "spawn_entry_count": 0,
+  "implementation_spawn_count": 0,
+  "verification_spawn_count": 0,
+  "spawn_batch_count": 0,
+  "parallel_spawn_allowed": false,
+  "max_parallel_batch_size": 0,
+  "skill_update_required": false,
+  "missing_skill_update_candidate": false,
+  "spawn_batches": [],
+  "spawn_entries": [],
+  "blocked_waves": [],
+  "does_not_claim": [
+    "sub-agent execution occurred",
+    "automatic sub-agent spawning inside package runtime",
+    "generated RTL completeness",
+    "full LLaMA execution",
+    "board-level ZCU104 signoff"
+  ]
+}

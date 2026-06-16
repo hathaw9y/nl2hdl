@@ -1,0 +1,459 @@
+{
+  "artifact": "framework_e2e_runner_summary",
+  "dispatch_plan": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/00_parent_inspect/hdl_subagent_dispatch_plan.json",
+  "evidence_root": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence",
+  "waves": [
+    {
+      "wave_id": "wave_1_projection_kernels",
+      "tasks": [
+        {
+          "task_id": "projection_q_proj",
+          "kernel": "projection_target_stream_plan",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_q_proj_gate"
+        },
+        {
+          "task_id": "projection_k_proj",
+          "kernel": "projection_target_stream_plan",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_k_proj_gate"
+        },
+        {
+          "task_id": "projection_v_proj",
+          "kernel": "projection_target_stream_plan",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_v_proj_gate"
+        },
+        {
+          "task_id": "projection_o_proj",
+          "kernel": "projection_target_stream_plan",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_o_proj_gate"
+        },
+        {
+          "task_id": "projection_gate_proj",
+          "kernel": "projection_target_stream_plan",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_gate_proj_gate"
+        },
+        {
+          "task_id": "projection_up_proj",
+          "kernel": "projection_target_stream_plan",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_up_proj_gate"
+        },
+        {
+          "task_id": "projection_down_proj",
+          "kernel": "projection_target_stream_plan",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_down_proj_gate"
+        }
+      ],
+      "verification_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/verification_results/wave_1_projection_kernels__verification.json",
+      "status_after_wave": "passed"
+    },
+    {
+      "wave_id": "wave_1_non_gemm_kernels",
+      "tasks": [
+        {
+          "task_id": "non_gemm_input_layernorm",
+          "kernel": "rmsnorm_rope_source_path",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/non_gemm_input_layernorm_gate"
+        },
+        {
+          "task_id": "non_gemm_rope_qk",
+          "kernel": "rmsnorm_rope_source_path",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/non_gemm_rope_qk_gate"
+        },
+        {
+          "task_id": "non_gemm_attention_scores_softmax_kv",
+          "kernel": "attention_kv_cache_fixture",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/non_gemm_attention_scores_softmax_kv_gate"
+        },
+        {
+          "task_id": "non_gemm_attention_residual",
+          "kernel": "residual_mlp_fixture",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/non_gemm_attention_residual_gate"
+        },
+        {
+          "task_id": "non_gemm_post_attention_layernorm",
+          "kernel": "rmsnorm_rope_source_path",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/non_gemm_post_attention_layernorm_gate"
+        },
+        {
+          "task_id": "non_gemm_silu_gate",
+          "kernel": "residual_mlp_fixture",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/non_gemm_silu_gate_gate"
+        },
+        {
+          "task_id": "non_gemm_swiglu_multiply",
+          "kernel": "residual_mlp_fixture",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/non_gemm_swiglu_multiply_gate"
+        },
+        {
+          "task_id": "non_gemm_mlp_residual",
+          "kernel": "residual_mlp_fixture",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/non_gemm_mlp_residual_gate"
+        }
+      ],
+      "verification_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/verification_results/wave_1_non_gemm_kernels__verification.json",
+      "status_after_wave": "passed"
+    },
+    {
+      "wave_id": "wave_2_decoder_block",
+      "tasks": [
+        {
+          "task_id": "decoder_block_attention_mlp_fixture",
+          "kernel": "decoder_block_attention_mlp_fixture",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/decoder_block_attention_mlp_fixture_gate"
+        }
+      ],
+      "verification_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/verification_results/wave_2_decoder_block__verification.json",
+      "status_after_wave": "passed"
+    },
+    {
+      "wave_id": "wave_3_layer_fsm",
+      "tasks": [
+        {
+          "task_id": "layer_fsm_decoder_block_fixture",
+          "kernel": "layer_fsm_decoder_block_fixture",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/layer_fsm_decoder_block_fixture_gate"
+        }
+      ],
+      "verification_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/verification_results/wave_3_layer_fsm__verification.json",
+      "status_after_wave": "passed"
+    },
+    {
+      "wave_id": "wave_4_top_fsm",
+      "tasks": [
+        {
+          "task_id": "top_fsm_decoder_block_fixture",
+          "kernel": "top_fsm_decoder_block_fixture",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/top_fsm_decoder_block_fixture_gate"
+        }
+      ],
+      "verification_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/verification_results/wave_4_top_fsm__verification.json",
+      "status_after_wave": "passed"
+    },
+    {
+      "wave_id": "wave_5_token_loop",
+      "tasks": [
+        {
+          "task_id": "token_loop_decoder_block_fixture",
+          "kernel": "token_loop_decoder_block_fixture",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/token_loop_decoder_block_fixture_gate"
+        }
+      ],
+      "verification_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/verification_results/wave_5_token_loop__verification.json",
+      "status_after_wave": "passed"
+    },
+    {
+      "wave_id": "wave_6_projection_axi_read_command_adapter",
+      "tasks": [
+        {
+          "task_id": "projection_axi_read_command_adapter",
+          "kernel": "projection_axi_read_command_adapter",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_axi_read_command_adapter_gate"
+        },
+        {
+          "task_id": "projection_k_proj_axi_read_command_adapter",
+          "kernel": "projection_axi_read_command_adapter",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_k_proj_axi_read_command_adapter_gate"
+        },
+        {
+          "task_id": "projection_v_proj_axi_read_command_adapter",
+          "kernel": "projection_axi_read_command_adapter",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_v_proj_axi_read_command_adapter_gate"
+        },
+        {
+          "task_id": "projection_o_proj_axi_read_command_adapter",
+          "kernel": "projection_axi_read_command_adapter",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_o_proj_axi_read_command_adapter_gate"
+        },
+        {
+          "task_id": "projection_gate_proj_axi_read_command_adapter",
+          "kernel": "projection_axi_read_command_adapter",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_gate_proj_axi_read_command_adapter_gate"
+        },
+        {
+          "task_id": "projection_up_proj_axi_read_command_adapter",
+          "kernel": "projection_axi_read_command_adapter",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_up_proj_axi_read_command_adapter_gate"
+        },
+        {
+          "task_id": "projection_down_proj_axi_read_command_adapter",
+          "kernel": "projection_axi_read_command_adapter",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_down_proj_axi_read_command_adapter_gate"
+        }
+      ],
+      "verification_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/verification_results/wave_6_projection_axi_read_command_adapter__verification.json",
+      "status_after_wave": "passed"
+    },
+    {
+      "wave_id": "wave_7_projection_axi_read_data_channel_adapter",
+      "tasks": [
+        {
+          "task_id": "projection_axi_read_data_channel_adapter",
+          "kernel": "projection_axi_read_data_channel_adapter",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_axi_read_data_channel_adapter_gate"
+        },
+        {
+          "task_id": "projection_k_proj_axi_read_data_channel_adapter",
+          "kernel": "projection_axi_read_data_channel_adapter",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_k_proj_axi_read_data_channel_adapter_gate"
+        },
+        {
+          "task_id": "projection_v_proj_axi_read_data_channel_adapter",
+          "kernel": "projection_axi_read_data_channel_adapter",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_v_proj_axi_read_data_channel_adapter_gate"
+        },
+        {
+          "task_id": "projection_o_proj_axi_read_data_channel_adapter",
+          "kernel": "projection_axi_read_data_channel_adapter",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_o_proj_axi_read_data_channel_adapter_gate"
+        },
+        {
+          "task_id": "projection_gate_proj_axi_read_data_channel_adapter",
+          "kernel": "projection_axi_read_data_channel_adapter",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_gate_proj_axi_read_data_channel_adapter_gate"
+        },
+        {
+          "task_id": "projection_up_proj_axi_read_data_channel_adapter",
+          "kernel": "projection_axi_read_data_channel_adapter",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_up_proj_axi_read_data_channel_adapter_gate"
+        },
+        {
+          "task_id": "projection_down_proj_axi_read_data_channel_adapter",
+          "kernel": "projection_axi_read_data_channel_adapter",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_down_proj_axi_read_data_channel_adapter_gate"
+        }
+      ],
+      "verification_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/verification_results/wave_7_projection_axi_read_data_channel_adapter__verification.json",
+      "status_after_wave": "passed"
+    },
+    {
+      "wave_id": "wave_8_projection_axi_read_transaction_adapter",
+      "tasks": [
+        {
+          "task_id": "projection_axi_read_transaction_adapter",
+          "kernel": "projection_axi_read_transaction_adapter",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_axi_read_transaction_adapter_gate"
+        },
+        {
+          "task_id": "projection_k_proj_axi_read_transaction_adapter",
+          "kernel": "projection_axi_read_transaction_adapter",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_k_proj_axi_read_transaction_adapter_gate"
+        },
+        {
+          "task_id": "projection_v_proj_axi_read_transaction_adapter",
+          "kernel": "projection_axi_read_transaction_adapter",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_v_proj_axi_read_transaction_adapter_gate"
+        },
+        {
+          "task_id": "projection_o_proj_axi_read_transaction_adapter",
+          "kernel": "projection_axi_read_transaction_adapter",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_o_proj_axi_read_transaction_adapter_gate"
+        },
+        {
+          "task_id": "projection_gate_proj_axi_read_transaction_adapter",
+          "kernel": "projection_axi_read_transaction_adapter",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_gate_proj_axi_read_transaction_adapter_gate"
+        },
+        {
+          "task_id": "projection_up_proj_axi_read_transaction_adapter",
+          "kernel": "projection_axi_read_transaction_adapter",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_up_proj_axi_read_transaction_adapter_gate"
+        },
+        {
+          "task_id": "projection_down_proj_axi_read_transaction_adapter",
+          "kernel": "projection_axi_read_transaction_adapter",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_down_proj_axi_read_transaction_adapter_gate"
+        }
+      ],
+      "verification_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/verification_results/wave_8_projection_axi_read_transaction_adapter__verification.json",
+      "status_after_wave": "passed"
+    },
+    {
+      "wave_id": "wave_9_projection_axi_stream_integration",
+      "tasks": [
+        {
+          "task_id": "projection_axi_stream_integration",
+          "kernel": "projection_axi_stream_integration",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_axi_stream_integration_gate"
+        },
+        {
+          "task_id": "projection_k_proj_axi_stream_integration",
+          "kernel": "projection_axi_stream_integration",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_k_proj_axi_stream_integration_gate"
+        },
+        {
+          "task_id": "projection_v_proj_axi_stream_integration",
+          "kernel": "projection_axi_stream_integration",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_v_proj_axi_stream_integration_gate"
+        },
+        {
+          "task_id": "projection_o_proj_axi_stream_integration",
+          "kernel": "projection_axi_stream_integration",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_o_proj_axi_stream_integration_gate"
+        },
+        {
+          "task_id": "projection_gate_proj_axi_stream_integration",
+          "kernel": "projection_axi_stream_integration",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_gate_proj_axi_stream_integration_gate"
+        },
+        {
+          "task_id": "projection_up_proj_axi_stream_integration",
+          "kernel": "projection_axi_stream_integration",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_up_proj_axi_stream_integration_gate"
+        },
+        {
+          "task_id": "projection_down_proj_axi_stream_integration",
+          "kernel": "projection_axi_stream_integration",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/projection_down_proj_axi_stream_integration_gate"
+        }
+      ],
+      "verification_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/verification_results/wave_9_projection_axi_stream_integration__verification.json",
+      "status_after_wave": "passed"
+    },
+    {
+      "wave_id": "wave_10_decoder_child_axi_attention_datapath",
+      "tasks": [
+        {
+          "task_id": "decoder_child_axi_attention_datapath",
+          "kernel": "decoder_child_axi_attention_datapath",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/decoder_child_axi_attention_datapath_gate"
+        }
+      ],
+      "verification_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/verification_results/wave_10_decoder_child_axi_attention_datapath__verification.json",
+      "status_after_wave": "passed"
+    },
+    {
+      "wave_id": "wave_11_layer_fsm_axi_attention_fixture",
+      "tasks": [
+        {
+          "task_id": "layer_fsm_axi_attention_fixture",
+          "kernel": "layer_fsm_axi_attention_fixture",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/layer_fsm_axi_attention_fixture_gate"
+        }
+      ],
+      "verification_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/verification_results/wave_11_layer_fsm_axi_attention_fixture__verification.json",
+      "status_after_wave": "passed"
+    },
+    {
+      "wave_id": "wave_12_top_fsm_axi_attention_fixture",
+      "tasks": [
+        {
+          "task_id": "top_fsm_axi_attention_fixture",
+          "kernel": "top_fsm_axi_attention_fixture",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/top_fsm_axi_attention_fixture_gate"
+        }
+      ],
+      "verification_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/verification_results/wave_12_top_fsm_axi_attention_fixture__verification.json",
+      "status_after_wave": "passed"
+    },
+    {
+      "wave_id": "wave_13_token_loop_axi_attention_fixture",
+      "tasks": [
+        {
+          "task_id": "token_loop_axi_attention_fixture",
+          "kernel": "token_loop_axi_attention_fixture",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/token_loop_axi_attention_fixture_gate"
+        }
+      ],
+      "verification_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/verification_results/wave_13_token_loop_axi_attention_fixture__verification.json",
+      "status_after_wave": "passed"
+    },
+    {
+      "wave_id": "wave_14_decoder_block_axi_attention_mlp_fixture",
+      "tasks": [
+        {
+          "task_id": "decoder_block_axi_attention_mlp_fixture",
+          "kernel": "decoder_block_axi_attention_mlp_fixture",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/decoder_block_axi_attention_mlp_fixture_gate"
+        }
+      ],
+      "verification_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/verification_results/wave_14_decoder_block_axi_attention_mlp_fixture__verification.json",
+      "status_after_wave": "passed"
+    },
+    {
+      "wave_id": "wave_15_layer_fsm_axi_decoder_block_fixture",
+      "tasks": [
+        {
+          "task_id": "layer_fsm_axi_decoder_block_fixture",
+          "kernel": "layer_fsm_axi_decoder_block_fixture",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/layer_fsm_axi_decoder_block_fixture_gate"
+        }
+      ],
+      "verification_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/verification_results/wave_15_layer_fsm_axi_decoder_block_fixture__verification.json",
+      "status_after_wave": "passed"
+    },
+    {
+      "wave_id": "wave_16_top_fsm_axi_decoder_block_fixture",
+      "tasks": [
+        {
+          "task_id": "top_fsm_axi_decoder_block_fixture",
+          "kernel": "top_fsm_axi_decoder_block_fixture",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/top_fsm_axi_decoder_block_fixture_gate"
+        }
+      ],
+      "verification_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/verification_results/wave_16_top_fsm_axi_decoder_block_fixture__verification.json",
+      "status_after_wave": "passed"
+    },
+    {
+      "wave_id": "wave_17_token_loop_axi_decoder_block_fixture",
+      "tasks": [
+        {
+          "task_id": "token_loop_axi_decoder_block_fixture",
+          "kernel": "token_loop_axi_decoder_block_fixture",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/token_loop_axi_decoder_block_fixture_gate"
+        }
+      ],
+      "verification_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/verification_results/wave_17_token_loop_axi_decoder_block_fixture__verification.json",
+      "status_after_wave": "passed"
+    },
+    {
+      "wave_id": "wave_18_model_fsm_axi_decoder_block_fixture",
+      "tasks": [
+        {
+          "task_id": "model_fsm_axi_decoder_block_fixture",
+          "kernel": "model_fsm_axi_decoder_block_fixture",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/model_fsm_axi_decoder_block_fixture_gate"
+        }
+      ],
+      "verification_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/verification_results/wave_18_model_fsm_axi_decoder_block_fixture__verification.json",
+      "status_after_wave": "passed"
+    },
+    {
+      "wave_id": "wave_19_ddr_axi_board_shell_fixture",
+      "tasks": [
+        {
+          "task_id": "ddr_axi_board_shell_fixture",
+          "kernel": "ddr_axi_board_shell_fixture",
+          "evidence_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/ddr_axi_board_shell_fixture_gate"
+        }
+      ],
+      "verification_report": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/evidence/verification_results/wave_19_ddr_axi_board_shell_fixture__verification.json",
+      "status_after_wave": "passed"
+    }
+  ],
+  "kernel_cache": {
+    "projection_target_stream_plan": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_target_stream_plan",
+    "rmsnorm_rope_source_path": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/rmsnorm_rope_source_path",
+    "attention_kv_cache_fixture": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/attention_kv_cache_fixture",
+    "residual_mlp_fixture": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/residual_mlp_fixture",
+    "decoder_block_attention_mlp_fixture": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/decoder_block_attention_mlp_fixture",
+    "layer_fsm_decoder_block_fixture": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/layer_fsm_decoder_block_fixture",
+    "top_fsm_decoder_block_fixture": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/top_fsm_decoder_block_fixture",
+    "token_loop_decoder_block_fixture": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/token_loop_decoder_block_fixture",
+    "projection_axi_read_command_adapter": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_command_adapter",
+    "projection_axi_read_data_channel_adapter": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_data_channel_adapter",
+    "projection_axi_read_transaction_adapter": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter",
+    "projection_axi_stream_integration": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_stream_integration",
+    "decoder_child_axi_attention_datapath": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/decoder_child_axi_attention_datapath",
+    "layer_fsm_axi_attention_fixture": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/layer_fsm_axi_attention_fixture",
+    "top_fsm_axi_attention_fixture": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/top_fsm_axi_attention_fixture",
+    "token_loop_axi_attention_fixture": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/token_loop_axi_attention_fixture",
+    "decoder_block_axi_attention_mlp_fixture": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/decoder_block_axi_attention_mlp_fixture",
+    "layer_fsm_axi_decoder_block_fixture": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/layer_fsm_axi_decoder_block_fixture",
+    "top_fsm_axi_decoder_block_fixture": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/top_fsm_axi_decoder_block_fixture",
+    "token_loop_axi_decoder_block_fixture": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/token_loop_axi_decoder_block_fixture",
+    "model_fsm_axi_decoder_block_fixture": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/model_fsm_axi_decoder_block_fixture",
+    "ddr_axi_board_shell_fixture": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/ddr_axi_board_shell_fixture"
+  },
+  "stopped_at": null,
+  "resume_started_after": "wave_1_projection_kernels_ooc_normalized",
+  "final_status_dir": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/status_snapshots/final_after_all_waves_resume"
+}

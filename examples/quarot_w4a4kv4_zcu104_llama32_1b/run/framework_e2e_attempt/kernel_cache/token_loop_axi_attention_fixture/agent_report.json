@@ -1,0 +1,1702 @@
+{
+  "model": "meta-llama/Llama-3.2-1B",
+  "status": "passed",
+  "agent_goal": "inspect_model_and_design_direct_systemverilog_accelerator",
+  "planner": {
+    "mode": "heuristic",
+    "model": "gpt-4.1-mini"
+  },
+  "config": {
+    "model": {
+      "input_shape": [
+        1,
+        1
+      ],
+      "dummy_input_seed": 7,
+      "sequence_length": 2048,
+      "gptq_checkpoint": "examples/quarot_w4a4kv4_zcu104_llama32_1b/input/assumed_gptq_checkpoint",
+      "mlir_graph": null
+    },
+    "hardware": {
+      "fpga_part": "xczu7ev-ffvc1156-2-e",
+      "target_clock_mhz": 200,
+      "max_dsp": 1536,
+      "max_bram": 280,
+      "max_lut": 207360,
+      "max_ff": 414720,
+      "max_uram": 80,
+      "max_io": 420,
+      "memory_data_width": 128,
+      "device_logic_cells": 504000,
+      "device_lut": 230400,
+      "device_ff": 460800,
+      "device_dsp": 1728,
+      "device_bram_36k": 312,
+      "device_uram": 96,
+      "device_io": 464,
+      "device_distributed_ram_mb": 6.2,
+      "device_bram_mb": 11.0,
+      "device_uram_mb": 27.0,
+      "device_ps_gtr": 4,
+      "device_gth": 20,
+      "resource_reference": "AMD ZCU104 UG1267 v1.1 and XCZU7EV resource tables"
+    },
+    "optimization": {
+      "quantization": "quarot_w4a4kv4_gptq_weights",
+      "pruning": "none",
+      "pruning_threshold": 0.0,
+      "optimization_brief": "Use QuaRot-style rotations so the LLaMA decode path can target W4A4KV4: 4-bit GPTQ weights, 4-bit rotated activations, and 4-bit KV-cache storage. The example assumes GPTQ weight tensors already exist and uses a local sparse metadata fixture only to exercise the parent planning flow.\n",
+      "optimization_candidates": [
+        {
+          "name": "quarot_w4a4kv4",
+          "scope": "primary example path",
+          "notes": "rotate residual/attention/MLP streams, quantize activations to 4-bit, and store KV-cache in 4-bit form"
+        },
+        {
+          "name": "w4a8kv4_fallback",
+          "scope": "fallback",
+          "notes": "keep weights and KV-cache at 4-bit but allow 8-bit activations if W4A4 timing or accuracy is unsafe"
+        },
+        {
+          "name": "mixed_precision_softmax_control",
+          "scope": "non_gemm_control",
+          "notes": "keep softmax/control accumulations wider while preserving W4A4KV4 storage boundaries"
+        }
+      ],
+      "extra_options": {
+        "weight_quantization": {
+          "method": "GPTQ",
+          "bits": 4,
+          "group_size": 128,
+          "source_assumption": "implemented_checkpoint_available",
+          "checkpoint_fixture": "sparse_header_and_payload_prefix_fixture"
+        },
+        "activation_quantization": {
+          "bits": 4,
+          "method": "QuaRot_rotated_activation_quantization",
+          "calibration_source": "assumed_offline_quarot_calibration",
+          "scale_granularity": "per_tensor_or_per_channel_to_be_selected_by_parent"
+        },
+        "kv_cache_quantization": {
+          "bits": 4,
+          "method": "QuaRot_KV4",
+          "storage": "external_ddr_or_onchip_tile_cache",
+          "dequant_location": "attention_score_value_path"
+        },
+        "rotation": {
+          "method": "QuaRot",
+          "transform": "hadamard_like_orthogonal_rotation",
+          "placement": [
+            "residual_stream_before_attention_projection",
+            "qkv_projection_input",
+            "attention_output_before_o_proj",
+            "mlp_input_before_gate_up_projection",
+            "kv_cache_write_read_boundary"
+          ],
+          "implementation_requirement": "rotation kernels must be separate non_gemm module packets unless fused by an explicit parent boundary review"
+        },
+        "numeric_policy": {
+          "weight_bits": 4,
+          "activation_bits": 4,
+          "kv_cache_bits": 4,
+          "accumulator_bits": 32,
+          "requantization": "explicit_scale_shift_saturation"
+        }
+      }
+    },
+    "design": {
+      "style": "systolic_weight_stationary_llm_streaming",
+      "compute_style": "systolic_array",
+      "execution_style": "llm_decoder_streaming",
+      "memory_style": "external_ddr_streaming",
+      "control_style": "hierarchical_fsm",
+      "pe_count": 1024,
+      "activation_buffer": "rotated_a4_ping_pong_uram_bram",
+      "weight_storage": "external_ddr_gptq_packed_stream_to_onchip_weight_stationary_tiles",
+      "architecture_brief": "Use a weight-stationary systolic array for projection GEMM/GEMV tiles. GPTQ-packed W4 weights are streamed from DDR into on-chip tile buffers, unpacked/dequantized near the array edge, and reused in-place while rotated A4 activations stream through the array. Size the array from the active DSP budget rather than hardcoding a final dimension.\n",
+      "design_candidates": [
+        {
+          "name": "ws_systolic_32x32",
+          "focus": "first candidate under a 1536-DSP active compute budget",
+          "risk": "routing pressure and activation/KV4 quantization overhead may reduce timing margin"
+        },
+        {
+          "name": "ws_systolic_16x64",
+          "focus": "preserve projection throughput while easing vertical routing",
+          "risk": "less square data reuse and more edge buffering"
+        },
+        {
+          "name": "ws_systolic_24x48",
+          "focus": "middle-ground DSP use with easier BRAM banking",
+          "risk": "tile scheduler is less regular than 32x32"
+        }
+      ],
+      "extra_options": {
+        "systolic_array": {
+          "dataflow": "weight_stationary",
+          "initial_rows": 32,
+          "initial_cols": 32,
+          "dsp_per_cell_assumption": 1,
+          "active_dsp_budget": 1536,
+          "reserved_dsp_for_non_gemm_and_control": 192,
+          "sizing_rule": "choose rows*cols*dsp_per_cell <= active_dsp_budget after reserving non-GEMM/control DSP",
+          "allowed_shapes": [
+            [
+              16,
+              64
+            ],
+            [
+              24,
+              48
+            ],
+            [
+              32,
+              32
+            ]
+          ],
+          "selected_shape": "parent_to_select_after_module_ooc_synthesis"
+        },
+        "ddr_streaming": {
+          "stream_width_bits": 128,
+          "burst_policy": "aligned_bursts_per_projection_tile",
+          "onchip_weight_tile_buffer": "double_buffered_bram_uram",
+          "unpack_location": "array_edge",
+          "backpressure": "valid_ready"
+        },
+        "activation_path": {
+          "format": "rotated_int4",
+          "buffer_policy": "ping_pong_tile_buffer",
+          "rotation_module_boundary": "non_gemm_quarot_rotation"
+        },
+        "control": {
+          "hierarchy": [
+            "module_fsm",
+            "projection_tile_scheduler",
+            "decoder_block_fsm",
+            "model_fsm",
+            "board_wrapper_control_regs"
+          ]
+        }
+      }
+    },
+    "verification": {
+      "enable_verilator": true,
+      "enable_vivado_synth": true,
+      "tolerance_lsb": 2,
+      "vivado_timeout_sec": 900
+    }
+  },
+  "steps": [
+    {
+      "name": "write_llm_plan",
+      "status": "passed"
+    },
+    {
+      "name": "inspect_semantic_mlir",
+      "status": "passed",
+      "mlir": "synthetic_llama_block.mlir",
+      "analysis": "mlir_analysis.json",
+      "mlir_model_analysis_readiness": "mlir_model_analysis_readiness.json",
+      "semantic_graph": "model_semantic_graph.json",
+      "gptq_checkpoint_source_preflight": "gptq_checkpoint_source_preflight.json",
+      "gptq_checkpoint_metadata": "gptq_checkpoint_metadata.json",
+      "gptq_payload_probe": "gptq_payload_probe.json",
+      "projection_weight_stream_plan": "projection_weight_stream_plan.json",
+      "target_readiness_report": "target_readiness_report.json",
+      "target_blocker_remediation_plan": "target_blocker_remediation_plan.json",
+      "target_blocker_remediation_markdown": "target_blocker_remediation_plan.md",
+      "hdl_task_manifest": "hdl_task_manifest.json",
+      "hdl_subagent_tasks": "hdl_subagent_tasks.json",
+      "skill_update_candidate_template": "skill_update_candidate_template.json",
+      "subagent_prompts": "subagent_prompts",
+      "verification_prompts": "verification_prompts",
+      "hdl_subagent_dispatch_plan": "hdl_subagent_dispatch_plan.json",
+      "hdl_subagent_wave_status": "hdl_subagent_wave_status.json",
+      "hdl_subagent_execution_manifest": "hdl_subagent_execution_manifest.json",
+      "codex_spawn_instructions": "codex_spawn_instructions.md"
+    },
+    {
+      "name": "emit_kernel_token_loop_axi_attention_fixture",
+      "status": "passed",
+      "out": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/token_loop_axi_attention_fixture",
+      "files": [
+        "rmsnorm_rope_source_path.sv",
+        "projection_axi_stream_integration.sv",
+        "attention_kv_cache_fixture.sv",
+        "decoder_child_axi_attention_datapath.sv",
+        "layer_fsm_axi_attention_fixture.sv",
+        "top_fsm_axi_attention_fixture.sv",
+        "token_loop_axi_attention_fixture.sv",
+        "tb_token_loop_axi_attention_fixture.sv"
+      ],
+      "coverage_level": "token_loop_axi_attention_fixture",
+      "implementation_stage": "post-route",
+      "simulation": {
+        "passed": true,
+        "stage": "run",
+        "output": "TOKEN_LOOP_TRACE token_loop_axi_attention_fixture trace_hex=0x64636261 events=token0_start,token0_done,token1_start,token1_done\nTOKEN_CHILD_CALL_TRACE token_loop_axi_attention_fixture token=0 top_trace_hex=0x5453 layer_trace_hex=0x4241 child_trace_hex=0x323122211211 axi_bits=0xf output=4,-2,1,2\nTOKEN_CHILD_CALL_TRACE token_loop_axi_attention_fixture token=1 top_trace_hex=0x5453 layer_trace_hex=0x4241 child_trace_hex=0x323122211211 axi_bits=0xf output=4,-2,1,2\nTOKEN_CHILD_START_HOLD_TRACE token_loop_axi_attention_fixture token=0 busy_cycles=370 done_seen_while_start_high=1 deasserted_after_done=1 release_seen=1\nTOKEN_CHILD_START_HOLD_TRACE token_loop_axi_attention_fixture token=1 busy_cycles=369 done_seen_while_start_high=1 deasserted_after_done=1 release_seen=1\nTOP_AXI_ATTENTION_TRACE token_loop_axi_attention_fixture token=1 top_trace_hex=0x5453 layer_trace_hex=0x4241 child_trace_hex=0x323122211211 events=layer_fsm_axi_attention_fixture_start,layer_fsm_axi_attention_fixture_done\nLAYER_AXI_ATTENTION_TRACE token_loop_axi_attention_fixture token=1 layer_trace_hex=0x4241 child_trace_hex=0x323122211211 events=decoder_child_axi_attention_datapath_start,decoder_child_axi_attention_datapath_done\nCHILD_TRACE token_loop_axi_attention_fixture token=1 trace_hex=0x323122211211 events=source_path_start,source_path_done,projection_axi_start,projection_axi_done,attention_kv_start,attention_kv_done\nAXI_PROJECTION_AR_TRACE token_loop_axi_attention_fixture addr=0x120000 len=1 size=4 burst=1 id=0x2 beats=2\nAXI_PROJECTION_R_METADATA_TRACE token_loop_axi_attention_fixture accepted=0x3 last=0x2 rid_ok=1 rresp_ok=1 rlast_ok=1\nAXI_PROJECTION_EMITTED_PAYLOADS token_loop_axi_attention_fixture 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83\nAXI_PROJECTION_CONSUMED_PAYLOADS token_loop_axi_attention_fixture 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83 0xe94fa50b 0x61c72d83\nAXI_PROJECTION_PAYLOAD_TRACE token_loop_axi_attention_fixture emitted=16 consumed=16 payload_match=1 first=0xe94fa50b last=0x61c72d83\nAXI_PROJECTION_BACKPRESSURE_TRACE token_loop_axi_attention_fixture ready_low_payload_idx=0,3,4 trace=0x19 payload_hold_ok=1\nAXI_PROJECTION_OUTPUT_TRACE token_loop_axi_attention_fixture output=484,1904\nAXI_PROJECTION_ROUND_TRIP_TRACE token_loop_axi_attention_fixture packed_bytes=32 unpacked_values=64 round_trip_passed=1\nTOKEN_AXI_METADATA_PROPAGATION_TRACE token_loop_axi_attention_fixture token_bits=0xf token_bit_lsb=64 token_bit_msb=67 top_bits=0xf layer_bits=0xf nested_bits=0xf source=top_fsm_axi_attention_fixture.status_o[95:92]:layer_fsm_axi_attention_fixture.status_o[79:76]:decoder_child_axi_attention_datapath.status_o[63:60]:projection_axi_stream_integration.integration_status_o[45:42] status=0xa71c0af4241545364636261\nCACHE_WRITE_TRACE token_loop_axi_attention_fixture count=2 slot=1 key=-3,2,1,6 value=-2,6,-5,4 stable=1\nKEY_READ_TRACE token_loop_axi_attention_fixture slots=0,1 keys=2,-1,4,3|-3,2,1,6\nVALUE_READ_TRACE token_loop_axi_attention_fixture slots=0,1 values=7,-4,3,2|-2,6,-5,4\nSCORE_TRACE token_loop_axi_attention_fixture scores=25,-14\nSOFTMAX_CONTROL_TRACE token_loop_axi_attention_fixture policy=two_score_winner_loser_q0_4 weights=12,4 exp=0\nATTENTION_OUTPUT_TRACE token_loop_axi_attention_fixture output=4,-2,1,2\nFINAL_OUTPUT_TRACE token_loop_axi_attention_fixture output=4,-2,1,2 status=0xa71c0af4241545364636261\nTOKEN_LOOP_STABILITY_TRACE token_loop_axi_attention_fixture stable=1\nTOKEN_OUTPUT_POLICY_TRACE token_loop_axi_attention_fixture repeated_deterministic_outputs=1 token_dependent_outputs=0\nCOMPACT_IO_TRACE token_loop_axi_attention_fixture estimated_iob_bits=164 prior_top_fsm_bonded_iob=196 prior_top_fsm_status_bits=128 exposed_child_vectors=0 exposed_wide_status=0 exposed_128b_axi_data=0 exposed_kv_arrays=0 exposed_axi_debug=0\nPASS token_loop_axi_attention_fixture\n",
+        "cmd": [
+          "iverilog",
+          "-g2012",
+          "-o",
+          "kernel_sim",
+          "rmsnorm_rope_source_path.sv",
+          "projection_axi_stream_integration.sv",
+          "attention_kv_cache_fixture.sv",
+          "decoder_child_axi_attention_datapath.sv",
+          "layer_fsm_axi_attention_fixture.sv",
+          "top_fsm_axi_attention_fixture.sv",
+          "token_loop_axi_attention_fixture.sv",
+          "tb_token_loop_axi_attention_fixture.sv"
+        ]
+      },
+      "verilator": {
+        "passed": true,
+        "stage": "lint_only",
+        "cmd": [
+          "verilator",
+          "--lint-only",
+          "-sv",
+          "-Wno-STMTDLY",
+          "-Wno-INFINITELOOP",
+          "rmsnorm_rope_source_path.sv",
+          "projection_axi_stream_integration.sv",
+          "attention_kv_cache_fixture.sv",
+          "decoder_child_axi_attention_datapath.sv",
+          "layer_fsm_axi_attention_fixture.sv",
+          "top_fsm_axi_attention_fixture.sv",
+          "token_loop_axi_attention_fixture.sv",
+          "tb_token_loop_axi_attention_fixture.sv"
+        ],
+        "output": "",
+        "policy": "DUT lint must be warning-clean. Testbench-only Verilator 4.x timing-delay warnings STMTDLY and INFINITELOOP are allowed for lint-only checks because iverilog executes the timed behavioral testbench.",
+        "requested_timing_policy": "--timing",
+        "timing_policy_supported": false,
+        "effective_timing_policy": null,
+        "allowed_warning_classes": [
+          "STMTDLY",
+          "INFINITELOOP"
+        ]
+      },
+      "synthesis": {
+        "passed": true,
+        "cmd": [
+          "vivado",
+          "-mode",
+          "batch",
+          "-source",
+          "vivado_synth.tcl"
+        ],
+        "output": "utable Net Status*\n  *Does not include unroutable nets such as driverless and loadless.\n  Run report_route_status for detailed report.\n  Number of Failed Nets               = 632\n    (Failed Nets is the sum of unrouted and partially routed nets)\n  Number of Unrouted Nets             = 594\n  Number of Partially Routed Nets     = 38\n  Number of Node Overlaps             = 0\n\nPhase 2 Router Initialization | Checksum: 18028fecb\n\nTime (s): cpu = 00:00:04 ; elapsed = 00:00:03 . Memory (MB): peak = 4793.945 ; gain = 0.000 ; free physical = 44329 ; free virtual = 53654\n\nPhase 3 Global Routing\nPhase 3 Global Routing | Checksum: 18028fecb\n\nTime (s): cpu = 00:00:04 ; elapsed = 00:00:03 . Memory (MB): peak = 4793.945 ; gain = 0.000 ; free physical = 44329 ; free virtual = 53654\n\nPhase 4 Initial Routing\n\nPhase 4.1 Initial Net Routing Pass\nPhase 4.1 Initial Net Routing Pass | Checksum: 269698eb5\n\nTime (s): cpu = 00:00:04 ; elapsed = 00:00:03 . Memory (MB): peak = 4793.945 ; gain = 0.000 ; free physical = 44329 ; free virtual = 53654\nPhase 4 Initial Routing | Checksum: 1bd0a1c9e\n\nTime (s): cpu = 00:00:04 ; elapsed = 00:00:03 . Memory (MB): peak = 4793.945 ; gain = 0.000 ; free physical = 44329 ; free virtual = 53654\n\nPhase 5 Rip-up And Reroute\n\nPhase 5.1 Global Iteration 0\n Number of Nodes with overlaps = 27\n Number of Nodes with overlaps = 0\nINFO: [Route 35-416] Intermediate Timing Summary | WNS=2.268  | TNS=0.000  | WHS=0.025  | THS=0.000  |\n\nPhase 5.1 Global Iteration 0 | Checksum: 2bd99ebaa\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4793.945 ; gain = 0.000 ; free physical = 44329 ; free virtual = 53654\n\nPhase 5.2 Additional Iteration for Hold\nPhase 5.2 Additional Iteration for Hold | Checksum: 291b1a7ca\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4793.945 ; gain = 0.000 ; free physical = 44329 ; free virtual = 53654\nPhase 5 Rip-up And Reroute | Checksum: 291b1a7ca\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4793.945 ; gain = 0.000 ; free physical = 44329 ; free virtual = 53654\n\nPhase 6 Delay and Skew Optimization\n\nPhase 6.1 Delay CleanUp\nPhase 6.1 Delay CleanUp | Checksum: 23311ade9\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4793.945 ; gain = 0.000 ; free physical = 44329 ; free virtual = 53654\n\nPhase 6.2 Clock Skew Optimization\nPhase 6.2 Clock Skew Optimization | Checksum: 23311ade9\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4793.945 ; gain = 0.000 ; free physical = 44329 ; free virtual = 53654\nPhase 6 Delay and Skew Optimization | Checksum: 23311ade9\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4793.945 ; gain = 0.000 ; free physical = 44329 ; free virtual = 53654\n\nPhase 7 Post Hold Fix\n\nPhase 7.1 Hold Fix Iter\nINFO: [Route 35-416] Intermediate Timing Summary | WNS=2.268  | TNS=0.000  | WHS=0.025  | THS=0.000  |\n\nPhase 7.1 Hold Fix Iter | Checksum: 2a711d158\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4793.945 ; gain = 0.000 ; free physical = 44329 ; free virtual = 53654\nPhase 7 Post Hold Fix | Checksum: 2a711d158\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4793.945 ; gain = 0.000 ; free physical = 44329 ; free virtual = 53654\n\nPhase 8 Route finalize\n\nRouter Utilization Summary\n  Global Vertical Routing Utilization    = 0.0901981 %\n  Global Horizontal Routing Utilization  = 0.0226896 %\n  Routable Net Status*\n  *Does not include unroutable nets such as driverless and loadless.\n  Run report_route_status for detailed report.\n  Number of Failed Nets               = 0\n    (Failed Nets is the sum of unrouted and partially routed nets)\n  Number of Unrouted Nets             = 0\n  Number of Partially Routed Nets     = 0\n  Number of Node Overlaps             = 0\n\nPhase 8 Route finalize | Checksum: 2a711d158\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4793.945 ; gain = 0.000 ; free physical = 44329 ; free virtual = 53654\n\nPhase 9 Verifying routed nets\n\n Verification completed successfully\nPhase 9 Verifying routed nets | Checksum: 2a711d158\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4793.945 ; gain = 0.000 ; free physical = 44329 ; free virtual = 53654\n\nPhase 10 Depositing Routes\nPhase 10 Depositing Routes | Checksum: 2a711d158\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4793.945 ; gain = 0.000 ; free physical = 44329 ; free virtual = 53654\n\nPhase 11 Resolve XTalk\nPhase 11 Resolve XTalk | Checksum: 2a711d158\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4793.945 ; gain = 0.000 ; free physical = 44329 ; free virtual = 53654\n\nPhase 12 Post Process Routing\nPhase 12 Post Process Routing | Checksum: 2a711d158\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4793.945 ; gain = 0.000 ; free physical = 44329 ; free virtual = 53654\n\nPhase 13 Post Router Timing\nINFO: [Route 35-57] Estimated Timing Summary | WNS=2.268  | TNS=0.000  | WHS=0.025  | THS=0.000  |\n\nINFO: [Route 35-327] The final timing numbers are based on the router estimated timing analysis. For a complete and accurate timing signoff, please run report_timing_summary.\nPhase 13 Post Router Timing | Checksum: 2a711d158\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4793.945 ; gain = 0.000 ; free physical = 44329 ; free virtual = 53654\nTotal Elapsed time in route_design: 3.15 secs\n\nPhase 14 Post-Route Event Processing\nPhase 14 Post-Route Event Processing | Checksum: 1a17e7729\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4793.945 ; gain = 0.000 ; free physical = 44329 ; free virtual = 53654\nINFO: [Route 35-16] Router Completed Successfully\nEnding Routing Task | Checksum: 1a17e7729\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4793.945 ; gain = 0.000 ; free physical = 44329 ; free virtual = 53654\n\nRouting Is Done.\nINFO: [Common 17-83] Releasing license: Implementation\n12 Infos, 0 Warnings, 0 Critical Warnings and 0 Errors encountered.\nroute_design completed successfully\n# report_utilization -file utilization.rpt\n# report_timing_summary -file timing_summary.rpt\nINFO: [Timing 38-91] UpdateTimingParams: Speed grade: -2, Temperature grade: E, Delay Type: min_max.\nINFO: [Timing 38-191] Multithreading enabled for timing update using a maximum of 8 CPUs\n# write_checkpoint -force post_route.dcp\nINFO: [Timing 38-480] Writing timing data to binary archive.\nWrite ShapeDB Complete: Time (s): cpu = 00:00:00.01 ; elapsed = 00:00:00 . Memory (MB): peak = 4793.945 ; gain = 0.000 ; free physical = 44305 ; free virtual = 53630\nWrote PlaceDB: Time (s): cpu = 00:00:00.05 ; elapsed = 00:00:00.01 . Memory (MB): peak = 4793.945 ; gain = 0.000 ; free physical = 44304 ; free virtual = 53629\nWrote PulsedLatchDB: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 4793.945 ; gain = 0.000 ; free physical = 44304 ; free virtual = 53629\nWriting XDEF routing.\nWriting XDEF routing logical nets.\nWriting XDEF routing special nets.\nWrote RouteStorage: Time (s): cpu = 00:00:00.05 ; elapsed = 00:00:00.04 . Memory (MB): peak = 4793.945 ; gain = 0.000 ; free physical = 44303 ; free virtual = 53630\nWrote Netlist Cache: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.01 . Memory (MB): peak = 4793.945 ; gain = 0.000 ; free physical = 44303 ; free virtual = 53630\nWrote Device Cache: Time (s): cpu = 00:00:00.01 ; elapsed = 00:00:00 . Memory (MB): peak = 4793.945 ; gain = 0.000 ; free physical = 44303 ; free virtual = 53632\nWrite Physdb Complete: Time (s): cpu = 00:00:00.11 ; elapsed = 00:00:00.06 . Memory (MB): peak = 4793.945 ; gain = 0.000 ; free physical = 44303 ; free virtual = 53632\nINFO: [Common 17-1381] The checkpoint '/home/iamjames77/Nlp2Verilog/examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/token_loop_axi_attention_fixture/post_route.dcp' has been generated.\nINFO: [Common 17-206] Exiting Vivado at Tue Jun 16 09:51:53 2026...\n",
+        "timing": {
+          "setup_worst_slack_ns": 2.277,
+          "hold_worst_slack_ns": 0.026,
+          "pulse_width_worst_slack_ns": 2.225,
+          "constraints_met": true,
+          "worst_slack_ns": 2.277,
+          "parse_status": "parsed"
+        },
+        "implementation_stage": "post-route",
+        "timing_report": "timing_summary.rpt",
+        "timing_report_available": true,
+        "utilization_report": "utilization.rpt",
+        "utilization_report_available": true,
+        "resource_status": "available",
+        "resource_utilization": {
+          "lut_as_logic": {
+            "used": 362,
+            "available": 230400,
+            "utilization_percent": 0.16
+          },
+          "clb_registers": {
+            "used": 392,
+            "available": 460800,
+            "utilization_percent": 0.09
+          },
+          "block_ram_tile": {
+            "used": 0,
+            "available": 312,
+            "utilization_percent": 0.0
+          },
+          "dsps": {
+            "used": 0,
+            "available": 1728,
+            "utilization_percent": 0.0
+          },
+          "bonded_iob": {
+            "used": 164,
+            "available": 360,
+            "utilization_percent": 45.56
+          }
+        }
+      },
+      "contract_gate": {
+        "verilator_enforced": true,
+        "synthesis_enforced": true
+      },
+      "numeric_policy": {
+        "fixture_kind": "token_loop_axi_attention_fixture",
+        "datapath_composition": "instantiated_top_fsm_axi_attention_fixture",
+        "fixture_token_count": 2,
+        "child_sequence": "top_fsm_axi_attention_fixture called twice with start_i held while busy and release-waited",
+        "uses_axi_top_fsm_child": true,
+        "token_outputs_are_token_dependent": false,
+        "repeated_deterministic_fixture_outputs": true,
+        "full_token_prefill_decode_semantics": false,
+        "target_sequence_scheduling": false,
+        "target_multi_layer_scheduling": false,
+        "ddr_axi_streaming": false,
+        "full_llama_model": false,
+        "board_level_signoff": false
+      },
+      "kernel": "token_loop_axi_attention_fixture",
+      "token_loop_axi_attention_fixture": true,
+      "uses_axi_top_fsm_child": true,
+      "top_fsm_child_instantiation": true,
+      "fixture_token_count": 2,
+      "child_modules": [
+        {
+          "name": "top_fsm_axi_attention_fixture",
+          "coverage_level": "top_fsm_axi_attention_fixture",
+          "instantiated": true,
+          "input_source": "token_loop_axi_attention_fixture_token_step_scheduler",
+          "output_consumed_by": "token_loop_axi_attention_fixture.output_o",
+          "nested_child_modules": [
+            {
+              "name": "layer_fsm_axi_attention_fixture",
+              "coverage_level": "layer_fsm_axi_attention_fixture",
+              "instantiated": true
+            },
+            {
+              "name": "decoder_child_axi_attention_datapath",
+              "coverage_level": "decoder_child_axi_attention_datapath_fixture",
+              "instantiated": true
+            },
+            {
+              "name": "q_projection_axi_stream_integration",
+              "module": "projection_axi_stream_integration",
+              "projection": "q",
+              "coverage_level": "projection_axi_stream_integration_fixture",
+              "instantiated": true
+            },
+            {
+              "name": "k_projection_axi_stream_integration",
+              "module": "projection_axi_stream_integration",
+              "projection": "k",
+              "coverage_level": "projection_axi_stream_integration_fixture",
+              "instantiated": true
+            },
+            {
+              "name": "v_projection_axi_stream_integration",
+              "module": "projection_axi_stream_integration",
+              "projection": "v",
+              "coverage_level": "projection_axi_stream_integration_fixture",
+              "instantiated": true
+            },
+            {
+              "name": "o_projection_axi_stream_integration",
+              "module": "projection_axi_stream_integration",
+              "projection": "o",
+              "coverage_level": "projection_axi_stream_integration_fixture",
+              "instantiated": true
+            },
+            {
+              "name": "attention_kv_cache_fixture",
+              "coverage_level": "attention_kv_cache_fixture",
+              "instantiated": true
+            },
+            {
+              "name": "rmsnorm_rope_source_path",
+              "coverage_level": "rmsnorm_rope_source_path_fixture",
+              "instantiated": true
+            }
+          ]
+        }
+      ],
+      "nested_child_coverage_summary": [
+        {
+          "name": "top_fsm_axi_attention_fixture",
+          "coverage_level": "top_fsm_axi_attention_fixture",
+          "instantiated": true
+        },
+        {
+          "name": "layer_fsm_axi_attention_fixture",
+          "coverage_level": "layer_fsm_axi_attention_fixture",
+          "instantiated": true
+        },
+        {
+          "name": "decoder_child_axi_attention_datapath",
+          "coverage_level": "decoder_child_axi_attention_datapath_fixture",
+          "instantiated": true
+        },
+        {
+          "name": "q_projection_axi_stream_integration",
+          "module": "projection_axi_stream_integration",
+          "projection": "q",
+          "coverage_level": "projection_axi_stream_integration_fixture",
+          "instantiated": true
+        },
+        {
+          "name": "k_projection_axi_stream_integration",
+          "module": "projection_axi_stream_integration",
+          "projection": "k",
+          "coverage_level": "projection_axi_stream_integration_fixture",
+          "instantiated": true
+        },
+        {
+          "name": "v_projection_axi_stream_integration",
+          "module": "projection_axi_stream_integration",
+          "projection": "v",
+          "coverage_level": "projection_axi_stream_integration_fixture",
+          "instantiated": true
+        },
+        {
+          "name": "o_projection_axi_stream_integration",
+          "module": "projection_axi_stream_integration",
+          "projection": "o",
+          "coverage_level": "projection_axi_stream_integration_fixture",
+          "instantiated": true
+        },
+        {
+          "name": "attention_kv_cache_fixture",
+          "coverage_level": "attention_kv_cache_fixture",
+          "instantiated": true
+        },
+        {
+          "name": "rmsnorm_rope_source_path",
+          "coverage_level": "rmsnorm_rope_source_path_fixture",
+          "instantiated": true
+        }
+      ],
+      "fsm_state_order": [
+        "IDLE",
+        "TOKEN0_START",
+        "TOKEN0_BUSY",
+        "TOKEN0_RELEASE",
+        "TOKEN1_START",
+        "TOKEN1_BUSY",
+        "TOKEN1_RELEASE",
+        "DONE"
+      ],
+      "token_start_done_trace": [
+        "token0_start",
+        "token0_done",
+        "token1_start",
+        "token1_done"
+      ],
+      "top_fsm_trace": {
+        "ordered_events": [
+          "layer_fsm_axi_attention_fixture_start",
+          "layer_fsm_axi_attention_fixture_done"
+        ],
+        "trace_hex": "0x5453",
+        "evidence_source": "expected_from_top_fsm_axi_attention_fixture_metadata_checked_through_token_loop_hierarchy"
+      },
+      "layer_fsm_trace": {
+        "ordered_events": [
+          "decoder_child_axi_attention_datapath_start",
+          "decoder_child_axi_attention_datapath_done"
+        ],
+        "trace_hex": "0x4241",
+        "evidence_source": "expected_from_top_fsm_axi_attention_fixture_metadata_checked_through_token_loop_hierarchy"
+      },
+      "child_datapath_trace": {
+        "ordered_events": [
+          "source_path_start",
+          "source_path_done",
+          "projection_axi_start",
+          "projection_axi_done",
+          "attention_kv_start",
+          "attention_kv_done"
+        ],
+        "trace_hex": "0x323122211211",
+        "evidence_source": "expected_from_top_fsm_axi_attention_fixture_metadata_checked_through_token_loop_hierarchy"
+      },
+      "expected_token_trace_hex": "0x64636261",
+      "expected_top_trace_hex": "0x5453",
+      "expected_layer_trace_hex": "0x4241",
+      "expected_child_trace_hex": "0x323122211211",
+      "per_token_child_start_hold_deassert_release_evidence": [
+        {
+          "token": 0,
+          "busy_cycles": 370,
+          "done_seen_while_start_high": true,
+          "deasserted_after_done": true,
+          "done_release_seen_after_start_deassert": true,
+          "evidence_source": "parsed_from_token_loop_axi_testbench_top_child_start_monitor"
+        },
+        {
+          "token": 1,
+          "busy_cycles": 369,
+          "done_seen_while_start_high": true,
+          "deasserted_after_done": true,
+          "done_release_seen_after_start_deassert": true,
+          "evidence_source": "parsed_from_token_loop_axi_testbench_top_child_start_monitor"
+        }
+      ],
+      "token_loop_compact_status_axi_metadata_propagation_plan": {
+        "token_status_bit_lsb": 64,
+        "token_status_bit_msb": 67,
+        "token_status_mask_hex": "0x000000000000000f0000000000000000",
+        "top_source": "top_fsm_axi_attention_fixture.status_o[95:92]",
+        "layer_source": "layer_fsm_axi_attention_fixture.status_o[79:76]",
+        "decoder_child_source": "decoder_child_axi_attention_datapath.status_o[63:60]",
+        "nested_axi_source": "projection_axi_stream_integration.integration_status_o[45:42]",
+        "bit_mapping": {
+          "rid_good": 64,
+          "rresp_good": 65,
+          "rlast_good": 66,
+          "all_metadata_good": 67
+        }
+      },
+      "nested_axi_projection_evidence_summary": {
+        "evidence_source": "parsed_from_token_loop_axi_testbench_nested_child_signals_token1",
+        "command_trace": {
+          "addr_hex": "0x120000",
+          "axi_arlen": 1,
+          "axi_arsize": 4,
+          "axi_arburst": 1,
+          "axi_arid_hex": "0x2",
+          "request_beat_count": 2,
+          "evidence_source": "parsed_from_token_loop_axi_testbench_axi_child_ar_trace"
+        },
+        "r_metadata_trace": {
+          "accepted_trace_hex": "0x3",
+          "rlast_trace_hex": "0x2",
+          "rid_ok": true,
+          "rresp_ok": true,
+          "rlast_ok": true,
+          "evidence_source": "parsed_from_token_loop_axi_testbench_axi_child_r_metadata"
+        },
+        "payload_trace": {
+          "emitted_count": 16,
+          "consumed_count": 16,
+          "payload_link_match_passed": true,
+          "first_payload_hex": "0xe94fa50b",
+          "last_payload_hex": "0x61c72d83",
+          "evidence_source": "parsed_from_integration_testbench_axi_child_payload_trace",
+          "emitted_payload_words_hex": [
+            "0xe94fa50b",
+            "0x61c72d83",
+            "0xe94fa50b",
+            "0x61c72d83",
+            "0xe94fa50b",
+            "0x61c72d83",
+            "0xe94fa50b",
+            "0x61c72d83"
+          ],
+          "consumed_payload_words_hex": [
+            "0xe94fa50b",
+            "0x61c72d83",
+            "0xe94fa50b",
+            "0x61c72d83",
+            "0xe94fa50b",
+            "0x61c72d83",
+            "0xe94fa50b",
+            "0x61c72d83"
+          ]
+        },
+        "backpressure_trace": {
+          "ready_low_payload_indices": [
+            0,
+            3,
+            4
+          ],
+          "ready_low_trace_hex": "0x19",
+          "payload_valid_held_while_ready_low": true,
+          "evidence_source": "parsed_from_token_loop_axi_testbench_axi_child_backpressure_trace"
+        },
+        "output_trace": {
+          "projection_output_vector": [
+            484,
+            1904
+          ],
+          "evidence_source": "parsed_from_token_loop_axi_testbench_axi_child_output"
+        },
+        "round_trip_evidence": {
+          "packed_bytes": 32,
+          "unpacked_values": 64,
+          "round_trip_passed": true,
+          "evidence_source": "parsed_from_integration_testbench_axi_child_round_trip"
+        },
+        "gptq_payload_probe_used": false,
+        "target_checkpoint_payload_dependency": "not_provided",
+        "gptq_probe_qweight_payload_words32_le_hex": [],
+        "expected_payload_words_hex": [
+          "0xe94fa50b",
+          "0x61c72d83",
+          "0xe94fa50b",
+          "0x61c72d83",
+          "0xe94fa50b",
+          "0x61c72d83",
+          "0xe94fa50b",
+          "0x61c72d83"
+        ],
+        "gptq_payload_probe_golden_source": {
+          "env_var": "NL2HDL_GPTQ_PAYLOAD_PROBE_JSON",
+          "artifact": "gptq_payload_probe",
+          "status": "absent",
+          "projection": "q_proj",
+          "used": false,
+          "payload_golden_source": "deterministic_fixture",
+          "fallback_reason": "NL2HDL_GPTQ_PAYLOAD_PROBE_JSON not set",
+          "target_checkpoint_payload_dependency": "not_provided",
+          "qweight_payload_words32_le_hex": [],
+          "qweight_payload_word_count": 0,
+          "expected_fixture_payload_word_count": 8,
+          "payload_words_match_gptq_probe": false
+        },
+        "emitted_payload_words_hex": [
+          "0xe94fa50b",
+          "0x61c72d83",
+          "0xe94fa50b",
+          "0x61c72d83",
+          "0xe94fa50b",
+          "0x61c72d83",
+          "0xe94fa50b",
+          "0x61c72d83"
+        ],
+        "projection_consumed_payload_words_hex": [
+          "0xe94fa50b",
+          "0x61c72d83",
+          "0xe94fa50b",
+          "0x61c72d83",
+          "0xe94fa50b",
+          "0x61c72d83",
+          "0xe94fa50b",
+          "0x61c72d83"
+        ],
+        "payload_words_match_gptq_probe": false,
+        "projection_output_vector": [
+          484,
+          1904
+        ]
+      },
+      "static_nested_axi_projection_probe_evidence": {
+        "projection_children": [
+          {
+            "projection": "q",
+            "module": "projection_axi_stream_integration",
+            "instance": "u_projection_axi_stream_integration"
+          },
+          {
+            "projection": "k",
+            "module": "projection_axi_stream_integration",
+            "instance": "u_k_projection_axi_stream_integration"
+          },
+          {
+            "projection": "v",
+            "module": "projection_axi_stream_integration",
+            "instance": "u_v_projection_axi_stream_integration"
+          },
+          {
+            "projection": "o",
+            "module": "projection_axi_stream_integration",
+            "instance": "u_o_projection_axi_stream_integration"
+          }
+        ],
+        "axi_command_trace": {
+          "request_addr_hex": "0x00120000",
+          "request_beat_count": 2,
+          "axi_arlen": 1,
+          "axi_arsize": 4,
+          "axi_arburst": 1,
+          "axi_arid_hex": "0x02",
+          "configured_memory_data_width_bits": 128,
+          "bytes_per_beat": 16
+        },
+        "r_metadata_validation": {
+          "expected_axi_rid_hex": "0x02",
+          "expected_axi_rresp": "0b00",
+          "expected_rlast_on_final_beat_only": true
+        },
+        "parent_compact_status_propagation_plan": {
+          "child_source": "q/k/v/o projection_axi_stream_integration.integration_status_o[45:42] aggregate_and",
+          "parent_status_bit_lsb": 60,
+          "parent_status_bit_msb": 63,
+          "parent_status_mask_hex": "0x00000000f000000000000000",
+          "bit_mapping": {
+            "rid_good": 60,
+            "rresp_good": 61,
+            "rlast_good": 62,
+            "all_metadata_good": 63
+          }
+        },
+        "expected_payload_words_hex": [
+          "0xe94fa50b",
+          "0x61c72d83",
+          "0xe94fa50b",
+          "0x61c72d83",
+          "0xe94fa50b",
+          "0x61c72d83",
+          "0xe94fa50b",
+          "0x61c72d83"
+        ],
+        "gptq_payload_probe_golden_source": {
+          "env_var": "NL2HDL_GPTQ_PAYLOAD_PROBE_JSON",
+          "artifact": "gptq_payload_probe",
+          "status": "absent",
+          "projection": "q_proj",
+          "used": false,
+          "payload_golden_source": "deterministic_fixture",
+          "fallback_reason": "NL2HDL_GPTQ_PAYLOAD_PROBE_JSON not set",
+          "target_checkpoint_payload_dependency": "not_provided",
+          "qweight_payload_words32_le_hex": [],
+          "qweight_payload_word_count": 0,
+          "expected_fixture_payload_word_count": 8,
+          "payload_words_match_gptq_probe": false
+        },
+        "gptq_payload_probe_used": false,
+        "target_checkpoint_payload_dependency": "not_provided",
+        "gptq_probe_qweight_payload_words32_le_hex": [],
+        "payload_words_match_gptq_probe": false,
+        "payload_link_match_passed": true,
+        "projection_output_vector": [
+          484,
+          1904
+        ],
+        "packed_int4_values": [
+          -5,
+          0,
+          5,
+          -6,
+          -1,
+          4,
+          -7,
+          -2,
+          3,
+          -8,
+          -3,
+          2,
+          7,
+          -4,
+          1,
+          6,
+          -5,
+          0,
+          5,
+          -6,
+          -1,
+          4,
+          -7,
+          -2,
+          3,
+          -8,
+          -3,
+          2,
+          7,
+          -4,
+          1,
+          6,
+          -5,
+          0,
+          5,
+          -6,
+          -1,
+          4,
+          -7,
+          -2,
+          3,
+          -8,
+          -3,
+          2,
+          7,
+          -4,
+          1,
+          6,
+          -5,
+          0,
+          5,
+          -6,
+          -1,
+          4,
+          -7,
+          -2,
+          3,
+          -8,
+          -3,
+          2,
+          7,
+          -4,
+          1,
+          6
+        ],
+        "projection_backpressure_trace": {
+          "link_name": "axi_payload_adapter_to_projection_consumer",
+          "ready_low_payload_indices": [
+            0,
+            3,
+            4
+          ],
+          "ready_low_trace_hex": "0x19",
+          "inside_beat_ready_low_index": 0,
+          "beat_boundary_ready_low_index": 3,
+          "post_boundary_ready_low_index": 4,
+          "payload_valid_held_while_ready_low": true,
+          "crosses_axi_to_projection_boundary": true
+        },
+        "round_trip_passed": true,
+        "packed_int4_round_trip_evidence": {
+          "packed_bytes": 32,
+          "unpacked_values": 64,
+          "round_trip_passed": true
+        },
+        "does_not_expose_128b_axi_read_data_at_parent_top": true,
+        "evidence_source": "dynamic_integration_testbench_overwrites_static_summary_fields"
+      },
+      "nested_attention_kv_evidence_summary": {
+        "evidence_source": "parsed_from_token_loop_axi_testbench_nested_child_signals_token1",
+        "cache_write_trace": {
+          "count": 2,
+          "slot": 1,
+          "key": [
+            -3,
+            2,
+            1,
+            6
+          ],
+          "value": [
+            -2,
+            6,
+            -5,
+            4
+          ],
+          "field_stability_checked": true,
+          "evidence_source": "parsed_from_integration_testbench_attention_child"
+        },
+        "key_read_trace": [
+          {
+            "slot": 0,
+            "key": [
+              2,
+              -1,
+              4,
+              3
+            ]
+          },
+          {
+            "slot": 1,
+            "key": [
+              -3,
+              2,
+              1,
+              6
+            ]
+          }
+        ],
+        "value_read_trace": [
+          {
+            "slot": 0,
+            "value": [
+              7,
+              -4,
+              3,
+              2
+            ]
+          },
+          {
+            "slot": 1,
+            "value": [
+              -2,
+              6,
+              -5,
+              4
+            ]
+          }
+        ],
+        "attention_score_trace": [
+          25,
+          -14
+        ],
+        "softmax_control_trace": {
+          "policy": "two_score_winner_loser_q0_4",
+          "weights": [
+            12,
+            4
+          ],
+          "softmax_exp_in_rtl": false,
+          "evidence_source": "parsed_from_integration_testbench_attention_child"
+        }
+      },
+      "top_level_interface_summary": {
+        "common_handshake": [
+          "aclk",
+          "aresetn",
+          "start_i",
+          "done_o"
+        ],
+        "registered_outputs": [
+          "output_o",
+          "status_o"
+        ],
+        "compact_top_level_io": true,
+        "no_128b_axi_read_data": true,
+        "no_axi_debug_buses": true,
+        "no_full_hidden_vectors": true,
+        "no_full_kv_arrays": true,
+        "no_nested_child_vector_ports": true,
+        "no_per_token_child_vectors": true
+      },
+      "exposed_port_width_summary": {
+        "top_level_ports": [
+          "aclk",
+          "aresetn",
+          "start_i",
+          "done_o",
+          "output_o",
+          "status_o"
+        ],
+        "output_o_bits": 64,
+        "status_o_bits": 96,
+        "control_bits": 4,
+        "estimated_total_top_level_iob_bits": 164,
+        "prior_top_fsm_axi_attention_bonded_iob_reference": 196,
+        "prior_top_fsm_axi_attention_status_bits": 128,
+        "exposes_128b_axi_read_data": false,
+        "exposes_axi_address_id_response_debug": false,
+        "exposes_full_hidden_vectors": false,
+        "exposes_full_kv_arrays": false,
+        "exposes_full_debug_arrays": false,
+        "exposes_nested_child_vector_ports": false,
+        "exposes_per_token_child_vectors": false
+      },
+      "per_token_output_vectors": [
+        {
+          "token": 0,
+          "output_vector": [
+            4,
+            -2,
+            1,
+            2
+          ],
+          "axi_metadata_bits_hex": "0xf",
+          "evidence_source": "parsed_from_token_loop_axi_testbench_captured_top_status"
+        },
+        {
+          "token": 1,
+          "output_vector": [
+            4,
+            -2,
+            1,
+            2
+          ],
+          "axi_metadata_bits_hex": "0xf",
+          "evidence_source": "parsed_from_token_loop_axi_testbench_captured_top_status"
+        }
+      ],
+      "fixture_output_vector": [
+        4,
+        -2,
+        1,
+        2
+      ],
+      "final_output_vector": [
+        4,
+        -2,
+        1,
+        2
+      ],
+      "expected_golden_vector": [
+        4,
+        -2,
+        1,
+        2
+      ],
+      "token_outputs_are_token_dependent": false,
+      "repeated_deterministic_fixture_outputs": true,
+      "softmax_exp_in_rtl": false,
+      "kv_cache_external_memory": false,
+      "omitted_operations": [
+        "DDR controller integration",
+        "multi-burst or outstanding AXI master behavior",
+        "full AXI master implementation",
+        "full qweight payload streaming",
+        "full target projection execution",
+        "mathematically complete Q/K/V/O attention wiring",
+        "full sequence KV-cache",
+        "real prefill/decode token loop",
+        "token-dependent KV-cache accumulation across full sequence length",
+        "multi-layer model execution",
+        "full LLaMA model execution",
+        "board-level ZCU104 signoff"
+      ],
+      "does_not_claim": [
+        "DDR_controller_integration",
+        "multi_burst_or_outstanding_AXI_master_behavior",
+        "full_AXI_master_implementation",
+        "full_qweight_payload_streaming",
+        "full_target_projection_execution",
+        "mathematically_complete_QKV_O_attention_wiring",
+        "full_sequence_KV_cache",
+        "real_prefill_decode_token_loop",
+        "token_dependent_KV_cache_accumulation_across_full_sequence_length",
+        "multi_layer_model_execution",
+        "full_LLaMA_model_execution",
+        "board_level_ZCU104_signoff",
+        "board_level_signoff"
+      ],
+      "implementation_stage_policy": "post-route when synthesis is enabled",
+      "verilator_status_policy": "Verilator lint result recorded when verification.enable_verilator is true",
+      "vivado_timing_status_policy": "post-route with non-NA setup/hold/pulse-width when synthesis is enabled",
+      "vivado_resource_status_policy": "utilization.rpt emitted when Vivado synthesis completes",
+      "timing_caveat": "Routed timing is bounded two-token fixture timing without board I/O delay, DDR/AXI shell, or PS/PL integration constraints; it is not board-level ZCU104 signoff.",
+      "timing_scope_caveat": "post-route fixture timing only; no board-level I/O delay constraints, DDR/AXI shell constraints, or PS/PL integration constraints are applied; not board-level I/O, DDR/AXI, or PS/PL timing signoff",
+      "board_io_constraints_present": false,
+      "board_level_signoff": false,
+      "expected_token_trace": "0x64636261",
+      "expected_top_trace": "0x5453",
+      "expected_layer_trace": "0x4241",
+      "expected_child_trace": "0x323122211211",
+      "expected_outputs": [
+        4,
+        -2,
+        1,
+        2
+      ],
+      "golden_reference": "token_loop_axi_attention_fixture_golden.json",
+      "simulation_token_start_done_trace": {
+        "recorded": true,
+        "trace_hex": "0x64636261",
+        "ordered_events": [
+          "token0_start",
+          "token0_done",
+          "token1_start",
+          "token1_done"
+        ],
+        "evidence_source": "parsed_from_token_loop_axi_attention_trace"
+      },
+      "observed_token_start_done_trace": [
+        "token0_start",
+        "token0_done",
+        "token1_start",
+        "token1_done"
+      ],
+      "token_output_vectors": [
+        [
+          4,
+          -2,
+          1,
+          2
+        ],
+        [
+          4,
+          -2,
+          1,
+          2
+        ]
+      ],
+      "top_fsm_traces": [
+        {
+          "token": 0,
+          "ordered_events": [
+            "layer_fsm_axi_attention_fixture_start",
+            "layer_fsm_axi_attention_fixture_done"
+          ],
+          "top_trace_hex": "0x5453",
+          "layer_trace_hex": "0x4241",
+          "child_trace_hex": "0x323122211211",
+          "axi_metadata_bits_hex": "0xf",
+          "evidence_source": "parsed_from_token_loop_axi_testbench_captured_top_status"
+        },
+        {
+          "token": 1,
+          "ordered_events": [
+            "layer_fsm_axi_attention_fixture_start",
+            "layer_fsm_axi_attention_fixture_done"
+          ],
+          "top_trace_hex": "0x5453",
+          "layer_trace_hex": "0x4241",
+          "child_trace_hex": "0x323122211211",
+          "axi_metadata_bits_hex": "0xf",
+          "evidence_source": "parsed_from_token_loop_axi_testbench_captured_top_status"
+        }
+      ],
+      "layer_fsm_traces": [
+        {
+          "token": 0,
+          "ordered_events": [
+            "decoder_child_axi_attention_datapath_start",
+            "decoder_child_axi_attention_datapath_done"
+          ],
+          "layer_trace_hex": "0x4241",
+          "child_trace_hex": "0x323122211211",
+          "evidence_source": "parsed_from_token_loop_axi_testbench_captured_top_status"
+        },
+        {
+          "token": 1,
+          "ordered_events": [
+            "decoder_child_axi_attention_datapath_start",
+            "decoder_child_axi_attention_datapath_done"
+          ],
+          "layer_trace_hex": "0x4241",
+          "child_trace_hex": "0x323122211211",
+          "evidence_source": "parsed_from_token_loop_axi_testbench_captured_top_status"
+        }
+      ],
+      "decoder_child_traces": [
+        {
+          "token": 0,
+          "ordered_events": [
+            "source_path_start",
+            "source_path_done",
+            "projection_axi_start",
+            "projection_axi_done",
+            "attention_kv_start",
+            "attention_kv_done"
+          ],
+          "trace_hex": "0x323122211211",
+          "evidence_source": "parsed_from_token_loop_axi_testbench_captured_top_status"
+        },
+        {
+          "token": 1,
+          "ordered_events": [
+            "source_path_start",
+            "source_path_done",
+            "projection_axi_start",
+            "projection_axi_done",
+            "attention_kv_start",
+            "attention_kv_done"
+          ],
+          "trace_hex": "0x323122211211",
+          "evidence_source": "parsed_from_token_loop_axi_testbench_captured_top_status"
+        }
+      ],
+      "child_start_hold_deassert_release_evidence": [
+        {
+          "token": 0,
+          "busy_cycles": 370,
+          "done_seen_while_start_high": true,
+          "deasserted_after_done": true,
+          "done_release_seen_after_start_deassert": true,
+          "evidence_source": "parsed_from_token_loop_axi_testbench_top_child_start_monitor"
+        },
+        {
+          "token": 1,
+          "busy_cycles": 369,
+          "done_seen_while_start_high": true,
+          "deasserted_after_done": true,
+          "done_release_seen_after_start_deassert": true,
+          "evidence_source": "parsed_from_token_loop_axi_testbench_top_child_start_monitor"
+        }
+      ],
+      "token_loop_compact_status_axi_metadata_propagation": {
+        "propagated": true,
+        "token_status_bits_hex": "0xf",
+        "token_bit_lsb": 64,
+        "token_bit_msb": 67,
+        "top_status_bits_hex": "0xf",
+        "layer_status_bits_hex": "0xf",
+        "nested_axi_status_bits_hex": "0xf",
+        "child_source": "top_fsm_axi_attention_fixture.status_o[95:92]:layer_fsm_axi_attention_fixture.status_o[79:76]:decoder_child_axi_attention_datapath.status_o[63:60]:projection_axi_stream_integration.integration_status_o[45:42]",
+        "compact_status_hex": "0xa71c0af4241545364636261",
+        "bit_mapping": {
+          "rid_good": 64,
+          "rresp_good": 65,
+          "rlast_good": 66,
+          "all_metadata_good": 67
+        },
+        "evidence_source": "parsed_from_token_loop_axi_testbench_parent_compact_status"
+      },
+      "simulation_top_trace": {
+        "recorded": true,
+        "token": 1,
+        "top_trace_hex": "0x5453",
+        "layer_trace_hex": "0x4241",
+        "child_trace_hex": "0x323122211211",
+        "ordered_events": [
+          "layer_fsm_axi_attention_fixture_start",
+          "layer_fsm_axi_attention_fixture_done"
+        ],
+        "evidence_source": "observed_through_token_loop_axi_top_child_hierarchy"
+      },
+      "observed_final_fixture_output_vector": [
+        4,
+        -2,
+        1,
+        2
+      ],
+      "observed_compact_status_hex": "0xa71c0af4241545364636261",
+      "loop_done_output_status_stability_observed": true,
+      "compact_io_observed_trace": {
+        "estimated_iob_bits": 164,
+        "prior_top_fsm_bonded_iob_reference": 196,
+        "prior_top_fsm_status_bits": 128,
+        "exposes_child_vectors": false,
+        "exposes_wide_status": false,
+        "exposes_128b_axi_read_data": false,
+        "exposes_full_kv_arrays": false,
+        "exposes_axi_debug_buses": false,
+        "evidence_source": "parsed_from_token_loop_axi_testbench_compact_io_trace"
+      }
+    }
+  ],
+  "mode": "kernel",
+  "kernel": "token_loop_axi_attention_fixture",
+  "partition": "gemm_non_gemm",
+  "target": {
+    "board": "ZCU104",
+    "part": "xczu7ev-ffvc1156-2-e",
+    "device_lut": 230400,
+    "device_ff": 460800,
+    "device_dsp": 1728,
+    "device_bram_36k": 312,
+    "device_uram": 96,
+    "device_io": 464,
+    "quantization": "quarot_w4a4kv4_gptq_weights",
+    "optimization_brief": "Use QuaRot-style rotations so the LLaMA decode path can target W4A4KV4: 4-bit GPTQ weights, 4-bit rotated activations, and 4-bit KV-cache storage. The example assumes GPTQ weight tensors already exist and uses a local sparse metadata fixture only to exercise the parent planning flow.\n",
+    "optimization_candidates": [
+      {
+        "name": "quarot_w4a4kv4",
+        "scope": "primary example path",
+        "notes": "rotate residual/attention/MLP streams, quantize activations to 4-bit, and store KV-cache in 4-bit form"
+      },
+      {
+        "name": "w4a8kv4_fallback",
+        "scope": "fallback",
+        "notes": "keep weights and KV-cache at 4-bit but allow 8-bit activations if W4A4 timing or accuracy is unsafe"
+      },
+      {
+        "name": "mixed_precision_softmax_control",
+        "scope": "non_gemm_control",
+        "notes": "keep softmax/control accumulations wider while preserving W4A4KV4 storage boundaries"
+      }
+    ],
+    "optimization_extra_options": {
+      "weight_quantization": {
+        "method": "GPTQ",
+        "bits": 4,
+        "group_size": 128,
+        "source_assumption": "implemented_checkpoint_available",
+        "checkpoint_fixture": "sparse_header_and_payload_prefix_fixture"
+      },
+      "activation_quantization": {
+        "bits": 4,
+        "method": "QuaRot_rotated_activation_quantization",
+        "calibration_source": "assumed_offline_quarot_calibration",
+        "scale_granularity": "per_tensor_or_per_channel_to_be_selected_by_parent"
+      },
+      "kv_cache_quantization": {
+        "bits": 4,
+        "method": "QuaRot_KV4",
+        "storage": "external_ddr_or_onchip_tile_cache",
+        "dequant_location": "attention_score_value_path"
+      },
+      "rotation": {
+        "method": "QuaRot",
+        "transform": "hadamard_like_orthogonal_rotation",
+        "placement": [
+          "residual_stream_before_attention_projection",
+          "qkv_projection_input",
+          "attention_output_before_o_proj",
+          "mlp_input_before_gate_up_projection",
+          "kv_cache_write_read_boundary"
+        ],
+        "implementation_requirement": "rotation kernels must be separate non_gemm module packets unless fused by an explicit parent boundary review"
+      },
+      "numeric_policy": {
+        "weight_bits": 4,
+        "activation_bits": 4,
+        "kv_cache_bits": 4,
+        "accumulator_bits": 32,
+        "requantization": "explicit_scale_shift_saturation"
+      }
+    },
+    "design_style": "systolic_weight_stationary_llm_streaming",
+    "compute_style": "systolic_array",
+    "execution_style": "llm_decoder_streaming",
+    "memory_style": "external_ddr_streaming",
+    "control_style": "hierarchical_fsm",
+    "architecture_brief": "Use a weight-stationary systolic array for projection GEMM/GEMV tiles. GPTQ-packed W4 weights are streamed from DDR into on-chip tile buffers, unpacked/dequantized near the array edge, and reused in-place while rotated A4 activations stream through the array. Size the array from the active DSP budget rather than hardcoding a final dimension.\n",
+    "design_candidates": [
+      {
+        "name": "ws_systolic_32x32",
+        "focus": "first candidate under a 1536-DSP active compute budget",
+        "risk": "routing pressure and activation/KV4 quantization overhead may reduce timing margin"
+      },
+      {
+        "name": "ws_systolic_16x64",
+        "focus": "preserve projection throughput while easing vertical routing",
+        "risk": "less square data reuse and more edge buffering"
+      },
+      {
+        "name": "ws_systolic_24x48",
+        "focus": "middle-ground DSP use with easier BRAM banking",
+        "risk": "tile scheduler is less regular than 32x32"
+      }
+    ],
+    "design_extra_options": {
+      "systolic_array": {
+        "dataflow": "weight_stationary",
+        "initial_rows": 32,
+        "initial_cols": 32,
+        "dsp_per_cell_assumption": 1,
+        "active_dsp_budget": 1536,
+        "reserved_dsp_for_non_gemm_and_control": 192,
+        "sizing_rule": "choose rows*cols*dsp_per_cell <= active_dsp_budget after reserving non-GEMM/control DSP",
+        "allowed_shapes": [
+          [
+            16,
+            64
+          ],
+          [
+            24,
+            48
+          ],
+          [
+            32,
+            32
+          ]
+        ],
+        "selected_shape": "parent_to_select_after_module_ooc_synthesis"
+      },
+      "ddr_streaming": {
+        "stream_width_bits": 128,
+        "burst_policy": "aligned_bursts_per_projection_tile",
+        "onchip_weight_tile_buffer": "double_buffered_bram_uram",
+        "unpack_location": "array_edge",
+        "backpressure": "valid_ready"
+      },
+      "activation_path": {
+        "format": "rotated_int4",
+        "buffer_policy": "ping_pong_tile_buffer",
+        "rotation_module_boundary": "non_gemm_quarot_rotation"
+      },
+      "control": {
+        "hierarchy": [
+          "module_fsm",
+          "projection_tile_scheduler",
+          "decoder_block_fsm",
+          "model_fsm",
+          "board_wrapper_control_regs"
+        ]
+      }
+    }
+  },
+  "input_clarification": {
+    "artifact": "input_clarification_questions",
+    "status": "clear",
+    "requires_user_response": false,
+    "question_count": 0,
+    "questions": [],
+    "checked_fields": {
+      "optimization": {
+        "quantization": "quarot_w4a4kv4_gptq_weights",
+        "pruning": "none",
+        "pruning_threshold": 0.0,
+        "optimization_brief": "Use QuaRot-style rotations so the LLaMA decode path can target W4A4KV4: 4-bit GPTQ weights, 4-bit rotated activations, and 4-bit KV-cache storage. The example assumes GPTQ weight tensors already exist and uses a local sparse metadata fixture only to exercise the parent planning flow.\n",
+        "optimization_candidates": [
+          {
+            "name": "quarot_w4a4kv4",
+            "scope": "primary example path",
+            "notes": "rotate residual/attention/MLP streams, quantize activations to 4-bit, and store KV-cache in 4-bit form"
+          },
+          {
+            "name": "w4a8kv4_fallback",
+            "scope": "fallback",
+            "notes": "keep weights and KV-cache at 4-bit but allow 8-bit activations if W4A4 timing or accuracy is unsafe"
+          },
+          {
+            "name": "mixed_precision_softmax_control",
+            "scope": "non_gemm_control",
+            "notes": "keep softmax/control accumulations wider while preserving W4A4KV4 storage boundaries"
+          }
+        ],
+        "extra_options": {
+          "weight_quantization": {
+            "method": "GPTQ",
+            "bits": 4,
+            "group_size": 128,
+            "source_assumption": "implemented_checkpoint_available",
+            "checkpoint_fixture": "sparse_header_and_payload_prefix_fixture"
+          },
+          "activation_quantization": {
+            "bits": 4,
+            "method": "QuaRot_rotated_activation_quantization",
+            "calibration_source": "assumed_offline_quarot_calibration",
+            "scale_granularity": "per_tensor_or_per_channel_to_be_selected_by_parent"
+          },
+          "kv_cache_quantization": {
+            "bits": 4,
+            "method": "QuaRot_KV4",
+            "storage": "external_ddr_or_onchip_tile_cache",
+            "dequant_location": "attention_score_value_path"
+          },
+          "rotation": {
+            "method": "QuaRot",
+            "transform": "hadamard_like_orthogonal_rotation",
+            "placement": [
+              "residual_stream_before_attention_projection",
+              "qkv_projection_input",
+              "attention_output_before_o_proj",
+              "mlp_input_before_gate_up_projection",
+              "kv_cache_write_read_boundary"
+            ],
+            "implementation_requirement": "rotation kernels must be separate non_gemm module packets unless fused by an explicit parent boundary review"
+          },
+          "numeric_policy": {
+            "weight_bits": 4,
+            "activation_bits": 4,
+            "kv_cache_bits": 4,
+            "accumulator_bits": 32,
+            "requantization": "explicit_scale_shift_saturation"
+          }
+        }
+      },
+      "design": {
+        "style": "systolic_weight_stationary_llm_streaming",
+        "compute_style": "systolic_array",
+        "execution_style": "llm_decoder_streaming",
+        "memory_style": "external_ddr_streaming",
+        "control_style": "hierarchical_fsm",
+        "pe_count": 1024,
+        "activation_buffer": "rotated_a4_ping_pong_uram_bram",
+        "weight_storage": "external_ddr_gptq_packed_stream_to_onchip_weight_stationary_tiles",
+        "architecture_brief": "Use a weight-stationary systolic array for projection GEMM/GEMV tiles. GPTQ-packed W4 weights are streamed from DDR into on-chip tile buffers, unpacked/dequantized near the array edge, and reused in-place while rotated A4 activations stream through the array. Size the array from the active DSP budget rather than hardcoding a final dimension.\n",
+        "design_candidates": [
+          {
+            "name": "ws_systolic_32x32",
+            "focus": "first candidate under a 1536-DSP active compute budget",
+            "risk": "routing pressure and activation/KV4 quantization overhead may reduce timing margin"
+          },
+          {
+            "name": "ws_systolic_16x64",
+            "focus": "preserve projection throughput while easing vertical routing",
+            "risk": "less square data reuse and more edge buffering"
+          },
+          {
+            "name": "ws_systolic_24x48",
+            "focus": "middle-ground DSP use with easier BRAM banking",
+            "risk": "tile scheduler is less regular than 32x32"
+          }
+        ],
+        "extra_options": {
+          "systolic_array": {
+            "dataflow": "weight_stationary",
+            "initial_rows": 32,
+            "initial_cols": 32,
+            "dsp_per_cell_assumption": 1,
+            "active_dsp_budget": 1536,
+            "reserved_dsp_for_non_gemm_and_control": 192,
+            "sizing_rule": "choose rows*cols*dsp_per_cell <= active_dsp_budget after reserving non-GEMM/control DSP",
+            "allowed_shapes": [
+              [
+                16,
+                64
+              ],
+              [
+                24,
+                48
+              ],
+              [
+                32,
+                32
+              ]
+            ],
+            "selected_shape": "parent_to_select_after_module_ooc_synthesis"
+          },
+          "ddr_streaming": {
+            "stream_width_bits": 128,
+            "burst_policy": "aligned_bursts_per_projection_tile",
+            "onchip_weight_tile_buffer": "double_buffered_bram_uram",
+            "unpack_location": "array_edge",
+            "backpressure": "valid_ready"
+          },
+          "activation_path": {
+            "format": "rotated_int4",
+            "buffer_policy": "ping_pong_tile_buffer",
+            "rotation_module_boundary": "non_gemm_quarot_rotation"
+          },
+          "control": {
+            "hierarchy": [
+              "module_fsm",
+              "projection_tile_scheduler",
+              "decoder_block_fsm",
+              "model_fsm",
+              "board_wrapper_control_regs"
+            ]
+          }
+        }
+      }
+    },
+    "parent_policy": "If requires_user_response is true, stop before HDL sub-agent dispatch and ask these questions. If false, preserve the free-form fields in manifests and continue planning."
+  },
+  "target_gate_summary": {
+    "mlir_model_analysis": {
+      "artifact": "mlir_model_analysis_readiness.json",
+      "status": "blocked",
+      "analysis_source": "synthetic_llama_block_mlir",
+      "source_kind": "synthetic_fixture",
+      "target_claim_allowed_by_source": false,
+      "coverage_level": "synthetic_decoder_block_mlir_not_exported_target_model",
+      "missing_semantic_gemm_ops": [
+        "v_proj",
+        "gate_proj"
+      ],
+      "missing_semantic_non_gemm_ops": [
+        "attention_residual",
+        "swiglu_multiply",
+        "mlp_residual"
+      ]
+    },
+    "target_readiness": {
+      "artifact": "target_readiness_report.json",
+      "status": "target_blocked",
+      "safe_to_spawn_bounded_subagents": true,
+      "safe_to_claim_target_accelerator": false,
+      "blocked_target_task_count": 3
+    },
+    "target_blocker_remediation": {
+      "artifact": "target_blocker_remediation_plan.json",
+      "status": "blocked",
+      "blocked_target_task_count": 3,
+      "target_preflight_blockers": [
+        "real_mlir_model_analysis"
+      ],
+      "canonical_full_preflight_command": "python3 -m nl2hdl agent --model meta-llama/Llama-3.2-1B --spec examples/zcu104_llama32_1b_gptq.yaml --mode inspect --out examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/token_loop_axi_attention_fixture --skip-synth --mlir-graph '<exported_or_provided_model_graph.mlir>' --gptq-checkpoint '<local_gptq_int4_checkpoint_dir_or_hf_repo>'"
+    },
+    "gptq_checkpoint_metadata": {
+      "artifact": "gptq_checkpoint_metadata.json",
+      "status": "parsed",
+      "quantization_artifact_classification": "candidate_gptq_int4_checkpoint",
+      "checkpoint_quantization_dependency": "satisfied_by_gptq_quant_metadata",
+      "quantization_artifact_next_action": "run target layout and payload probes for all required LLaMA projections",
+      "source_preflight_status": "resolved_local_path",
+      "checkpoint_source_dependency": "satisfied_by_local_path",
+      "source_preflight_next_action": "run GPTQ metadata and payload probes against the resolved local checkpoint directory",
+      "metadata_source_model_name": "examples/quarot_w4a4kv4_zcu104_llama32_1b/input/assumed_gptq_checkpoint",
+      "target_model_name": "meta-llama/Llama-3.2-1B",
+      "bits": 4,
+      "group_size": 128,
+      "projection_metadata_count": 7,
+      "quantized_projection_metadata_count": 7,
+      "complete_gptq_projection_metadata_count": 7,
+      "raw_projection_key_count": 7,
+      "tensor_summary_count": 21,
+      "tensor_summary_source": "safetensors_header",
+      "weight_layout_preflight_status": "passed",
+      "weight_layout_compatible_projection_count": 7,
+      "weight_layout_required_projection_count": 7
+    },
+    "gptq_checkpoint_source_preflight": {
+      "artifact": "gptq_checkpoint_source_preflight.json",
+      "status": "resolved_local_path",
+      "checkpoint_source_dependency": "satisfied_by_local_path",
+      "next_action": "run GPTQ metadata and payload probes against the resolved local checkpoint directory"
+    },
+    "gptq_payload_probe": {
+      "artifact": "gptq_payload_probe.json",
+      "status": "sampled",
+      "projection": "q_proj",
+      "payload_probe_source": null,
+      "payload_golden_source": null,
+      "sampled_tensor_count": 3,
+      "required_tensor_count": 3,
+      "sample_bytes_requested": 64,
+      "qweight_payload_order": "safetensors_payload_prefix_32bit_little_endian_words",
+      "qweight_payload_word_count": 16,
+      "qweight_stream_probe": {
+        "source": "qweight_safetensors_payload_prefix",
+        "payload_order": "safetensors_payload_prefix_32bit_little_endian_words",
+        "memory_data_width_bits": 128,
+        "bytes_per_memory_beat": 16,
+        "words32_per_memory_beat": 4,
+        "sample_byte_count": 64,
+        "sampled_full_memory_beat_count": 4,
+        "covers_first_memory_beat": true,
+        "first_memory_beats_128b_le_hex": [
+          "0x00000000000000000000000000000000",
+          "0x00000000000000000000000000000000",
+          "0x00000000000000000000000000000000",
+          "0x00000000000000000000000000000000"
+        ],
+        "memory_beat_word_chunks32_le_hex": [
+          [
+            "0x00000000",
+            "0x00000000",
+            "0x00000000",
+            "0x00000000"
+          ],
+          [
+            "0x00000000",
+            "0x00000000",
+            "0x00000000",
+            "0x00000000"
+          ],
+          [
+            "0x00000000",
+            "0x00000000",
+            "0x00000000",
+            "0x00000000"
+          ],
+          [
+            "0x00000000",
+            "0x00000000",
+            "0x00000000",
+            "0x00000000"
+          ]
+        ],
+        "does_not_claim": [
+          "full_qweight_payload_streaming",
+          "AXI_or_DDR_burst_execution",
+          "checkpoint_specific_qweight_order_correctness"
+        ]
+      },
+      "target_checkpoint_payload_dependency": "satisfied_by_payload_probe",
+      "payload_words_match_gptq_probe": null,
+      "qweight_payload_words32_le_count": 16,
+      "projection_payload_probe_count": 7,
+      "sampled_projection_payload_probe_count": 7,
+      "required_projection_payload_probe_count": 7,
+      "all_projection_payload_dependency": "satisfied_by_payload_probe"
+    },
+    "gptq_weight_layout_preflight": {
+      "artifact": "gptq_weight_layout_preflight.json",
+      "status": "passed",
+      "target_compatible_projection_count": 7,
+      "required_projection_count": 7,
+      "blocking_reason": null
+    },
+    "projection_weight_stream_plan": {
+      "artifact": "projection_weight_stream_plan.json",
+      "projection_count": 7,
+      "target_stream_plan_valid_count": 7,
+      "payload_satisfied_projection_count": 7,
+      "all_projection_layout_dependency": "satisfied_by_header_preflight",
+      "all_projection_payload_dependency": "satisfied_by_payload_probe",
+      "target_scale_ready_for_all_projection_streaming": true
+    },
+    "blocked_target_task_count": 3,
+    "blocked_target_tasks": [
+      {
+        "task_id": "real_mlir_model_analysis",
+        "reason": "current inspect MLIR does not prove every target LLaMA GEMM/non-GEMM operation from a provided or exported model graph"
+      },
+      {
+        "task_id": "full_llama_model_execution",
+        "reason": "current gates are bounded fixtures and target planning; full multi-layer/token/DDR/AXI execution is not implemented"
+      },
+      {
+        "task_id": "board_level_zcu104_signoff",
+        "reason": "current Vivado evidence is fixture post-route timing without board I/O, DDR/AXI, or PS/PL constraints"
+      }
+    ]
+  },
+  "plan_summary": {
+    "first_rtl_milestones": [
+      "MLIR GEMM/non-GEMM partition report for the selected LLaMA checkpoint",
+      "INT4 GPTQ unpack/dequant tile reader",
+      "INT4xINT8 or INT4xINT16 projection GEMV kernel",
+      "RMSNorm kernel",
+      "single decoder block skeleton with AXI-stream-like tile handshakes",
+      "single-token decode loop for one block, then all blocks"
+    ],
+    "acceptance_gates": [
+      "MLIR/semantic graph report names every LLaMA submodule and tensor shape",
+      "GEMM ops are mapped to tiled INT4 projection kernels and non-GEMM ops are mapped to dedicated RMSNorm/RoPE/softmax/control kernels",
+      "GPTQ metadata parser round-trips packed INT4 weights for at least one projection",
+      "kernel-level RTL matches PyTorch/NumPy references for deterministic vectors",
+      "Vivado synthesis reports timing and resource usage on the ZCU104 part",
+      "agent report records attempted design knobs and final effective design"
+    ]
+  }
+}

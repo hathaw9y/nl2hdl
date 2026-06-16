@@ -1,0 +1,390 @@
+{
+  "status": "passed",
+  "out": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter",
+  "files": [
+    "projection_axi_read_transaction_adapter.sv",
+    "tb_projection_axi_read_transaction_adapter.sv"
+  ],
+  "coverage_level": "projection_axi_read_transaction_adapter_fixture",
+  "implementation_stage": "post-route",
+  "simulation": {
+    "passed": true,
+    "stage": "run",
+    "output": "AXI_TRANSACTION_AR_TRACE projection_axi_read_transaction_adapter addr=0x120000 len=1 size=4 burst=1 id=0x2 beats=2\nAXI_TRANSACTION_R_TRACE projection_axi_read_transaction_adapter accepted=0x3 last=0x2 rid_ok=1 rresp_ok=1 rlast_ok=1 arlen_matches_r_beats=1 words=0x00112233445566778899aabbccddeeff 0x102132435465768798a9babbdcddfeff\nPAYLOAD_TRACE projection_axi_read_transaction_adapter payload_words=0xccddeeff 0x8899aabb 0x44556677 0x00112233 0xdcddfeff 0x98a9babb 0x54657687 0x10213243 count=8 order_ok=1 stability_at_done=1\nBACKPRESSURE_TRACE projection_axi_read_transaction_adapter ar_ready_low_cycles=2 ar_fields_stable=1 rvalid_while_rready_low_cycles=4 payload_ready_low_indices=0,3,4 payload_ready_low_events=3\nDUT_METADATA_TRACE projection_axi_read_transaction_adapter accepted=0x3 last=0x2 rid_error=0x0 rresp_error=0x0 rlast_error=0x0 status=0x8190\nVALIDATION_TRACE projection_axi_read_transaction_adapter id_ok=1 resp_ok=1 last_ok=1 arlen_matches_r_beats=1 payload_order_ok=1 done_stability_ok=1\nNEGATIVE_METADATA_TRACE projection_axi_read_transaction_adapter accepted=0x3 last=0x1 rid_error=0x1 rresp_error=0x1 rlast_error=0x3 rid_ok=0 rresp_ok=0 rlast_ok=0 arlen_matches_r_beats=1 status=0x8f90\nPASS projection_axi_read_transaction_adapter\n",
+    "cmd": [
+      "iverilog",
+      "-g2012",
+      "-o",
+      "kernel_sim",
+      "projection_axi_read_transaction_adapter.sv",
+      "tb_projection_axi_read_transaction_adapter.sv"
+    ]
+  },
+  "verilator": {
+    "passed": true,
+    "stage": "lint_only",
+    "cmd": [
+      "verilator",
+      "--lint-only",
+      "-sv",
+      "-Wno-STMTDLY",
+      "-Wno-INFINITELOOP",
+      "projection_axi_read_transaction_adapter.sv",
+      "tb_projection_axi_read_transaction_adapter.sv"
+    ],
+    "output": "",
+    "policy": "DUT lint must be warning-clean. Testbench-only Verilator 4.x timing-delay warnings STMTDLY and INFINITELOOP are allowed for lint-only checks because iverilog executes the timed behavioral testbench.",
+    "requested_timing_policy": "--timing",
+    "timing_policy_supported": false,
+    "effective_timing_policy": null,
+    "allowed_warning_classes": [
+      "STMTDLY",
+      "INFINITELOOP"
+    ]
+  },
+  "synthesis": {
+    "passed": true,
+    "cmd": [
+      "vivado",
+      "-mode",
+      "batch",
+      "-source",
+      "vivado_synth.tcl"
+    ],
+    "output": "outable Net Status*\n  *Does not include unroutable nets such as driverless and loadless.\n  Run report_route_status for detailed report.\n  Number of Failed Nets               = 415\n    (Failed Nets is the sum of unrouted and partially routed nets)\n  Number of Unrouted Nets             = 363\n  Number of Partially Routed Nets     = 52\n  Number of Node Overlaps             = 0\n\nPhase 2 Router Initialization | Checksum: 21047fece\n\nTime (s): cpu = 00:00:04 ; elapsed = 00:00:03 . Memory (MB): peak = 4792.949 ; gain = 0.000 ; free physical = 44509 ; free virtual = 53724\n\nPhase 3 Global Routing\nPhase 3 Global Routing | Checksum: 21047fece\n\nTime (s): cpu = 00:00:04 ; elapsed = 00:00:03 . Memory (MB): peak = 4792.949 ; gain = 0.000 ; free physical = 44509 ; free virtual = 53724\n\nPhase 4 Initial Routing\n\nPhase 4.1 Initial Net Routing Pass\nPhase 4.1 Initial Net Routing Pass | Checksum: 119cb1ff9\n\nTime (s): cpu = 00:00:04 ; elapsed = 00:00:03 . Memory (MB): peak = 4792.949 ; gain = 0.000 ; free physical = 44509 ; free virtual = 53724\nPhase 4 Initial Routing | Checksum: 183afe567\n\nTime (s): cpu = 00:00:04 ; elapsed = 00:00:03 . Memory (MB): peak = 4792.949 ; gain = 0.000 ; free physical = 44509 ; free virtual = 53724\n\nPhase 5 Rip-up And Reroute\n\nPhase 5.1 Global Iteration 0\n Number of Nodes with overlaps = 10\n Number of Nodes with overlaps = 0\nINFO: [Route 35-416] Intermediate Timing Summary | WNS=3.038  | TNS=0.000  | WHS=0.040  | THS=0.000  |\n\nPhase 5.1 Global Iteration 0 | Checksum: 1b5b66e5a\n\nTime (s): cpu = 00:00:04 ; elapsed = 00:00:03 . Memory (MB): peak = 4792.949 ; gain = 0.000 ; free physical = 44509 ; free virtual = 53724\n\nPhase 5.2 Additional Iteration for Hold\nPhase 5.2 Additional Iteration for Hold | Checksum: 1177ae2ac\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4792.949 ; gain = 0.000 ; free physical = 44509 ; free virtual = 53724\nPhase 5 Rip-up And Reroute | Checksum: 1177ae2ac\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4792.949 ; gain = 0.000 ; free physical = 44509 ; free virtual = 53724\n\nPhase 6 Delay and Skew Optimization\n\nPhase 6.1 Delay CleanUp\nPhase 6.1 Delay CleanUp | Checksum: 181541783\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4792.949 ; gain = 0.000 ; free physical = 44509 ; free virtual = 53724\n\nPhase 6.2 Clock Skew Optimization\nPhase 6.2 Clock Skew Optimization | Checksum: 181541783\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4792.949 ; gain = 0.000 ; free physical = 44509 ; free virtual = 53724\nPhase 6 Delay and Skew Optimization | Checksum: 181541783\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4792.949 ; gain = 0.000 ; free physical = 44509 ; free virtual = 53724\n\nPhase 7 Post Hold Fix\n\nPhase 7.1 Hold Fix Iter\nINFO: [Route 35-416] Intermediate Timing Summary | WNS=3.038  | TNS=0.000  | WHS=0.040  | THS=0.000  |\n\nPhase 7.1 Hold Fix Iter | Checksum: 177bfe641\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4792.949 ; gain = 0.000 ; free physical = 44509 ; free virtual = 53724\nPhase 7 Post Hold Fix | Checksum: 177bfe641\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4792.949 ; gain = 0.000 ; free physical = 44509 ; free virtual = 53724\n\nPhase 8 Route finalize\n\nRouter Utilization Summary\n  Global Vertical Routing Utilization    = 0.283249 %\n  Global Horizontal Routing Utilization  = 0.0174715 %\n  Routable Net Status*\n  *Does not include unroutable nets such as driverless and loadless.\n  Run report_route_status for detailed report.\n  Number of Failed Nets               = 0\n    (Failed Nets is the sum of unrouted and partially routed nets)\n  Number of Unrouted Nets             = 0\n  Number of Partially Routed Nets     = 0\n  Number of Node Overlaps             = 0\n\nPhase 8 Route finalize | Checksum: 177bfe641\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4792.949 ; gain = 0.000 ; free physical = 44509 ; free virtual = 53724\n\nPhase 9 Verifying routed nets\n\n Verification completed successfully\nPhase 9 Verifying routed nets | Checksum: 177bfe641\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4792.949 ; gain = 0.000 ; free physical = 44508 ; free virtual = 53723\n\nPhase 10 Depositing Routes\nPhase 10 Depositing Routes | Checksum: 177bfe641\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4792.949 ; gain = 0.000 ; free physical = 44508 ; free virtual = 53723\n\nPhase 11 Resolve XTalk\nPhase 11 Resolve XTalk | Checksum: 177bfe641\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4792.949 ; gain = 0.000 ; free physical = 44508 ; free virtual = 53723\n\nPhase 12 Post Process Routing\nPhase 12 Post Process Routing | Checksum: 177bfe641\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4792.949 ; gain = 0.000 ; free physical = 44508 ; free virtual = 53723\n\nPhase 13 Post Router Timing\nINFO: [Route 35-57] Estimated Timing Summary | WNS=3.038  | TNS=0.000  | WHS=0.040  | THS=0.000  |\n\nINFO: [Route 35-327] The final timing numbers are based on the router estimated timing analysis. For a complete and accurate timing signoff, please run report_timing_summary.\nPhase 13 Post Router Timing | Checksum: 177bfe641\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4792.949 ; gain = 0.000 ; free physical = 44508 ; free virtual = 53723\nTotal Elapsed time in route_design: 3.06 secs\n\nPhase 14 Post-Route Event Processing\nPhase 14 Post-Route Event Processing | Checksum: 152ca1ab7\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4792.949 ; gain = 0.000 ; free physical = 44508 ; free virtual = 53723\nINFO: [Route 35-16] Router Completed Successfully\nEnding Routing Task | Checksum: 152ca1ab7\n\nTime (s): cpu = 00:00:05 ; elapsed = 00:00:03 . Memory (MB): peak = 4792.949 ; gain = 0.000 ; free physical = 44508 ; free virtual = 53723\n\nRouting Is Done.\nINFO: [Common 17-83] Releasing license: Implementation\n12 Infos, 0 Warnings, 0 Critical Warnings and 0 Errors encountered.\nroute_design completed successfully\n# report_utilization -file utilization.rpt\n# report_timing_summary -file timing_summary.rpt\nINFO: [Timing 38-91] UpdateTimingParams: Speed grade: -2, Temperature grade: E, Delay Type: min_max.\nINFO: [Timing 38-191] Multithreading enabled for timing update using a maximum of 8 CPUs\n# write_checkpoint -force post_route.dcp\nINFO: [Timing 38-480] Writing timing data to binary archive.\nWrite ShapeDB Complete: Time (s): cpu = 00:00:00.01 ; elapsed = 00:00:00 . Memory (MB): peak = 4792.949 ; gain = 0.000 ; free physical = 44473 ; free virtual = 53689\nWrote PlaceDB: Time (s): cpu = 00:00:00.04 ; elapsed = 00:00:00.01 . Memory (MB): peak = 4792.949 ; gain = 0.000 ; free physical = 44473 ; free virtual = 53689\nWrote PulsedLatchDB: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 4792.949 ; gain = 0.000 ; free physical = 44473 ; free virtual = 53689\nWriting XDEF routing.\nWriting XDEF routing logical nets.\nWriting XDEF routing special nets.\nWrote RouteStorage: Time (s): cpu = 00:00:00.05 ; elapsed = 00:00:00.04 . Memory (MB): peak = 4792.949 ; gain = 0.000 ; free physical = 44473 ; free virtual = 53690\nWrote Netlist Cache: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 4792.949 ; gain = 0.000 ; free physical = 44473 ; free virtual = 53690\nWrote Device Cache: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 4792.949 ; gain = 0.000 ; free physical = 44473 ; free virtual = 53692\nWrite Physdb Complete: Time (s): cpu = 00:00:00.1 ; elapsed = 00:00:00.05 . Memory (MB): peak = 4792.949 ; gain = 0.000 ; free physical = 44473 ; free virtual = 53692\nINFO: [Common 17-1381] The checkpoint '/home/iamjames77/Nlp2Verilog/examples/quarot_w4a4kv4_zcu104_llama32_1b/run/framework_e2e_attempt/kernel_cache/projection_axi_read_transaction_adapter/post_route.dcp' has been generated.\nINFO: [Common 17-206] Exiting Vivado at Tue Jun 16 09:47:49 2026...\n",
+    "timing": {
+      "setup_worst_slack_ns": 3.038,
+      "hold_worst_slack_ns": 0.041,
+      "pulse_width_worst_slack_ns": 2.225,
+      "constraints_met": true,
+      "worst_slack_ns": 3.038,
+      "parse_status": "parsed"
+    },
+    "implementation_stage": "post-route",
+    "timing_report": "timing_summary.rpt",
+    "timing_report_available": true,
+    "utilization_report": "utilization.rpt",
+    "utilization_report_available": true,
+    "resource_status": "available",
+    "resource_utilization": {
+      "lut_as_logic": {
+        "used": 150,
+        "available": 230400,
+        "utilization_percent": 0.07
+      },
+      "clb_registers": {
+        "used": 203,
+        "available": 460800,
+        "utilization_percent": 0.04
+      },
+      "block_ram_tile": {
+        "used": 0,
+        "available": 312,
+        "utilization_percent": 0.0
+      },
+      "dsps": {
+        "used": 0,
+        "available": 1728,
+        "utilization_percent": 0.0
+      },
+      "bonded_iob": {
+        "used": 261,
+        "available": 360,
+        "utilization_percent": 72.5
+      }
+    }
+  },
+  "contract_gate": {
+    "verilator_enforced": true,
+    "synthesis_enforced": true
+  },
+  "numeric_policy": {
+    "fixture_kind": "projection_axi_read_transaction_adapter_fixture",
+    "operation": "issue_one_axi_read_command_consume_bounded_r_beats_emit_payload_stream",
+    "payload_order": "accepted_axi_beat_order_then_little_32_bit_chunk_order",
+    "rounding_mode": "none_bit_exact_control_path",
+    "saturation_policy": "none_bit_exact_control_path"
+  },
+  "kernel": "projection_axi_read_transaction_adapter",
+  "target_board_part": "xczu7ev-ffvc1156-2-e",
+  "target_clock_mhz": 200,
+  "selected_projection": "q_proj",
+  "selected_projection_shape": {
+    "rows": 2048,
+    "cols": 2048
+  },
+  "target_projection_shape": {
+    "rows": 2048,
+    "cols": 2048
+  },
+  "selected_projection_packed_int4_bytes": 2097152,
+  "raw_qweight_memory_beats": 131072,
+  "configured_memory_data_width_bits": 128,
+  "bytes_per_beat": 16,
+  "bytes_per_memory_beat": 16,
+  "payload_width_bits": 32,
+  "payloads_per_read_data_beat": 4,
+  "fixture_payload_count": 8,
+  "derived_axi_arsize": 4,
+  "read_data_words_hex": [
+    "0x00112233445566778899aabbccddeeff",
+    "0x102132435465768798a9babbdcddfeff"
+  ],
+  "gptq_payload_probe_golden_source": {
+    "env_var": "NL2HDL_GPTQ_PAYLOAD_PROBE_JSON",
+    "artifact": "gptq_payload_probe",
+    "status": "absent",
+    "projection": "q_proj",
+    "used": false,
+    "payload_golden_source": "deterministic_fixture",
+    "fallback_reason": "NL2HDL_GPTQ_PAYLOAD_PROBE_JSON not set",
+    "target_checkpoint_payload_dependency": "not_provided",
+    "qweight_payload_words32_le_hex": [],
+    "qweight_payload_word_count": 0,
+    "expected_fixture_payload_word_count": 8,
+    "payload_words_match_gptq_probe": false
+  },
+  "gptq_payload_probe_used": false,
+  "target_checkpoint_payload_dependency": "not_provided",
+  "gptq_probe_qweight_payload_words32_le_hex": [],
+  "payload_words_match_gptq_probe": false,
+  "addr_width_bits": 32,
+  "id_width_bits": 8,
+  "request_addr_hex": "0x00120000",
+  "request_beat_count": 2,
+  "request_id_hex": "0x02",
+  "axi_command_trace": {
+    "request_addr_hex": "0x00120000",
+    "request_beat_count": 2,
+    "axi_arlen": 1,
+    "axi_arsize": 4,
+    "axi_arburst": 1,
+    "axi_arid_hex": "0x02",
+    "configured_memory_data_width_bits": 128,
+    "bytes_per_beat": 16
+  },
+  "checkpoint_target_weight_stream_plan": {
+    "selected_projection": "q_proj",
+    "stream_plan_valid": false,
+    "unavailable_reason": "NL2HDL_TARGET_WEIGHT_STREAM_PLAN_JSON not set",
+    "qweight_file": null,
+    "qweight_key": null,
+    "qweight_byte_offset": null,
+    "qweight_byte_count": null,
+    "request_byte_addr": null,
+    "request_beat_count": null,
+    "first_beat_byte_offset": null,
+    "last_beat_valid_bytes": null,
+    "request_covers_unaligned_qweight_range": null,
+    "memory_data_width_bits": 128,
+    "bytes_per_memory_beat": 16,
+    "raw_qweight_memory_beats": 131072
+  },
+  "checkpoint_target_request_summary": {
+    "selected_projection": "q_proj",
+    "qweight_file": null,
+    "qweight_key": null,
+    "qweight_byte_offset": null,
+    "qweight_byte_count": null,
+    "request_byte_addr": null,
+    "request_beat_count": null,
+    "first_beat_byte_offset": null,
+    "last_beat_valid_bytes": null,
+    "request_covers_unaligned_qweight_range": null,
+    "stream_plan_valid": false,
+    "memory_data_width_bits": 128,
+    "bytes_per_memory_beat": 16,
+    "raw_qweight_memory_beats": 131072,
+    "unavailable_reason": "NL2HDL_TARGET_WEIGHT_STREAM_PLAN_JSON not set",
+    "target_planned_request_beat_count": null,
+    "fixture_command_beat_count": 2,
+    "fixture_consumed_read_data_beat_count": 2,
+    "target_request_split_or_truncated_by_fixture": false,
+    "fixture_bounded_read_transaction_beats": 2
+  },
+  "target_checkpoint_request_planning_only": false,
+  "target_planned_request_beat_count": null,
+  "fixture_command_beat_count": 2,
+  "fixture_consumed_read_data_beat_count": 2,
+  "target_request_split_or_truncated_by_fixture": false,
+  "fixture_axi_read_transaction_execution": {
+    "execution_scope": "bounded_single_burst_fixture",
+    "fixture_command_beat_count": 2,
+    "fixture_consumed_read_data_beat_count": 2,
+    "axi_command": {
+      "request_addr_hex": "0x00120000",
+      "request_beat_count": 2,
+      "axi_arlen": 1,
+      "axi_arsize": 4,
+      "axi_arburst": 1,
+      "axi_arid_hex": "0x02",
+      "configured_memory_data_width_bits": 128,
+      "bytes_per_beat": 16
+    },
+    "arlen_plus_one_matches_consumed_r_beats": true,
+    "expected_axi_rid_hex": "0x02",
+    "expected_axi_rresp": "0b00",
+    "expected_rlast_on_final_beat_only": true,
+    "r_channel_metadata_validation": "dut_observed_sticky_error_traces",
+    "negative_r_metadata_regression_required": true,
+    "read_data_words_hex": [
+      "0x00112233445566778899aabbccddeeff",
+      "0x102132435465768798a9babbdcddfeff"
+    ],
+    "payload_words_hex": [
+      "0xccddeeff",
+      "0x8899aabb",
+      "0x44556677",
+      "0x00112233",
+      "0xdcddfeff",
+      "0x98a9babb",
+      "0x54657687",
+      "0x10213243"
+    ],
+    "payload_word_count": 8,
+    "payload_width_bits": 32,
+    "payloads_per_read_data_beat": 4
+  },
+  "expected_axi_rid_hex": "0x02",
+  "expected_payload_words_hex": [
+    "0xccddeeff",
+    "0x8899aabb",
+    "0x44556677",
+    "0x00112233",
+    "0xdcddfeff",
+    "0x98a9babb",
+    "0x54657687",
+    "0x10213243"
+  ],
+  "golden_reference": "projection_axi_read_transaction_adapter_golden.json",
+  "simulation_status_policy": "iverilog simulation result recorded in kernel_report.json",
+  "verilator_status_policy": "Verilator lint result recorded when verification.enable_verilator is true",
+  "vivado_timing_status_policy": "post-route when synthesis is enabled; not board-level signoff",
+  "caveats": [
+    "projection_axi_read_transaction_adapter_fixture executes one bounded single-burst transaction",
+    "checkpoint target request metadata is planning-only when provided",
+    "projection_axi_read_transaction_adapter_fixture is not a DDR controller",
+    "projection_axi_read_transaction_adapter_fixture is not a full AXI master",
+    "projection_axi_read_transaction_adapter_fixture is not full qweight payload streaming",
+    "projection_axi_read_transaction_adapter_fixture is not a complete board shell",
+    "projection_axi_read_transaction_adapter_fixture is not full target projection execution",
+    "projection_axi_read_transaction_adapter_fixture is not full model execution",
+    "projection_axi_read_transaction_adapter_fixture is not board-level signoff"
+  ],
+  "does_not_claim": [
+    "DDR_controller_integration",
+    "full_AXI_master",
+    "full_qweight_payload_streaming",
+    "complete_board_shell",
+    "full_target_projection_execution",
+    "full_model_execution",
+    "board_level_signoff"
+  ],
+  "board_level_signoff": false,
+  "observed_axi_command_trace": {
+    "addr_hex": "0x120000",
+    "axi_arlen": 1,
+    "axi_arsize": 4,
+    "axi_arburst": 1,
+    "axi_arid_hex": "0x2",
+    "request_beat_count": 2,
+    "evidence_source": "parsed_from_iverilog_axi_transaction_ar_trace"
+  },
+  "axi_r_channel_accepted_beat_trace": {
+    "accepted_trace_hex": "0x3",
+    "rlast_trace_hex": "0x2",
+    "rid_ok": true,
+    "rresp_ok": true,
+    "rlast_ok": true,
+    "arlen_matches_r_beats": true,
+    "accepted_beat_count": 2,
+    "read_data_words_hex": [
+      "0x00112233445566778899aabbccddeeff",
+      "0x102132435465768798a9babbdcddfeff"
+    ],
+    "evidence_source": "parsed_from_iverilog_axi_transaction_r_trace_from_dut_outputs"
+  },
+  "payload_trace": {
+    "emitted_payload_words_hex": [
+      "0xccddeeff",
+      "0x8899aabb",
+      "0x44556677",
+      "0x00112233",
+      "0xdcddfeff",
+      "0x98a9babb",
+      "0x54657687",
+      "0x10213243"
+    ],
+    "payload_count": 8,
+    "payload_order_matches_golden": true,
+    "payload_stable_at_done": true,
+    "evidence_source": "parsed_from_iverilog_transaction_payload_trace"
+  },
+  "emitted_payload_words_hex": [
+    "0xccddeeff",
+    "0x8899aabb",
+    "0x44556677",
+    "0x00112233",
+    "0xdcddfeff",
+    "0x98a9babb",
+    "0x54657687",
+    "0x10213243"
+  ],
+  "transaction_backpressure_trace": {
+    "ar_ready_low_cycles": 2,
+    "ar_fields_stable_during_ready_low": true,
+    "rvalid_while_rready_low_cycles": 4,
+    "payload_ready_low_indices": [
+      0,
+      3,
+      4
+    ],
+    "payload_ready_low_events": 3,
+    "evidence_source": "parsed_from_iverilog_transaction_backpressure_trace"
+  },
+  "transaction_consistency": {
+    "rid_ok": true,
+    "rresp_ok": true,
+    "rlast_ok": true,
+    "arlen_matches_consumed_r_beats": true,
+    "payload_order_matches_golden": true,
+    "done_output_stability_ok": true,
+    "evidence_source": "parsed_from_iverilog_transaction_validation_trace"
+  },
+  "id_resp_last_validation": {
+    "rid_ok": true,
+    "rresp_ok": true,
+    "rlast_ok": true,
+    "evidence_source": "parsed_from_iverilog_transaction_validation_trace"
+  },
+  "dut_observed_r_metadata_validation": {
+    "accepted_trace_hex": "0x3",
+    "rlast_trace_hex": "0x2",
+    "rid_error_trace_hex": "0x0",
+    "rresp_error_trace_hex": "0x0",
+    "rlast_error_trace_hex": "0x0",
+    "status_hex": "0x8190",
+    "rid_ok": true,
+    "rresp_ok": true,
+    "rlast_ok": true,
+    "evidence_source": "parsed_from_dut_metadata_trace_outputs"
+  },
+  "negative_r_metadata_regression": {
+    "injected_bad_rid": true,
+    "injected_bad_rresp": true,
+    "injected_early_rlast": true,
+    "injected_missing_final_rlast": true,
+    "accepted_trace_hex": "0x3",
+    "rlast_trace_hex": "0x1",
+    "rid_error_trace_hex": "0x1",
+    "rresp_error_trace_hex": "0x1",
+    "rlast_error_trace_hex": "0x3",
+    "rid_ok": false,
+    "rresp_ok": false,
+    "rlast_ok": false,
+    "arlen_matches_consumed_r_beats": true,
+    "status_hex": "0x8f90",
+    "dut_recorded_expected_errors": true,
+    "evidence_source": "parsed_from_iverilog_negative_metadata_regression"
+  }
+}

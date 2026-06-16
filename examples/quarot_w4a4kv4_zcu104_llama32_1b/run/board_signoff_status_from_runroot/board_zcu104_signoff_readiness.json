@@ -1,0 +1,36 @@
+{
+  "artifact": "board_zcu104_signoff_readiness",
+  "coverage_level": "parent_gate_for_board_level_zcu104_signoff_claim",
+  "status": "blocked_by_full_llama_execution",
+  "collection_root": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run",
+  "model": {
+    "name": "meta-llama/Llama-3.2-1B",
+    "metadata_source": "huggingface_auto_config_local_cache",
+    "decoder_layers": 16,
+    "hidden_size": 2048,
+    "intermediate_size": 8192
+  },
+  "target": {
+    "board": "ZCU104",
+    "fpga_part": "xczu7ev-ffvc1156-2-e",
+    "quantization": "quarot_w4a4kv4_gptq_weights",
+    "design_style": "systolic_weight_stationary_llm_streaming",
+    "compute_style": "systolic_array",
+    "execution_style": "llm_decoder_streaming",
+    "memory_style": "external_ddr_streaming",
+    "control_style": "hierarchical_fsm"
+  },
+  "full_execution_status": "blocked_by_target_preflight",
+  "required_evidence_file": "examples/quarot_w4a4kv4_zcu104_llama32_1b/run/board_zcu104_signoff_evidence.json",
+  "board_signoff_evidence": null,
+  "evidence_failures": [
+    "board_zcu104_signoff_evidence.json not found",
+    "full_llama_execution_readiness must be passed before board signoff"
+  ],
+  "safe_to_clear_board_level_zcu104_signoff_blocker": false,
+  "next_action": "pass full_llama_execution_readiness before board signoff",
+  "does_not_claim": [
+    "real_time_LLaMA_inference_performance",
+    "hardware_lab_runtime_validation"
+  ]
+}

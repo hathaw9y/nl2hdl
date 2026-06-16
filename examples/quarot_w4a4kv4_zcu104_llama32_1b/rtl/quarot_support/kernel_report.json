@@ -1,0 +1,96 @@
+{
+  "module": "quarot_w4a4kv4_support",
+  "coverage_level": "bounded_quarot_support_fixture",
+  "implementation_stage": "simulation_and_lint_only_fixture",
+  "fixture_scope": {
+    "is_bounded_fixture": true,
+    "is_full_quarot_target_implementation": false,
+    "is_full_llama_target_implementation": false
+  },
+  "common_contract": {
+    "clock": "aclk",
+    "reset": "aresetn synchronous active-low",
+    "start": "start_i sampled while idle",
+    "done": "done_o remains high until start_i is deasserted",
+    "output_stability": "outputs are registered and held stable while done_o is high",
+    "packed_vector_order": "little-element: element idx is [idx*WIDTH +: WIDTH]"
+  },
+  "dimensions": {
+    "N": 4,
+    "input_vector_elements": 4,
+    "input_element_width_bits": 8,
+    "rotation_output_width_bits": 10,
+    "a4_width_bits": 4,
+    "kv4_width_bits": 4,
+    "kv_vectors_round_tripped": 2
+  },
+  "numeric_policy": {
+    "input": "signed int8 two's complement",
+    "rotation": "signed integer add/subtract, unnormalized H4 fixture rotation",
+    "quantization": "saturating clamp to signed A4 range [-8, 7]",
+    "a4_packing": "two's-complement nibble per element in little-element order",
+    "kv4_roundtrip": "unpack/repack nibble identity round trip; no dequantization"
+  },
+  "rotation_matrix": {
+    "source": "explicit bounded Hadamard-like H4 matrix inside RTL",
+    "normalized": false,
+    "matrix": [
+      [1, 1, 1, 1],
+      [1, -1, 1, -1],
+      [1, 1, -1, -1],
+      [1, -1, -1, 1]
+    ]
+  },
+  "simulation": {
+    "iverilog": {
+      "command": "iverilog -g2012 -Wall -o /tmp/tb_quarot_w4a4kv4_support.vvp examples/quarot_w4a4kv4_zcu104_llama32_1b/rtl/quarot_support/quarot_w4a4kv4_support.sv examples/quarot_w4a4kv4_zcu104_llama32_1b/rtl/quarot_support/tb_quarot_w4a4kv4_support.sv && vvp /tmp/tb_quarot_w4a4kv4_support.vvp",
+      "result": "pass",
+      "pass_text": "PASS tb_quarot_w4a4kv4_support"
+    },
+    "xsim": {
+      "command": "mkdir -p /tmp/quarot_w4a4kv4_support_xsim && cd /tmp/quarot_w4a4kv4_support_xsim && /tools/Xilinx/Vivado/2024.1/bin/xvlog -sv /home/iamjames77/Nlp2Verilog/examples/quarot_w4a4kv4_zcu104_llama32_1b/rtl/quarot_support/quarot_w4a4kv4_support.sv /home/iamjames77/Nlp2Verilog/examples/quarot_w4a4kv4_zcu104_llama32_1b/rtl/quarot_support/tb_quarot_w4a4kv4_support.sv && /tools/Xilinx/Vivado/2024.1/bin/xelab tb_quarot_w4a4kv4_support -s tb_quarot_w4a4kv4_support_sim && /tools/Xilinx/Vivado/2024.1/bin/xsim tb_quarot_w4a4kv4_support_sim -runall",
+      "tool_version": "Vivado Simulator v2024.1",
+      "result": "pass",
+      "pass_text": "PASS tb_quarot_w4a4kv4_support"
+    },
+    "overall_result": "pass"
+  },
+  "verilator": {
+    "version": "Verilator 4.038 2020-07-11 rev v4.036-114-g0cd4a57ad",
+    "dut_lint_command": "verilator --lint-only -Wall --top-module quarot_w4a4kv4_support examples/quarot_w4a4kv4_zcu104_llama32_1b/rtl/quarot_support/quarot_w4a4kv4_support.sv",
+    "dut_lint_result": "pass",
+    "testbench_timing_lint_result": "unavailable",
+    "testbench_timing_lint_unavailable_reason": "Installed Verilator 4.038 rejects --timing, so delay/event-control testbench lint with explicit timing policy was not available."
+  },
+  "vivado_timing_resource": {
+    "stage": "not_run",
+    "result": "skipped",
+    "reason": "Fixture-only support module; XSIM was run, but OOC Vivado synthesis/timing/resource signoff was not required for this bounded support artifact."
+  },
+  "testbench_coverage": {
+    "rotation_result_checked": true,
+    "a4_saturation_checked": true,
+    "a4_packing_checked": true,
+    "kv4_roundtrip_checked": true,
+    "done_hold_release_checked": true,
+    "output_stability_while_done_checked": true,
+    "reuse_after_release_checked": true
+  },
+  "pass_fail": "pass",
+  "forbidden_claims": [
+    "full QuaRot implementation",
+    "full LLaMA implementation",
+    "real checkpoint layout compatibility",
+    "GPTQ metadata compatibility",
+    "AXI or DDR integration",
+    "ZCU104 board timing closure",
+    "post-synthesis, post-place, or post-route timing pass",
+    "target-scale throughput or resource utilization"
+  ],
+  "does_not_claim": {
+    "real_gptq_checkpoint_layout_compatible": false,
+    "full_attention_or_kv_cache_behavior": false,
+    "board_shell_integration": false,
+    "vivado_timing_closed": false
+  }
+}
