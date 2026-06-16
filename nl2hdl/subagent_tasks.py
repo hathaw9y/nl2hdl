@@ -808,7 +808,7 @@ def _verification_prompt_for_wave(wave: dict[str, Any], dispatch_plan: dict[str,
     prompt = [
         f"# {prompt_title}: {wave['wave_id']}",
         "",
-        "You are the Codex verification agent for this dispatch wave. Audit only; do not edit source, RTL, tests, or contracts.",
+        "You are the Codex verification sub-agent for this dispatch wave. Audit only; do not edit source, RTL, tests, or contracts.",
         "",
         "## Target Context",
         "",
@@ -2263,6 +2263,14 @@ def build_target_evidence_execution_manifest(target_task: dict[str, Any]) -> dic
         entry = {
             "spawn_key": f"target_evidence::{task_id}",
             "spawn_kind": spawn_kind,
+            "agent_hierarchy_role": "subagent",
+            "subagent_type": (
+                "board_wrapper_implementation_subagent"
+                if spawn_kind == "target_evidence_implementation_agent"
+                else "target_evidence_subagent"
+            ),
+            "subagent_may_spawn_subagents": False,
+            "parent_feedback_channel": "feedback_packet.json",
             "agent": target_task.get("agent", "Codex"),
             "mode": target_task.get("mode", "read_write_target_evidence"),
             "task_id": task_id,
@@ -2316,9 +2324,11 @@ def build_target_evidence_execution_manifest(target_task: dict[str, Any]) -> dic
     return {
         "artifact": "target_evidence_execution_manifest",
         "coverage_level": "target_readiness_gap_to_codex_evidence_agent_spawn",
+        "agent_hierarchy": _parent_subagent_hierarchy(),
         "parent_agent_runtime_boundary": (
             "Package code emits target-evidence spawn instructions only; the interactive Codex parent "
-            "or an external runner must call the sub-agent and collect evidence."
+            "or an external runner must call the sub-agent, deliver feedback packets, "
+            "collect evidence, and decide retries."
         ),
         "spawn_entry_count": len(spawn_entries),
         "implementation_spawn_count": implementation_spawn_count,
@@ -2336,6 +2346,7 @@ def build_target_evidence_execution_manifest(target_task: dict[str, Any]) -> dic
         "does_not_claim": [
             "sub-agent execution occurred",
             "automatic sub-agent spawning inside package runtime",
+            "sub-agents spawned other sub-agents",
             "generated RTL completeness",
             "board-level ZCU104 signoff",
         ],
@@ -3047,10 +3058,29 @@ def _wave_status_by_id(wave_status: dict[str, Any]) -> dict[str, dict[str, Any]]
     }
 
 
+def _parent_subagent_hierarchy() -> dict[str, Any]:
+    return {
+        "parent_agent": "single_orchestrator",
+        "all_non_parent_workers_are_subagents": True,
+        "subagents_may_spawn_subagents": False,
+        "parent_owns_feedback_loop": True,
+        "parent_feedback_artifacts": [
+            "parent_loop_state.json",
+            "feedback_packet.json",
+            "retry_plan.json",
+        ],
+        "subagent_result_returns_to": "parent_agent",
+    }
+
+
 def _execution_entry_for_task(wave: dict[str, Any], task: dict[str, Any]) -> dict[str, Any]:
     entry = {
         "spawn_key": f"{wave['wave_id']}::implementation::{task['task_id']}",
         "spawn_kind": "implementation_agent",
+        "agent_hierarchy_role": "subagent",
+        "subagent_type": "hdl_implementation_subagent",
+        "subagent_may_spawn_subagents": False,
+        "parent_feedback_channel": "feedback_packet.json",
         "agent": "Codex",
         "mode": "read_write_hdl_packet",
         "wave_id": wave["wave_id"],
@@ -3099,6 +3129,10 @@ def _execution_entry_for_verification(wave: dict[str, Any]) -> dict[str, Any]:
     entry = {
         "spawn_key": f"{wave['wave_id']}::verification::{wave['wave_id']}",
         "spawn_kind": "verification_agent",
+        "agent_hierarchy_role": "subagent",
+        "subagent_type": "verification_subagent",
+        "subagent_may_spawn_subagents": False,
+        "parent_feedback_channel": "feedback_packet.json",
         "agent": "Codex",
         "mode": wave["verification_agent"].get("mode", "read_only"),
         "wave_id": wave["wave_id"],
@@ -3113,7 +3147,7 @@ def _execution_entry_for_verification(wave: dict[str, Any]) -> dict[str, Any]:
         "runs_integration_synthesis": runs_integration_synthesis,
         "blocking_findings": ["P0", "P1", "P2"],
         "codex_spawn_message": (
-            "You are the Codex verification agent for this wave. "
+            "You are the Codex verification sub-agent for this wave. "
             f"Read this execution manifest's sibling prompt file `{wave['verification_agent']['prompt_file']}`, "
             "do not edit source/RTL/test files, audit the collected implementation evidence, "
             "run or inspect integration synthesis when the prompt requires it, and write "
@@ -3295,6 +3329,10 @@ def build_hdl_subagent_spawn_ledger(
             "agent_id": agent_id,
             "agent_nickname": prior.get("agent_nickname"),
             "spawn_kind": entry.get("spawn_kind"),
+            "agent_hierarchy_role": entry.get("agent_hierarchy_role", "subagent"),
+            "subagent_type": entry.get("subagent_type"),
+            "subagent_may_spawn_subagents": entry.get("subagent_may_spawn_subagents", False),
+            "parent_feedback_channel": entry.get("parent_feedback_channel", "feedback_packet.json"),
             "wave_id": entry.get("wave_id"),
             "task_id": entry.get("task_id"),
             "label": label,
@@ -3324,6 +3362,7 @@ def build_hdl_subagent_spawn_ledger(
     return {
         "artifact": "hdl_subagent_spawn_ledger",
         "coverage_level": "execution_manifest_to_external_codex_agent_tracking",
+        "agent_hierarchy": _parent_subagent_hierarchy(),
         "spawn_entry_count": len(records),
         "status_counts": status_counts,
         "parallel_spawn_allowed": execution_manifest.get("parallel_spawn_allowed", False),
@@ -3333,6 +3372,7 @@ def build_hdl_subagent_spawn_ledger(
         "does_not_claim": [
             "package code spawned Codex agents",
             "sub-agent execution completed",
+            "sub-agents spawned other sub-agents",
             "generated RTL completeness",
             "full LLaMA execution",
             "board-level ZCU104 signoff",
@@ -3503,13 +3543,15 @@ def build_hdl_subagent_execution_manifest(
     return {
         "artifact": "hdl_subagent_execution_manifest",
         "coverage_level": "dispatch_wave_status_to_codex_spawn_instructions",
+        "agent_hierarchy": _parent_subagent_hierarchy(),
         "model": dispatch_plan.get("model", {}),
         "hardware": dispatch_plan.get("hardware", {}),
         "optimization": dispatch_plan.get("optimization", {}),
         "dispatch_policy": dispatch_plan.get("dispatch_policy", {}),
         "parent_agent_runtime_boundary": (
             "Package code emits spawn instructions only; the interactive Codex parent "
-            "or an external runner must call sub-agents and collect evidence."
+            "or an external runner must call sub-agents, deliver feedback packets, "
+            "collect evidence, update Skills on reusable failures, and decide retries."
         ),
         "spawn_entry_count": len(spawn_entries),
         "implementation_spawn_count": len(implementation_entries),
@@ -3528,11 +3570,219 @@ def build_hdl_subagent_execution_manifest(
         "does_not_claim": [
             "sub-agent execution occurred",
             "automatic sub-agent spawning inside package runtime",
+            "sub-agents spawned other sub-agents",
             "generated RTL completeness",
             "full LLaMA execution",
             "board-level ZCU104 signoff",
         ],
     }
+
+
+def _parent_loop_status(execution_manifest: dict[str, Any]) -> str:
+    if execution_manifest.get("skill_update_required"):
+        return "waiting_for_parent_skill_update_before_retry"
+    if execution_manifest.get("missing_skill_update_candidate"):
+        return "waiting_for_subagent_failure_detail"
+    if execution_manifest.get("spawn_entry_count", 0) > 0:
+        return "ready_to_spawn_subagents"
+    if execution_manifest.get("blocked_waves"):
+        return "blocked_waiting_for_parent_action"
+    return "idle_or_waiting_for_target_evidence"
+
+
+def _feedback_entry_for_spawn(entry: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "feedback_kind": "spawn_or_retry_instruction",
+        "spawn_key": entry.get("spawn_key"),
+        "spawn_kind": entry.get("spawn_kind"),
+        "subagent_type": entry.get("subagent_type"),
+        "wave_id": entry.get("wave_id"),
+        "task_id": entry.get("task_id"),
+        "prompt_file": entry.get("prompt_file"),
+        "expected_evidence_dir": entry.get("expected_evidence_dir"),
+        "expected_evidence_file": entry.get("expected_evidence_file"),
+        "expected_subagent_result": entry.get("expected_subagent_result"),
+        "parent_feedback": {
+            "subagent_may_spawn_subagents": False,
+            "return_result_to_parent": True,
+            "write_required_evidence_before_claiming_success": True,
+            "on_failure_return_skill_update_candidate": entry.get("failure_to_skill_required", True),
+        },
+    }
+
+
+def _feedback_entry_for_blocked_wave(wave: dict[str, Any]) -> dict[str, Any]:
+    next_action = wave.get("next_action")
+    return {
+        "feedback_kind": "blocked_wave_feedback",
+        "wave_id": wave.get("wave_id"),
+        "status": wave.get("status"),
+        "reason": wave.get("reason"),
+        "next_action": next_action,
+        "depends_on_waves": wave.get("depends_on_waves", []),
+        "verification": wave.get("verification"),
+        "task_status_counts": wave.get("task_status_counts", {}),
+        "parent_feedback": {
+            "parent_decides_retry": True,
+            "subagent_may_spawn_subagents": False,
+            "skill_update_required_before_retry": next_action
+            == "run_subagents_skill_draft_and_update_skill_before_retry",
+            "collect_complete_failure_detail": next_action
+            == "collect_complete_skill_update_candidate_before_retry",
+        },
+    }
+
+
+def build_parent_feedback_loop_state(
+    dispatch_plan: dict[str, Any],
+    wave_status: dict[str, Any],
+    execution_manifest: dict[str, Any],
+) -> dict[str, Any]:
+    """Build parent-owned feedback and retry artifacts for the sub-agent loop."""
+    feedback_entries = [
+        _feedback_entry_for_spawn(entry)
+        for entry in execution_manifest.get("spawn_entries", [])
+        if isinstance(entry, dict)
+    ]
+    feedback_entries.extend(
+        _feedback_entry_for_blocked_wave(wave)
+        for wave in execution_manifest.get("blocked_waves", [])
+        if isinstance(wave, dict)
+    )
+    retry_entries = [
+        {
+            "wave_id": wave.get("wave_id"),
+            "status": wave.get("status"),
+            "retry_gate": wave.get("next_action"),
+            "retry_allowed_now": wave.get("next_action")
+            not in {
+                "run_subagents_skill_draft_and_update_skill_before_retry",
+                "collect_complete_skill_update_candidate_before_retry",
+                "collect_complete_subagent_result_before_verification",
+                "wait_for_dependency",
+            },
+            "parent_action_required": wave.get("next_action"),
+            "reason": wave.get("reason"),
+        }
+        for wave in execution_manifest.get("blocked_waves", [])
+        if isinstance(wave, dict)
+    ]
+    retry_entries.extend(
+        {
+            "batch_id": batch.get("batch_id"),
+            "wave_id": batch.get("wave_id"),
+            "status": "ready_to_spawn",
+            "retry_gate": "spawn_subagents_from_parent",
+            "retry_allowed_now": True,
+            "parent_action_required": "spawn_subagents_and_record_ledger",
+            "task_ids": batch.get("task_ids", []),
+        }
+        for batch in execution_manifest.get("spawn_batches", [])
+        if isinstance(batch, dict)
+    )
+    loop_status = _parent_loop_status(execution_manifest)
+    hierarchy = _parent_subagent_hierarchy()
+    feedback_packet = {
+        "artifact": "feedback_packet",
+        "coverage_level": "parent_to_subagent_feedback",
+        "agent_hierarchy": hierarchy,
+        "status": loop_status,
+        "entry_count": len(feedback_entries),
+        "entries": feedback_entries,
+        "does_not_claim": [
+            "sub-agent execution occurred",
+            "sub-agents spawned other sub-agents",
+            "retry completed",
+            "generated RTL completeness",
+        ],
+    }
+    retry_plan = {
+        "artifact": "retry_plan",
+        "coverage_level": "parent_owned_retry_decision_plan",
+        "agent_hierarchy": hierarchy,
+        "status": loop_status,
+        "retry_entry_count": len(retry_entries),
+        "entries": retry_entries,
+        "does_not_claim": [
+            "retry was executed",
+            "Skill files were updated automatically",
+            "failed HDL gate is fixed",
+        ],
+    }
+    parent_loop_state = {
+        "artifact": "parent_loop_state",
+        "coverage_level": "single_parent_feedback_retry_loop",
+        "status": loop_status,
+        "agent_hierarchy": hierarchy,
+        "model": dispatch_plan.get("model", {}),
+        "hardware": dispatch_plan.get("hardware", {}),
+        "optimization": dispatch_plan.get("optimization", {}),
+        "wave_status_summary": {
+            "wave_count": wave_status.get("wave_count"),
+            "next_dispatchable_waves": wave_status.get("next_dispatchable_waves", []),
+            "passed_wave_count": sum(
+                1 for wave in wave_status.get("waves", []) if wave.get("status") == "passed"
+            ),
+        },
+        "execution_summary": {
+            "spawn_entry_count": execution_manifest.get("spawn_entry_count", 0),
+            "spawn_batch_count": execution_manifest.get("spawn_batch_count", 0),
+            "implementation_spawn_count": execution_manifest.get("implementation_spawn_count", 0),
+            "verification_spawn_count": execution_manifest.get("verification_spawn_count", 0),
+            "skill_update_required": execution_manifest.get("skill_update_required", False),
+            "missing_skill_update_candidate": execution_manifest.get("missing_skill_update_candidate", False),
+        },
+        "feedback_packet": "feedback_packet.json",
+        "retry_plan": "retry_plan.json",
+        "next_parent_action": (
+            "update_skill_then_retry"
+            if execution_manifest.get("skill_update_required")
+            else "collect_complete_skill_update_candidate"
+            if execution_manifest.get("missing_skill_update_candidate")
+            else "spawn_ready_subagents"
+            if execution_manifest.get("spawn_entry_count", 0) > 0
+            else "refresh_status_after_new_evidence_or_target_gate"
+        ),
+        "does_not_claim": [
+            "package code spawned Codex agents",
+            "sub-agent execution completed",
+            "full LLaMA execution",
+            "board-level ZCU104 signoff",
+        ],
+    }
+    return {
+        "artifact": "parent_feedback_loop_artifacts",
+        "parent_loop_state": parent_loop_state,
+        "feedback_packet": feedback_packet,
+        "retry_plan": retry_plan,
+    }
+
+
+def write_parent_feedback_loop_state(
+    dispatch_plan: dict[str, Any],
+    wave_status: dict[str, Any],
+    execution_manifest: dict[str, Any],
+    out_dir: Path,
+) -> dict[str, Path]:
+    artifacts = build_parent_feedback_loop_state(dispatch_plan, wave_status, execution_manifest)
+    paths = {
+        "parent_loop_state": out_dir / "parent_loop_state.json",
+        "feedback_packet": out_dir / "feedback_packet.json",
+        "retry_plan": out_dir / "retry_plan.json",
+    }
+    paths["parent_loop_state"].write_text(
+        json.dumps(artifacts["parent_loop_state"], indent=2),
+        encoding="utf-8",
+    )
+    paths["feedback_packet"].write_text(
+        json.dumps(artifacts["feedback_packet"], indent=2),
+        encoding="utf-8",
+    )
+    paths["retry_plan"].write_text(
+        json.dumps(artifacts["retry_plan"], indent=2),
+        encoding="utf-8",
+    )
+    return paths
 
 
 def build_codex_spawn_instructions(execution_manifest: dict[str, Any]) -> str:
@@ -3541,12 +3791,15 @@ def build_codex_spawn_instructions(execution_manifest: dict[str, Any]) -> str:
         "",
         "This file is a runner-facing view of `hdl_subagent_execution_manifest.json`.",
         "Package code does not spawn agents; the interactive Codex parent or an external runner uses these entries.",
+        "The Parent Agent is the only orchestrator: every non-parent worker is a Sub-agent, and Sub-agents return evidence to the Parent instead of spawning other agents.",
         "",
         f"- Spawn entries: `{execution_manifest.get('spawn_entry_count', 0)}`",
         f"- Implementation agents: `{execution_manifest.get('implementation_spawn_count', 0)}`",
         f"- Verification agents: `{execution_manifest.get('verification_spawn_count', 0)}`",
         f"- Parallel spawn allowed: `{execution_manifest.get('parallel_spawn_allowed', False)}`",
         f"- Max parallel batch size: `{execution_manifest.get('max_parallel_batch_size', 0)}`",
+        "- Parent feedback packet: `feedback_packet.json`",
+        "- Parent retry plan: `retry_plan.json`",
         "",
     ]
     batches = execution_manifest.get("spawn_batches", [])
@@ -3583,6 +3836,9 @@ def build_codex_spawn_instructions(execution_manifest: dict[str, Any]) -> str:
                         f"### `{label}`",
                         "",
                         f"- Agent: `{entry.get('agent', 'Codex')}`",
+                        f"- Hierarchy role: `{entry.get('agent_hierarchy_role', 'subagent')}`",
+                        f"- Sub-agent type: `{entry.get('subagent_type', 'unknown')}`",
+                        f"- May spawn sub-agents: `{entry.get('subagent_may_spawn_subagents', False)}`",
                         f"- Mode: `{entry.get('mode', 'unknown')}`",
                         f"- Prompt file: `{entry.get('prompt_file', 'unknown')}`",
                         f"- Fork context: `{entry.get('fork_context', False)}`",
@@ -3678,6 +3934,7 @@ def write_hdl_subagent_execution_manifest(
         encoding="utf-8",
     )
     write_codex_spawn_instructions(execution_manifest, out_dir)
+    write_parent_feedback_loop_state(dispatch_plan, wave_status, execution_manifest, out_dir)
     return path
 
 

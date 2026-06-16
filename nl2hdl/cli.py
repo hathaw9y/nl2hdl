@@ -9,6 +9,7 @@ from dataclasses import replace
 from .agent import run_agent
 from .config import AgentConfig, load_config, validate_config
 from .llm_agent import run_llm_agent
+from .llm_kernels import run_zcu104_board_wrapper_axi_bridge_agent
 from .llm_plan import write_llm_accelerator_plan
 from .subagent_tasks import (
     build_board_zcu104_signoff_evidence_agent_task,
@@ -26,6 +27,7 @@ from .subagent_tasks import (
     write_codex_spawn_instructions,
     write_hdl_subagent_skill_update_draft,
     write_hdl_subagent_spawn_ledger,
+    write_parent_feedback_loop_state,
 )
 
 
@@ -204,6 +206,26 @@ def build_parser() -> argparse.ArgumentParser:
         default=[],
         help="Record a spawned agent id as spawn_key=agent_id. Repeat for multiple sub-agents.",
     )
+    board_wrapper = subagent_subparsers.add_parser(
+        "board-wrapper",
+        help="Run the bounded ZCU104 Board Wrapper Agent implementation attempt",
+    )
+    board_wrapper.add_argument("--spec", required=True, help="YAML/JSON hardware and verification spec")
+    board_wrapper.add_argument("--out", required=True, help="board_zcu104_signoff_gate output directory")
+    board_wrapper.add_argument(
+        "--fixture-report",
+        help="Optional strongest bounded fixture kernel_report.json used to reject fixture-only signoff claims",
+    )
+    board_wrapper.add_argument(
+        "--skip-vivado-route",
+        action="store_true",
+        help="Generate package and reports but do not run Vivado route/check",
+    )
+    board_wrapper.add_argument(
+        "--vivado-executable",
+        default="vivado",
+        help="Vivado executable name/path to use for version and route/check commands",
+    )
     return parser
 
 
@@ -271,6 +293,12 @@ def _run_subagent_status(args: argparse.Namespace) -> int:
     board_wrapper_execution_manifest = build_target_evidence_execution_manifest(board_wrapper_agent_task)
     wave_status_path = out_dir / "hdl_subagent_wave_status.json"
     execution_manifest_path = out_dir / "hdl_subagent_execution_manifest.json"
+    parent_loop_paths = write_parent_feedback_loop_state(
+        dispatch_plan,
+        wave_status,
+        execution_manifest,
+        out_dir,
+    )
     model_harness_execution_manifest_path = out_dir / "model_level_execution_harness_manifest.json"
     model_harness_spawn_instructions_path = out_dir / "model_level_execution_harness_spawn_instructions.md"
     target_evidence_execution_manifest_path = out_dir / "target_evidence_execution_manifest.json"
@@ -372,6 +400,9 @@ def _run_subagent_status(args: argparse.Namespace) -> int:
                 "skill_update_required": execution_manifest["skill_update_required"],
                 "missing_skill_update_candidate": execution_manifest["missing_skill_update_candidate"],
                 "blocked_waves": execution_manifest["blocked_waves"],
+                "parent_loop_state": str(parent_loop_paths["parent_loop_state"]),
+                "feedback_packet": str(parent_loop_paths["feedback_packet"]),
+                "retry_plan": str(parent_loop_paths["retry_plan"]),
                 "full_llama_execution_readiness": str(full_execution_readiness_path),
                 "full_llama_execution_readiness_status": full_execution_readiness["status"],
                 "safe_to_clear_full_llama_model_execution_blocker": full_execution_readiness[
@@ -477,6 +508,32 @@ def _run_subagent_ledger(args: argparse.Namespace) -> int:
     return 0
 
 
+def _run_subagent_board_wrapper(args: argparse.Namespace) -> int:
+    config = load_config(args.spec)
+    report = run_zcu104_board_wrapper_axi_bridge_agent(
+        config,
+        Path(args.out),
+        fixture_report_path=Path(args.fixture_report) if args.fixture_report else None,
+        run_vivado=not args.skip_vivado_route,
+        vivado_executable=args.vivado_executable,
+    )
+    print(
+        json.dumps(
+            {
+                "status": report["status"],
+                "out": str(Path(args.out)),
+                "implementation_report": report["evidence_files"]["implementation_report"],
+                "subagent_result": report["evidence_files"]["subagent_result"],
+                "route_completed": report["route_completed"],
+                "vivado_available": report["vivado_available"],
+                "final_board_signoff_still_blocked": report["final_board_signoff_still_blocked"],
+            },
+            indent=2,
+        )
+    )
+    return 0 if report["status"] == "passed" else 1
+
+
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
@@ -487,6 +544,8 @@ def main(argv: list[str] | None = None) -> int:
                 return _run_subagent_skill_draft(args)
             if args.subagent_command == "ledger":
                 return _run_subagent_ledger(args)
+            if args.subagent_command == "board-wrapper":
+                return _run_subagent_board_wrapper(args)
             raise ValueError(f"unsupported subagents command: {args.subagent_command}")
         config = load_config(args.spec)
         config = _apply_cli_overrides(config, args)

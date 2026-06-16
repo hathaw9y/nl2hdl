@@ -195,19 +195,19 @@ flowchart TD
     A["User target<br/>model + hardware + quantization + design"] --> B["Parent Codex agent"]
     B --> C["Inspect / planning artifacts"]
     C --> D["HDL sub-agent dispatch plan"]
-    D --> E["Module implementation agents"]
+    D --> E["Module implementation sub-agents"]
     E --> F["Module OOC synthesis<br/>resource tuning"]
-    F --> G["Read-only verification agents"]
-    G --> H["Decoder block integration agent"]
+    F --> G["Read-only verification sub-agents"]
+    G --> H["Decoder block integration sub-agent"]
     H --> I["Integration verification<br/>simulation + synthesis"]
-    I --> J["Layer FSM agent"]
+    I --> J["Layer FSM sub-agent"]
     J --> K["Integration verification<br/>simulation + synthesis"]
-    K --> L["Top FSM / token-loop agent"]
+    K --> L["Top FSM / token-loop sub-agent"]
     L --> M["Integration verification<br/>simulation + synthesis"]
-    M --> N["Board wrapper / PS-PL-DDR agent"]
+    M --> N["Board wrapper / PS-PL-DDR sub-agent"]
     N --> O["Vivado timing/resource/DRC evidence"]
-    O --> P["Target evidence agents"]
-    P --> Q["Readiness JSON + spawn ledger"]
+    O --> P["Target evidence sub-agents"]
+    P --> Q["Readiness JSON + feedback loop state"]
 ```
 
 ## Agent Roles
@@ -221,6 +221,7 @@ The parent agent owns:
 - prompt packets;
 - dispatch ordering;
 - read-only verification gates;
+- feedback packets and retry plans;
 - evidence collection;
 - ledger reconciliation;
 - Skill updates after reusable failures.
@@ -228,6 +229,10 @@ The parent agent owns:
 The parent agent must not hand-write HDL kernels, Layer FSM RTL, Top FSM RTL, or
 board-wrapper RTL. It may edit orchestration, tests, prompts, documentation, and
 Skill files when needed.
+
+The parent is the only orchestrator. Every non-parent worker is a Sub-agent and
+must return evidence to the parent instead of spawning or retrying other
+Sub-agents directly.
 
 Primary skills: `multi-agent-hdl-generation` and
 `parent-module-decomposition`.
@@ -251,7 +256,7 @@ Primary skills: `hdl-module-implementation`,
 
 ### Verification Sub-Agents
 
-Verification agents are read-only by default. They audit:
+Verification Sub-agents are read-only by default. They audit:
 
 - requirement coverage;
 - simulation evidence;
@@ -260,7 +265,7 @@ Verification agents are read-only by default. They audit:
 - missing tests;
 - unsafe or overbroad claims.
 
-Integration verification agents are the one evidence-producing exception: they
+Integration verification Sub-agents are the one evidence-producing exception: they
 still must not edit source, RTL, tests, contracts, or child module
 implementations, but they may run Vivado for the composed integration top and
 write generated synthesis evidence. This integration-level synthesis is
@@ -272,9 +277,9 @@ Primary skills: module verification uses `hdl-module-verification`; integration
 verification uses `hdl-integration-verification`,
 `fpga-vivado-systemverilog`, and `hdl-vivado-timing-closure`.
 
-### Target Evidence Agents
+### Target Evidence Sub-Agents
 
-Target evidence agents do not write HDL. They inspect existing artifacts and
+Target evidence Sub-agents do not write HDL. They inspect existing artifacts and
 write final evidence JSON only when all required proof exists. If proof is
 missing, they write a gap report and a `skill_update_candidate`.
 
@@ -287,6 +292,9 @@ Inspect/planning mode emits parent-owned task artifacts such as:
 - `hdl_subagent_dispatch_plan.json`
 - `hdl_subagent_wave_status.json`
 - `hdl_subagent_execution_manifest.json`
+- `parent_loop_state.json`
+- `feedback_packet.json`
+- `retry_plan.json`
 - `subagent_prompts/*.md`
 - `verification_prompts/*.md`
 - `target_blocker_remediation_plan.json`

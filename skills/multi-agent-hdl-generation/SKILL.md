@@ -12,9 +12,14 @@ role behavior in the role-specific skills listed below.
 
 - The parent agent coordinates; it must not hand-write HDL kernels,
   integration FSM RTL, or board-wrapper RTL.
+- The parent is the only orchestrator. Every non-parent worker is a Sub-agent,
+  including HDL implementation, verification, integration, board-wrapper,
+  model-signoff, and board-signoff workers.
+- Sub-agents must not spawn or directly route work to other sub-agents. They
+  return evidence, failures, and retry suggestions to the parent only.
 - The parent owns input interpretation, module packet definitions, prompt
-  packets, dispatch order, evidence collection, retry routing, and Skill
-  updates after reusable failures.
+  packets, dispatch order, feedback packets, evidence collection, retry
+  routing, and Skill updates after reusable failures.
 - HDL, integration, board-wrapper, and verification work is delegated to
   sub-agents with narrow scopes and explicit evidence requirements.
 - A dependent wave cannot start until its implementation evidence and required
@@ -61,15 +66,38 @@ Load the smallest role-specific skill that matches the current agent:
 4. HDL module sub-agents implement and self-verify independent packets.
 5. Real datapath modules pass module-level OOC synthesis and tuning before
    integration.
-6. Module verification agents audit each module wave.
-7. Integration agents compose only verified/tuned children.
-8. Integration verification agents audit the integration wave and run or
+6. Module verification sub-agents audit each module wave.
+7. Integration sub-agents compose only verified/tuned children.
+8. Integration verification sub-agents audit the integration wave and run or
    inspect integration-level Vivado synthesis.
-9. Board wrapper and signoff agents add the target hardware wrapper,
+9. Board wrapper and signoff sub-agents add the target hardware wrapper,
    interconnect, external-memory, clock/reset, constraint, and routed evidence
    only after model-level integration evidence is sufficient.
 10. If a sub-agent fails and the lesson is reusable, preserve evidence and
     update the relevant skill before retrying.
+
+## Parent Feedback Loop
+
+The framework is parent-centered:
+
+1. User input enters the parent once.
+2. The parent creates module packets and dispatch waves.
+3. The parent emits `feedback_packet.json` for ready or failed sub-agents.
+4. Sub-agents implement, verify, synthesize, or audit within their assigned
+   scope and return `subagent_result.json` or the required target evidence.
+5. The parent refreshes `parent_loop_state.json` and `retry_plan.json`.
+6. On reusable failure, the parent updates the relevant Skill, syncs runtime
+   skills, and then retries the responsible sub-agent.
+7. On pass, the parent advances to the next sub-agent wave.
+
+Required parent-owned loop artifacts:
+
+- `parent_loop_state.json`: global status and next parent action.
+- `feedback_packet.json`: scoped feedback sent to ready or failed sub-agents.
+- `retry_plan.json`: retry gates, blocked waves, and parent action required
+  before another sub-agent attempt.
+- `hdl_subagent_spawn_ledger.json`: external sub-agent id and evidence
+  bookkeeping.
 
 ## Evidence Identity
 

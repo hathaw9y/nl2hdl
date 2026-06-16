@@ -44,10 +44,18 @@ device capacity for a full-board target or be smaller for per-module budgets.
 For a 200 MHz ZCU104 target, require an implemented clock period <= `5.000 ns`.
 Do not accept a PS PL clock resolved to `5.625 ns / 177.778 MHz` as 200 MHz
 board signoff, even if WNS/WHS/WPWS are positive.
+Do not accept a PS PL clock resolved to `5.333 ns / 187.512 MHz` either; this
+is a known Board Wrapper Agent failure pattern where the BD requested 200 MHz
+but the implemented `clk_pl_0` was slower in `report_clocks` and implemented
+XDC.
 
 Evidence-only agents must compare the configured target clock against raw
 `report_clocks`, `report_timing_summary`, and implemented XDC/BD clock data.
 Positive timing slack at the wrong clock frequency is partial evidence only.
+Board-wrapper implementation agents must not trust
+`CONFIG.PSU__CRL_APB__PL0_REF_CTRL__FREQMHZ`, `ACT_FREQMHZ`, divisor settings,
+or pre-route BD properties alone. The post-route clock report and implemented
+XDC are the source of truth for the gate.
 
 ## PS/PL/DDR Board Wrapper Rules
 
@@ -88,6 +96,12 @@ If the board wrapper misses the target clock or routes the wrong clock:
 - route retry to a board-wrapper implementation agent, not an evidence-only
   signoff agent;
 - require post-route clock period <= `5.000 ns` for a 200 MHz target;
+- when `report_clocks` shows `clk_pl_0` at `5.333 ns / 187.512 MHz`, treat the
+  implementation as failed even if route completed, timing slack is positive,
+  DRC passes, and utilization is within budget;
+- retry the Zynq UltraScale+ PS PL clocking setup and board-automation order,
+  then prove the fix from generated routed reports rather than from requested
+  BD properties;
 - preserve PS/PL/DDR hierarchy evidence;
 - keep setup, hold, pulse-width, DRC, methodology, and resource gates active;
 - return a `skill_update_candidate` when the failure pattern is reusable.

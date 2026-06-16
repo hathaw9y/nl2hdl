@@ -31447,6 +31447,558 @@ def build_zcu104_board_shell_constraints_package(
     return report
 
 
+def run_zcu104_board_wrapper_axi_bridge_agent(
+    config: AgentConfig,
+    out_dir: Path,
+    *,
+    fixture_report_path: Path | None = None,
+    run_vivado: bool = True,
+    vivado_executable: str = "vivado",
+) -> dict[str, Any]:
+    """Run the bounded Board Wrapper Agent implementation attempt.
+
+    This produces implementation evidence for the board-wrapper stage only.
+    It intentionally does not write board_zcu104_signoff_evidence.json; the
+    later evidence-only signoff agent owns that file.
+    """
+    out_dir.mkdir(parents=True, exist_ok=True)
+    pre_signoff_report = build_zcu104_board_shell_constraints_package(
+        config,
+        out_dir,
+        fixture_report_path=fixture_report_path,
+    )
+    implementation_report_path = out_dir / "zcu104_board_wrapper_axi_bridge_implementation_report.json"
+    subagent_result_path = out_dir / "zcu104_board_wrapper_axi_bridge_subagent_result.json"
+    route_tcl_path = out_dir / "zcu104_board_route_check.tcl"
+    signoff_evidence_path = out_dir / "board_zcu104_signoff_evidence.json"
+
+    commands: list[dict[str, Any]] = []
+    vivado_timeout = max(60, int(config.verification.vivado_timeout_sec))
+    version_result = _run_logged_command(
+        [vivado_executable, "-version"],
+        cwd=out_dir,
+        timeout_sec=60,
+        stdout_path=out_dir / "vivado_version.stdout.log",
+        stderr_path=out_dir / "vivado_version.stderr.log",
+    )
+    commands.append(version_result)
+
+    vivado_available = version_result["returncode"] == 0
+    route_result: dict[str, Any] | None = None
+    if vivado_available and run_vivado:
+        route_result = _run_logged_command(
+            [vivado_executable, "-mode", "batch", "-source", route_tcl_path.name],
+            cwd=out_dir,
+            timeout_sec=vivado_timeout,
+            stdout_path=out_dir / "zcu104_board_route_check.stdout.log",
+            stderr_path=out_dir / "zcu104_board_route_check.stderr.log",
+        )
+        commands.append(route_result)
+
+    static_evidence = _zcu104_board_wrapper_static_evidence(out_dir)
+    route_analysis = _analyze_zcu104_board_route_reports(config, out_dir) if route_result else {}
+    route_reports_present = bool(
+        route_analysis
+        and route_analysis.get("reports_present", {}).get("timing_summary")
+        and route_analysis.get("reports_present", {}).get("utilization")
+        and route_analysis.get("reports_present", {}).get("drc")
+        and route_analysis.get("reports_present", {}).get("clocks")
+        and route_analysis.get("reports_present", {}).get("implemented_constraints")
+    )
+    route_completed = bool(route_result and (route_result.get("returncode") == 0 or route_reports_present))
+    route_check_command_passed = bool(route_result and route_result.get("returncode") == 0)
+
+    status = "passed"
+    failures: list[str] = []
+    if signoff_evidence_path.exists():
+        failures.append("board_zcu104_signoff_evidence.json exists; Board Wrapper Agent must not write signoff evidence")
+    if not vivado_available:
+        status = "blocked_by_missing_vivado"
+        failures.append("vivado -version failed or Vivado executable was unavailable")
+    elif not run_vivado:
+        status = "blocked_by_vivado_route_not_run"
+        failures.append("Vivado route/check was explicitly skipped")
+    elif route_result and route_result.get("returncode") != 0 and not route_completed:
+        status = "failed_vivado_route_check"
+        failures.append("vivado route/check command returned non-zero")
+    else:
+        gate_failures = list(route_analysis.get("gate_failures", []))
+        failures.extend(gate_failures)
+        if gate_failures:
+            status = "failed_board_wrapper_gates"
+        if route_result and route_result.get("returncode") != 0:
+            failures.append("vivado route/check command returned non-zero after routed report generation")
+            if status == "passed":
+                status = "failed_vivado_route_check"
+
+    if status == "passed":
+        required_static = [
+            "routed_top_instantiates_generated_bd_wrapper",
+            "ps_fclk_reset_drive_accelerator",
+            "ps_axi_reaches_control_registers",
+            "ddr_address_map_declared",
+        ]
+        for key in required_static:
+            if not static_evidence.get(key):
+                failures.append(f"static board-wrapper evidence missing: {key}")
+        if failures:
+            status = "failed_board_wrapper_gates"
+
+    skill_update_candidate = None
+    if status != "passed":
+        failing_command = (
+            " ".join(route_result["command"])
+            if route_result is not None
+            else " ".join(version_result["command"])
+        )
+        symptom = "; ".join(failures) if failures else f"Board wrapper implementation status {status}"
+        skill_update_candidate = {
+            "failing_command": failing_command,
+            "symptom": symptom,
+            "root_cause_hypothesis": (
+                "Board-wrapper implementation could not produce a routed PS/PL/DDR evidence bundle "
+                "for ZCU104 in the current environment or failed one of the route/timing/DRC gates."
+            ),
+            "prevention_rule": (
+                "Board Wrapper Agent must preserve Vivado command logs and report blocked/failed status "
+                "instead of writing board_zcu104_signoff_evidence.json when Vivado route, PS/PL/DDR hierarchy, "
+                "target clock, timing, DRC, or utilization evidence is incomplete."
+            ),
+            "minimal_regression_check": (
+                "Run the board-wrapper agent with Vivado unavailable and assert the implementation report is "
+                "blocked_by_missing_vivado; with fake routed reports, assert status passes only when top, "
+                "clock, timing, DRC, PS AXI, DDR/address map, and utilization gates all pass."
+            ),
+        }
+
+    report = {
+        "artifact": "zcu104_board_wrapper_axi_bridge_implementation_report",
+        "status": status,
+        "board": "AMD ZCU104",
+        "fpga_part": config.hardware.fpga_part,
+        "target_clock_mhz": config.hardware.target_clock_mhz,
+        "target_clock_period_ns": round(1000.0 / config.hardware.target_clock_mhz, 3),
+        "resource_budgets": {
+            "lut": config.hardware.max_lut,
+            "ff": config.hardware.max_ff,
+            "dsp": config.hardware.max_dsp,
+            "bram": config.hardware.max_bram,
+            "uram": config.hardware.max_uram,
+        },
+        "pre_signoff_report": str(out_dir / "zcu104_board_shell_signoff_readiness_report.json"),
+        "pre_signoff_status": pre_signoff_report.get("status"),
+        "routed_top_module": "zcu104_board_ps_pl_ddr_top",
+        "generated_bd_wrapper_module": "zcu104_ps_pl_ddr_bd_wrapper",
+        "route_completed": route_completed,
+        "route_check_command_passed": route_check_command_passed,
+        "vivado_available": vivado_available,
+        "commands": commands,
+        "static_integration_evidence": static_evidence,
+        "route_report_analysis": route_analysis,
+        "failures": failures,
+        "implementation_evidence_ready": status == "passed",
+        "board_zcu104_signoff_evidence_written": False,
+        "final_board_signoff_still_blocked": True,
+        "does_not_claim": [
+            "board_level_ZCU104_signoff",
+            "hardware_lab_runtime_validation",
+            "real_time_LLaMA_inference_performance",
+        ],
+        "evidence_files": {
+            "implementation_report": str(implementation_report_path),
+            "subagent_result": str(subagent_result_path),
+            "route_tcl": str(route_tcl_path),
+            "vivado_log": str(out_dir / "vivado.log"),
+            "timing_summary": str(out_dir / "zcu104_timing_summary.rpt"),
+            "utilization": str(out_dir / "zcu104_utilization.rpt"),
+            "drc": str(out_dir / "zcu104_drc.rpt"),
+            "methodology": str(out_dir / "zcu104_methodology.rpt"),
+            "clocks": str(out_dir / "zcu104_clocks.rpt"),
+            "implemented_constraints": str(out_dir / "zcu104_implemented_constraints.xdc"),
+            "checkpoint": str(out_dir / "zcu104_post_route.dcp"),
+        },
+    }
+    if skill_update_candidate is not None:
+        report["skill_update_candidate"] = skill_update_candidate
+    implementation_report_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
+
+    subagent_result = {
+        "artifact": "zcu104_board_wrapper_axi_bridge_subagent_result",
+        "status": status,
+        "changed_files": [
+            "nl2hdl/llm_kernels.py",
+            "nl2hdl/cli.py",
+            "tests/test_llm_kernels.py",
+        ],
+        "generated_files": [
+            str(path)
+            for path in sorted(out_dir.iterdir())
+            if path.is_file()
+        ],
+        "commands_run": commands,
+        "evidence_paths": report["evidence_files"],
+        "remaining_risks": _zcu104_board_wrapper_remaining_risks(status, failures),
+        "final_signoff_still_blocked": True,
+        "board_zcu104_signoff_evidence_written": False,
+    }
+    if skill_update_candidate is not None:
+        subagent_result["skill_update_candidate"] = skill_update_candidate
+    subagent_result_path.write_text(json.dumps(subagent_result, indent=2), encoding="utf-8")
+    return report
+
+
+def _run_logged_command(
+    command: list[str],
+    *,
+    cwd: Path,
+    timeout_sec: int,
+    stdout_path: Path,
+    stderr_path: Path,
+) -> dict[str, Any]:
+    try:
+        completed = subprocess.run(
+            command,
+            cwd=cwd,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            timeout=timeout_sec,
+            check=False,
+        )
+        stdout_path.write_text(completed.stdout, encoding="utf-8")
+        stderr_path.write_text(completed.stderr, encoding="utf-8")
+        return {
+            "command": command,
+            "cwd": str(cwd),
+            "returncode": completed.returncode,
+            "stdout": str(stdout_path),
+            "stderr": str(stderr_path),
+            "timed_out": False,
+            "missing_executable": False,
+        }
+    except FileNotFoundError as exc:
+        stdout_path.write_text("", encoding="utf-8")
+        stderr_path.write_text(str(exc), encoding="utf-8")
+        return {
+            "command": command,
+            "cwd": str(cwd),
+            "returncode": 127,
+            "stdout": str(stdout_path),
+            "stderr": str(stderr_path),
+            "timed_out": False,
+            "missing_executable": True,
+        }
+    except subprocess.TimeoutExpired as exc:
+        stdout_text = exc.stdout if isinstance(exc.stdout, str) else ""
+        stderr_text = exc.stderr if isinstance(exc.stderr, str) else ""
+        stdout_path.write_text(stdout_text, encoding="utf-8")
+        stderr_path.write_text(stderr_text, encoding="utf-8")
+        return {
+            "command": command,
+            "cwd": str(cwd),
+            "returncode": 124,
+            "stdout": str(stdout_path),
+            "stderr": str(stderr_path),
+            "timed_out": True,
+            "missing_executable": False,
+        }
+
+
+def _zcu104_board_wrapper_static_evidence(out_dir: Path) -> dict[str, Any]:
+    bd_tcl = _read_text_if_exists(out_dir / "zcu104_ps_pl_ddr_bd.tcl")
+    bd_top = _read_text_if_exists(out_dir / "zcu104_board_ps_pl_ddr_top.v")
+    bd_ref = _read_text_if_exists(out_dir / "zcu104_board_shell_axi_subsystem_bd.v")
+    bridge = _read_text_if_exists(out_dir / "zcu104_axi_lite_accel_bridge.sv")
+    route_tcl = _read_text_if_exists(out_dir / "zcu104_board_route_check.tcl")
+    return {
+        "routed_top_instantiates_generated_bd_wrapper": (
+            "module zcu104_board_ps_pl_ddr_top" in bd_top
+            and "zcu104_ps_pl_ddr_bd_wrapper" in bd_top
+            and "set_property top zcu104_board_ps_pl_ddr_top" in route_tcl
+        ),
+        "ps_fclk_reset_drive_accelerator": (
+            "zynq_ultra_ps_e_0/pl_clk0" in bd_tcl
+            and "zcu104_board_shell_top_0/aclk" in bd_tcl
+            and "proc_sys_reset_0/peripheral_aresetn" in bd_tcl
+            and "zcu104_board_shell_top_0/aresetn" in bd_tcl
+        ),
+        "ps_axi_reaches_control_registers": (
+            ("M_AXI_HPM0_FPD" in bd_tcl or "M_AXI_HPM0_LPD" in bd_tcl)
+            and "axi_interconnect_0/M00_AXI" in bd_tcl
+            and "zcu104_board_shell_top_0/S_AXI" in bd_tcl
+            and "CONTROL_ADDR = 8'h00" in bridge
+            and "accel_start_o" in bridge
+        ),
+        "ddr_address_map_declared": (
+            "zynq_ultra_ps_e" in bd_tcl
+            and "apply_board_preset" in bd_tcl
+            and "assign_bd_address" in bd_tcl
+            and "0xA0000000" in bd_tcl
+        ),
+        "axi_lite_interface_metadata_present": (
+            "X_INTERFACE_INFO" in bd_ref
+            and "xilinx.com:interface:aximm:1.0 S_AXI AWADDR" in bd_ref
+            and "PROTOCOL AXI4LITE" in bd_ref
+        ),
+        "board_visible_ports_are_compact": (
+            "input  board_reset_i" in bd_top
+            and "output [7:0] pmod0_o" in bd_top
+            and "input  aclk" not in bd_top
+            and "input  aresetn" not in bd_top
+        ),
+    }
+
+
+def _analyze_zcu104_board_route_reports(config: AgentConfig, out_dir: Path) -> dict[str, Any]:
+    timing_text = _read_text_if_exists(out_dir / "zcu104_timing_summary.rpt")
+    utilization_text = _read_text_if_exists(out_dir / "zcu104_utilization.rpt")
+    drc_text = _read_text_if_exists(out_dir / "zcu104_drc.rpt")
+    clocks_text = _read_text_if_exists(out_dir / "zcu104_clocks.rpt")
+    xdc_text = _read_text_if_exists(out_dir / "zcu104_implemented_constraints.xdc")
+    timing = _parse_vivado_timing_summary(timing_text)
+    utilization = _parse_vivado_utilization(utilization_text)
+    drc = _parse_vivado_drc(drc_text)
+    clocks = _parse_vivado_clock_evidence(clocks_text, xdc_text)
+    target_period_ns = 1000.0 / config.hardware.target_clock_mhz
+    utilization_budget = _check_zcu104_utilization_budget(config, utilization)
+
+    gate_failures: list[str] = []
+    if not timing["constraints_met"]:
+        gate_failures.append("timing setup/hold/pulse-width evidence is missing or failing")
+    if not drc["passes"]:
+        gate_failures.append("DRC contains blocking NSTD-1 or UCIO-1 evidence")
+    if clocks["observed_period_ns"] is None:
+        gate_failures.append("report_clocks did not prove clk_pl_0 period")
+    elif clocks["observed_period_ns"] > target_period_ns + 1e-6:
+        gate_failures.append("report_clocks period exceeds target clock period")
+    if clocks["implemented_xdc_period_ns"] is None:
+        gate_failures.append("implemented XDC did not prove clk_pl_0 period")
+    elif clocks["implemented_xdc_period_ns"] > target_period_ns + 1e-6:
+        gate_failures.append("implemented XDC period exceeds target clock period")
+    if not utilization_budget["passes"]:
+        gate_failures.extend(utilization_budget["failures"])
+
+    return {
+        "timing": timing,
+        "drc": drc,
+        "clock": {
+            **clocks,
+            "target_period_ns": round(target_period_ns, 3),
+            "target_clock_mhz": config.hardware.target_clock_mhz,
+        },
+        "utilization": utilization,
+        "utilization_budget": utilization_budget,
+        "gate_failures": gate_failures,
+        "reports_present": {
+            "timing_summary": bool(timing_text),
+            "utilization": bool(utilization_text),
+            "drc": bool(drc_text),
+            "clocks": bool(clocks_text),
+            "implemented_constraints": bool(xdc_text),
+            "checkpoint": (out_dir / "zcu104_post_route.dcp").exists(),
+        },
+    }
+
+
+def _parse_vivado_timing_summary(text: str) -> dict[str, Any]:
+    setup_slack = _first_float(
+        [
+            r"setup_worst_slack_ns\s*[:=]\s*(-?[0-9.]+)",
+            r"Setup\s*:\s*\d+\s+Failing Endpoints,\s*Worst Slack\s*(-?[0-9.]+)ns",
+            r"WNS\(ns\)\s+TNS\(ns\)\s+TNS Failing Endpoints[^\n]*\n\s*(-?[0-9.]+)",
+        ],
+        text,
+    )
+    hold_slack = _first_float(
+        [
+            r"hold_worst_slack_ns\s*[:=]\s*(-?[0-9.]+)",
+            r"Hold\s*:\s*\d+\s+Failing Endpoints,\s*Worst Slack\s*(-?[0-9.]+)ns",
+            r"WHS\(ns\)\s+THS\(ns\)\s+THS Failing Endpoints[^\n]*\n\s*(-?[0-9.]+)",
+        ],
+        text,
+    )
+    pulse_slack = _first_float(
+        [
+            r"pulse_width_worst_slack_ns\s*[:=]\s*(-?[0-9.]+)",
+            r"PW\s*:\s*\d+\s+Failing Endpoints,\s*Worst Slack\s*(-?[0-9.]+)ns",
+            r"WPWS\(ns\)\s+TPWS\(ns\)\s+TPWS Failing Endpoints[^\n]*\n\s*(-?[0-9.]+)",
+        ],
+        text,
+    )
+    setup_fail = _first_int(
+        [
+            r"setup_failing_endpoints\s*[:=]\s*(\d+)",
+            r"Setup\s*:\s*(\d+)\s+Failing Endpoints",
+            r"WNS\(ns\)\s+TNS\(ns\)\s+TNS Failing Endpoints[^\n]*\n\s*-?[0-9.]+\s+-?[0-9.]+\s+(\d+)",
+        ],
+        text,
+    )
+    hold_fail = _first_int(
+        [
+            r"hold_failing_endpoints\s*[:=]\s*(\d+)",
+            r"Hold\s*:\s*(\d+)\s+Failing Endpoints",
+            r"WHS\(ns\)\s+THS\(ns\)\s+THS Failing Endpoints[^\n]*\n\s*-?[0-9.]+\s+-?[0-9.]+\s+(\d+)",
+        ],
+        text,
+    )
+    pulse_fail = _first_int(
+        [
+            r"pulse_width_failing_endpoints\s*[:=]\s*(\d+)",
+            r"PW\s*:\s*(\d+)\s+Failing Endpoints",
+            r"WPWS\(ns\)\s+TPWS\(ns\)\s+TPWS Failing Endpoints[^\n]*\n\s*-?[0-9.]+\s+-?[0-9.]+\s+(\d+)",
+        ],
+        text,
+    )
+    missing = [
+        name
+        for name, value in (
+            ("setup_worst_slack_ns", setup_slack),
+            ("hold_worst_slack_ns", hold_slack),
+            ("pulse_width_worst_slack_ns", pulse_slack),
+            ("setup_failing_endpoints", setup_fail),
+            ("hold_failing_endpoints", hold_fail),
+            ("pulse_width_failing_endpoints", pulse_fail),
+        )
+        if value is None
+    ]
+    constraints_not_met = "Timing constraints are not met" in text or "timing constraints are not met" in text
+    constraints_met = (
+        not missing
+        and setup_slack is not None
+        and hold_slack is not None
+        and pulse_slack is not None
+        and setup_slack >= 0.0
+        and hold_slack >= 0.0
+        and pulse_slack >= 0.0
+        and setup_fail == 0
+        and hold_fail == 0
+        and pulse_fail == 0
+        and not constraints_not_met
+    )
+    return {
+        "constraints_met": constraints_met,
+        "setup_worst_slack_ns": setup_slack,
+        "hold_worst_slack_ns": hold_slack,
+        "pulse_width_worst_slack_ns": pulse_slack,
+        "setup_failing_endpoints": setup_fail,
+        "hold_failing_endpoints": hold_fail,
+        "pulse_width_failing_endpoints": pulse_fail,
+        "missing_fields": missing,
+    }
+
+
+def _parse_vivado_utilization(text: str) -> dict[str, Any]:
+    return {
+        "lut": _first_number([r"lut\s*[:=]\s*([0-9,.]+)", r"CLB LUTs\s*\|\s*([0-9,.]+)"], text),
+        "ff": _first_number([r"ff\s*[:=]\s*([0-9,.]+)", r"CLB Registers\s*\|\s*([0-9,.]+)"], text),
+        "dsp": _first_number([r"dsp\s*[:=]\s*([0-9,.]+)", r"DSPs\s*\|\s*([0-9,.]+)"], text),
+        "bram": _first_number([r"bram\s*[:=]\s*([0-9,.]+)", r"Block RAM Tile\s*\|\s*([0-9,.]+)"], text),
+        "uram": _first_number([r"uram\s*[:=]\s*([0-9,.]+)", r"URAM\s*\|\s*([0-9,.]+)"], text),
+    }
+
+
+def _parse_vivado_drc(text: str) -> dict[str, Any]:
+    blocking_rules = [
+        rule
+        for rule in ("NSTD-1", "UCIO-1")
+        if re.search(rule, text, re.IGNORECASE)
+    ]
+    critical_warning_count = len(re.findall(r"CRITICAL WARNING", text, re.IGNORECASE))
+    return {
+        "passes": not blocking_rules,
+        "blocking_rules": blocking_rules,
+        "critical_warning_count": critical_warning_count,
+    }
+
+
+def _parse_vivado_clock_evidence(clocks_text: str, xdc_text: str) -> dict[str, Any]:
+    observed_period = _first_float(
+        [
+            r"clk_pl_0\s+([0-9.]+)",
+            r"clk_pl_0_period_ns\s*[:=]\s*([0-9.]+)",
+        ],
+        clocks_text,
+    )
+    implemented_period = _first_float(
+        [
+            r"create_clock\s+-period\s+([0-9.]+)\s+-name\s+clk_pl_0",
+            r"create_clock\s+-name\s+clk_pl_0\s+-period\s+([0-9.]+)",
+            r"clk_pl_0_period_ns\s*[:=]\s*([0-9.]+)",
+        ],
+        xdc_text,
+    )
+    return {
+        "clock_name": "clk_pl_0",
+        "observed_period_ns": observed_period,
+        "observed_frequency_mhz": round(1000.0 / observed_period, 3) if observed_period else None,
+        "implemented_xdc_period_ns": implemented_period,
+    }
+
+
+def _check_zcu104_utilization_budget(config: AgentConfig, utilization: dict[str, Any]) -> dict[str, Any]:
+    budgets = {
+        "lut": config.hardware.max_lut,
+        "ff": config.hardware.max_ff,
+        "dsp": config.hardware.max_dsp,
+        "bram": config.hardware.max_bram,
+        "uram": config.hardware.max_uram,
+    }
+    failures = []
+    checked = {}
+    for resource, budget in budgets.items():
+        used = utilization.get(resource)
+        if budget is None:
+            checked[resource] = {"used": used, "budget": budget, "passes": True}
+            continue
+        if used is None:
+            failures.append(f"utilization.{resource} is missing")
+            checked[resource] = {"used": used, "budget": budget, "passes": False}
+            continue
+        passes = used <= budget
+        if not passes:
+            failures.append(f"utilization.{resource} exceeds budget")
+        checked[resource] = {"used": used, "budget": budget, "passes": passes}
+    return {"passes": not failures, "checked": checked, "failures": failures}
+
+
+def _read_text_if_exists(path: Path) -> str:
+    if not path.exists():
+        return ""
+    return path.read_text(encoding="utf-8", errors="ignore")
+
+
+def _first_float(patterns: list[str], text: str) -> float | None:
+    value = _first_number(patterns, text)
+    return float(value) if value is not None else None
+
+
+def _first_number(patterns: list[str], text: str) -> float | None:
+    for pattern in patterns:
+        match = re.search(pattern, text, re.IGNORECASE | re.MULTILINE)
+        if match:
+            return float(match.group(1).replace(",", ""))
+    return None
+
+
+def _first_int(patterns: list[str], text: str) -> int | None:
+    value = _first_number(patterns, text)
+    return int(value) if value is not None else None
+
+
+def _zcu104_board_wrapper_remaining_risks(status: str, failures: list[str]) -> list[str]:
+    risks = [
+        "board_zcu104_signoff_evidence.json remains owned by the later evidence-only signoff agent",
+        "hardware lab runtime validation is not claimed",
+        "real-time LLaMA inference performance is not claimed",
+    ]
+    if status != "passed":
+        risks.append("board wrapper implementation evidence is not passed")
+        risks.extend(failures)
+    else:
+        risks.append("board-level signoff still requires the separate signoff agent to audit routed evidence")
+    return risks
+
+
 def _zcu104_board_shell_constraints_xdc(period_ns: float) -> str:
     return f"""# ZCU104 board-shell constraints package for nl2hdl.
 # This file is a pre-signoff board constraint package, not board-level signoff.
@@ -31805,26 +32357,48 @@ def _zcu104_board_shell_axi_subsystem_bd_v() -> str:
     return """`timescale 1ns/1ps
 
 module zcu104_board_shell_axi_subsystem_bd (
+    (* X_INTERFACE_INFO = "xilinx.com:signal:clock:1.0 aclk CLK" *)
+    (* X_INTERFACE_PARAMETER = "ASSOCIATED_BUSIF S_AXI, ASSOCIATED_RESET aresetn" *)
     input         aclk,
+    (* X_INTERFACE_INFO = "xilinx.com:signal:reset:1.0 aresetn RST" *)
+    (* X_INTERFACE_PARAMETER = "POLARITY ACTIVE_LOW" *)
     input         aresetn,
     input         board_reset_i,
     output [7:0]  pmod0_o,
+    (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 S_AXI AWADDR" *)
+    (* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME S_AXI, DATA_WIDTH 32, PROTOCOL AXI4LITE, ADDR_WIDTH 8, HAS_BURST 0, HAS_LOCK 0, HAS_PROT 0, HAS_CACHE 0, HAS_QOS 0, HAS_REGION 0, SUPPORTS_NARROW_BURST 0, MAX_BURST_LENGTH 1" *)
     input  [7:0]  s_axi_awaddr,
+    (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 S_AXI AWVALID" *)
     input         s_axi_awvalid,
+    (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 S_AXI AWREADY" *)
     output        s_axi_awready,
+    (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 S_AXI WDATA" *)
     input  [31:0] s_axi_wdata,
+    (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 S_AXI WSTRB" *)
     input  [3:0]  s_axi_wstrb,
+    (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 S_AXI WVALID" *)
     input         s_axi_wvalid,
+    (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 S_AXI WREADY" *)
     output        s_axi_wready,
+    (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 S_AXI BRESP" *)
     output [1:0]  s_axi_bresp,
+    (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 S_AXI BVALID" *)
     output        s_axi_bvalid,
+    (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 S_AXI BREADY" *)
     input         s_axi_bready,
+    (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 S_AXI ARADDR" *)
     input  [7:0]  s_axi_araddr,
+    (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 S_AXI ARVALID" *)
     input         s_axi_arvalid,
+    (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 S_AXI ARREADY" *)
     output        s_axi_arready,
+    (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 S_AXI RDATA" *)
     output [31:0] s_axi_rdata,
+    (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 S_AXI RRESP" *)
     output [1:0]  s_axi_rresp,
+    (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 S_AXI RVALID" *)
     output        s_axi_rvalid,
+    (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 S_AXI RREADY" *)
     input         s_axi_rready,
     output        interrupt_o
 );
@@ -31863,7 +32437,7 @@ module zcu104_board_ps_pl_ddr_top (
     input  board_reset_i,
     output [7:0] pmod0_o
 );
-    zcu104_ps_pl_ddr_bd u_ps_pl_ddr_bd (
+    zcu104_ps_pl_ddr_bd_wrapper u_ps_pl_ddr_bd_wrapper (
         .board_reset_i(board_reset_i),
         .pmod0_o(pmod0_o)
     );
@@ -31879,6 +32453,10 @@ if {{[llength [get_projects -quiet]] == 0}} {{
     create_project nl2hdl_zcu104_board_shell ./zcu104_board_shell_vivado -part {fpga_part} -force
 }}
 set_property target_language Verilog [current_project]
+set board_part_candidates [get_board_parts -quiet -latest_file_version *zcu104*]
+if {{[llength $board_part_candidates] > 0}} {{
+    set_property board_part [lindex $board_part_candidates 0] [current_project]
+}}
 set origin_dir [file dirname [file normalize [info script]]]
 foreach rtl_file [list zcu104_accelerator_core.sv zcu104_axi_lite_accel_bridge.sv zcu104_board_shell_axi_subsystem.sv zcu104_board_shell_top.sv] {{
     if {{[llength [get_files -quiet $rtl_file]] == 0}} {{
@@ -31900,6 +32478,9 @@ set_property -dict [list \\
 apply_bd_automation -rule xilinx.com:bd_rule:zynq_ultra_ps_e -config {{apply_board_preset "1"}} [get_bd_cells zynq_ultra_ps_e_0]
 set_property -dict [list \\
     CONFIG.PSU__FPGA_PL0_ENABLE 1 \\
+    CONFIG.PSU__USE__M_AXI_GP0 0 \\
+    CONFIG.PSU__USE__M_AXI_GP1 0 \\
+    CONFIG.PSU__USE__M_AXI_GP2 1 \\
     CONFIG.PSU__CRL_APB__PL0_REF_CTRL__SRCSEL IOPLL \\
     CONFIG.PSU__CRL_APB__PL0_REF_CTRL__DIVISOR0 5 \\
     CONFIG.PSU__CRL_APB__PL0_REF_CTRL__DIVISOR1 1 \\
@@ -31907,27 +32488,32 @@ set_property -dict [list \\
     CONFIG.PSU__CRL_APB__PL0_REF_CTRL__ACT_FREQMHZ 200 \\
 ] [get_bd_cells zynq_ultra_ps_e_0]
 set pl0_actual_mhz [get_property CONFIG.PSU__CRL_APB__PL0_REF_CTRL__ACT_FREQMHZ [get_bd_cells zynq_ultra_ps_e_0]]
+set clock_precheck_log [open zcu104_ps_pl_clock_precheck.rpt w]
+puts $clock_precheck_log "target_pl0_clock_mhz=200"
+puts $clock_precheck_log "actual_pl0_clock_mhz=$pl0_actual_mhz"
 if {{$pl0_actual_mhz eq ""}} {{
+    puts $clock_precheck_log "status=missing_actual_frequency"
+    close $clock_precheck_log
     error "PS PL0 clock correction did not expose ACT_FREQMHZ"
 }}
 if {{[expr {{double($pl0_actual_mhz)}}] < 199.9}} {{
-    error "PS PL0 clock resolved below 200 MHz target: $pl0_actual_mhz MHz"
+    puts $clock_precheck_log "status=below_target"
+    puts "WARNING: PS PL0 clock resolved below 200 MHz target: $pl0_actual_mhz MHz"
+}} else {{
+    puts $clock_precheck_log "status=target_or_better"
 }}
+close $clock_precheck_log
 
 create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:* proc_sys_reset_0
 connect_bd_net [get_bd_pins zynq_ultra_ps_e_0/pl_clk0] [get_bd_pins proc_sys_reset_0/slowest_sync_clk]
 connect_bd_net [get_bd_pins zynq_ultra_ps_e_0/pl_resetn0] [get_bd_pins proc_sys_reset_0/ext_reset_in]
 
-create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:* axi_interconnect_0
-set_property -dict [list CONFIG.NUM_MI 1 CONFIG.NUM_SI 1] [get_bd_cells axi_interconnect_0]
+create_bd_cell -type ip -vlnv xilinx.com:ip:smartconnect:* axi_interconnect_0
+set_property -dict [list CONFIG.NUM_MI 1 CONFIG.NUM_SI 1 CONFIG.NUM_CLKS 1] [get_bd_cells axi_interconnect_0]
 create_bd_cell -type module -reference zcu104_board_shell_axi_subsystem_bd zcu104_board_shell_top_0
-connect_bd_net [get_bd_pins zynq_ultra_ps_e_0/pl_clk0] [get_bd_pins axi_interconnect_0/ACLK]
-connect_bd_net [get_bd_pins zynq_ultra_ps_e_0/pl_clk0] [get_bd_pins axi_interconnect_0/S00_ACLK]
-connect_bd_net [get_bd_pins zynq_ultra_ps_e_0/pl_clk0] [get_bd_pins axi_interconnect_0/M00_ACLK]
+connect_bd_net [get_bd_pins zynq_ultra_ps_e_0/pl_clk0] [get_bd_pins axi_interconnect_0/aclk]
 connect_bd_net [get_bd_pins zynq_ultra_ps_e_0/pl_clk0] [get_bd_pins zcu104_board_shell_top_0/aclk]
-connect_bd_net [get_bd_pins proc_sys_reset_0/peripheral_aresetn] [get_bd_pins axi_interconnect_0/ARESETN]
-connect_bd_net [get_bd_pins proc_sys_reset_0/peripheral_aresetn] [get_bd_pins axi_interconnect_0/S00_ARESETN]
-connect_bd_net [get_bd_pins proc_sys_reset_0/peripheral_aresetn] [get_bd_pins axi_interconnect_0/M00_ARESETN]
+connect_bd_net [get_bd_pins proc_sys_reset_0/peripheral_aresetn] [get_bd_pins axi_interconnect_0/aresetn]
 connect_bd_net [get_bd_pins proc_sys_reset_0/peripheral_aresetn] [get_bd_pins zcu104_board_shell_top_0/aresetn]
 make_bd_pins_external [get_bd_pins zcu104_board_shell_top_0/board_reset_i]
 set board_reset_ports [get_bd_ports -quiet board_reset_i*]
@@ -31945,7 +32531,16 @@ set irq_pin [get_bd_pins -quiet zynq_ultra_ps_e_0/pl_ps_irq0]
 if {{[llength $irq_pin] > 0}} {{
     connect_bd_net [get_bd_pins zcu104_board_shell_top_0/interrupt_o] $irq_pin
 }}
-connect_bd_intf_net [get_bd_intf_pins zynq_ultra_ps_e_0/M_AXI_HPM0_LPD] [get_bd_intf_pins axi_interconnect_0/S00_AXI]
+set ps_axi_master_candidates [list \\
+    [get_bd_intf_pins -quiet zynq_ultra_ps_e_0/M_AXI_HPM0_LPD] \\
+    [get_bd_intf_pins -quiet zynq_ultra_ps_e_0/M_AXI_HPM0_FPD] \\
+    [get_bd_intf_pins -quiet zynq_ultra_ps_e_0/M_AXI_HPM1_FPD] \\
+]
+set ps_axi_master [lindex [concat {{*}}$ps_axi_master_candidates] 0]
+if {{$ps_axi_master eq ""}} {{
+    error "No PS AXI HPM master interface pin found on zynq_ultra_ps_e_0"
+}}
+connect_bd_intf_net $ps_axi_master [get_bd_intf_pins axi_interconnect_0/S00_AXI]
 connect_bd_intf_net [get_bd_intf_pins axi_interconnect_0/M00_AXI] [get_bd_intf_pins zcu104_board_shell_top_0/S_AXI]
 foreach optional_clk_pin [list maxihpm0_lpd_aclk maxihpm0_fpd_aclk saxihpc0_fpd_aclk] {{
     set optional_pin [get_bd_pins -quiet zynq_ultra_ps_e_0/$optional_clk_pin]
@@ -32014,6 +32609,7 @@ report_drc -file zcu104_drc.rpt
 report_clocks -file zcu104_clocks.rpt
 report_io -file zcu104_io.rpt
 write_xdc -force zcu104_implemented_constraints.xdc
+write_checkpoint -force zcu104_post_route.dcp
 set clock_report [open zcu104_clocks.rpt r]
 set clock_text [read $clock_report]
 close $clock_report
@@ -32032,7 +32628,6 @@ if {{![regexp {{create_clock\\s+-period\\s+([0-9.]+)\\s+-name\\s+clk_pl_0}} $imp
 if {{[expr {{double($impl_clk_pl_0_period)}}] > 5.000}} {{
     error "Implemented XDC clk_pl_0 period exceeds 200 MHz target: $impl_clk_pl_0_period ns"
 }}
-write_checkpoint -force zcu104_post_route.dcp
 close_project
 """
 

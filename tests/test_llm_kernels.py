@@ -19,6 +19,7 @@ from nl2hdl.llm_kernels import (
     build_llama_semantic_graph,
     emit_inspect_artifacts,
     emit_kernel,
+    run_zcu104_board_wrapper_axi_bridge_agent,
     write_model_level_execution_harness_report,
 )
 from nl2hdl.subagent_tasks import (
@@ -30,6 +31,7 @@ from nl2hdl.subagent_tasks import (
     build_full_llama_execution_evidence_template,
     build_full_llama_execution_readiness_report,
     build_model_level_execution_harness_agent_task,
+    build_parent_feedback_loop_state,
     build_zcu104_board_wrapper_axi_bridge_agent_task,
     build_hdl_subagent_dispatch_plan,
     build_hdl_subagent_execution_manifest,
@@ -2378,6 +2380,9 @@ def test_cli_subagents_status_refreshes_execution_manifest_from_evidence_root(tm
     assert rc == 0
     wave_status = json.loads((status_dir / "hdl_subagent_wave_status.json").read_text(encoding="utf-8"))
     execution_manifest = json.loads((status_dir / "hdl_subagent_execution_manifest.json").read_text(encoding="utf-8"))
+    parent_loop_state = json.loads((status_dir / "parent_loop_state.json").read_text(encoding="utf-8"))
+    feedback_packet = json.loads((status_dir / "feedback_packet.json").read_text(encoding="utf-8"))
+    retry_plan = json.loads((status_dir / "retry_plan.json").read_text(encoding="utf-8"))
     full_execution = json.loads((status_dir / "full_llama_execution_readiness.json").read_text(encoding="utf-8"))
     board_signoff = json.loads((status_dir / "board_zcu104_signoff_readiness.json").read_text(encoding="utf-8"))
     full_execution_template = json.loads(
@@ -2441,7 +2446,15 @@ def test_cli_subagents_status_refreshes_execution_manifest_from_evidence_root(tm
     assert "# Codex Sub-Agent Spawn Instructions" in spawn_instructions
     assert "verification_prompts/wave_1_projection_kernels__verification.md" in spawn_instructions
     assert "subagent_prompts/non_gemm_input_layernorm__implementation.md" in spawn_instructions
-    assert "You are the Codex verification agent for this wave." in spawn_instructions
+    assert "You are the Codex verification sub-agent for this wave." in spawn_instructions
+    assert "The Parent Agent is the only orchestrator" in spawn_instructions
+    assert parent_loop_state["artifact"] == "parent_loop_state"
+    assert parent_loop_state["agent_hierarchy"]["parent_agent"] == "single_orchestrator"
+    assert parent_loop_state["agent_hierarchy"]["all_non_parent_workers_are_subagents"] is True
+    assert parent_loop_state["next_parent_action"] == "spawn_ready_subagents"
+    assert feedback_packet["artifact"] == "feedback_packet"
+    assert feedback_packet["agent_hierarchy"]["subagents_may_spawn_subagents"] is False
+    assert retry_plan["artifact"] == "retry_plan"
     spawn_batches = {batch["wave_id"]: batch for batch in execution_manifest["spawn_batches"]}
     assert spawn_batches["wave_1_projection_kernels"]["spawn_kind"] == "verification_agent"
     assert spawn_batches["wave_1_projection_kernels"]["parallel_spawn_allowed"] is False
@@ -4481,13 +4494,17 @@ def test_zcu104_board_shell_constraints_package_distinguishes_pre_signoff_from_e
     assert ".s_axi_awvalid(1'b1)" in board_top_text
     assert ".s_axi_wdata(32'h0000_0001)" in board_top_text
     assert "module zcu104_board_shell_axi_subsystem_bd" in bd_wrapper_text
+    assert "xilinx.com:interface:aximm:1.0 S_AXI AWADDR" in bd_wrapper_text
+    assert "PROTOCOL AXI4LITE" in bd_wrapper_text
+    assert "ASSOCIATED_BUSIF S_AXI" in bd_wrapper_text
     assert "zcu104_board_shell_axi_subsystem u_zcu104_board_shell_axi_subsystem" in bd_wrapper_text
     assert "module zcu104_board_ps_pl_ddr_top" in bd_top_text
-    assert "zcu104_ps_pl_ddr_bd u_ps_pl_ddr_bd" in bd_top_text
+    assert "zcu104_ps_pl_ddr_bd_wrapper u_ps_pl_ddr_bd_wrapper" in bd_top_text
     assert report["wrapper_implementation"]["board_level_ports_kept_compact"] is True
     assert report["wrapper_implementation"]["control_path"].startswith("PS AXI-lite")
 
     bd_tcl_text = (tmp_path / "zcu104_ps_pl_ddr_bd.tcl").read_text(encoding="utf-8")
+    assert "get_board_parts -quiet -latest_file_version *zcu104*" in bd_tcl_text
     assert "create_bd_cell -type ip -vlnv xilinx.com:ip:zynq_ultra_ps_e:* zynq_ultra_ps_e_0" in bd_tcl_text
     assert "CONFIG.PSU__USE__M_AXI_GP0 1" in bd_tcl_text
     assert "CONFIG.PSU__USE__S_AXI_GP0 0" in bd_tcl_text
@@ -4500,7 +4517,9 @@ def test_zcu104_board_shell_constraints_package_distinguishes_pre_signoff_from_e
     assert "create_bd_cell -type module -reference zcu104_board_shell_axi_subsystem_bd" in bd_tcl_text
     assert "assign_bd_address" in bd_tcl_text
     assert "0xA0000000" in bd_tcl_text
+    assert "CONFIG.PSU__USE__M_AXI_GP2 1" in bd_tcl_text
     assert "M_AXI_HPM0_LPD" in bd_tcl_text
+    assert "No PS AXI HPM master interface pin found" in bd_tcl_text
     assert "pl_ps_irq0" in bd_tcl_text
     assert "make_bd_pins_external [get_bd_pins zcu104_board_shell_top_0/interrupt_o]" not in bd_tcl_text
     assert "validate_bd_design" in bd_tcl_text
@@ -4534,6 +4553,98 @@ def test_zcu104_board_shell_constraints_package_distinguishes_pre_signoff_from_e
     )
     assert saved == report
     assert report["wrapper_implementation"]["routed_top_module"] == "zcu104_board_ps_pl_ddr_top"
+
+
+def test_zcu104_board_wrapper_agent_blocks_when_vivado_is_missing(tmp_path: Path):
+    cfg = load_config("examples/zcu104_llama32_1b_gptq.yaml")
+
+    report = run_zcu104_board_wrapper_axi_bridge_agent(
+        cfg,
+        tmp_path,
+        run_vivado=True,
+        vivado_executable="vivado_missing_for_nl2hdl_test",
+    )
+
+    assert report["artifact"] == "zcu104_board_wrapper_axi_bridge_implementation_report"
+    assert report["status"] == "blocked_by_missing_vivado"
+    assert report["vivado_available"] is False
+    assert report["route_completed"] is False
+    assert report["implementation_evidence_ready"] is False
+    assert report["board_zcu104_signoff_evidence_written"] is False
+    assert report["final_board_signoff_still_blocked"] is True
+    assert "skill_update_candidate" in report
+    assert not (tmp_path / "board_zcu104_signoff_evidence.json").exists()
+    assert (tmp_path / "zcu104_board_wrapper_axi_bridge_implementation_report.json").exists()
+    assert (tmp_path / "zcu104_board_wrapper_axi_bridge_subagent_result.json").exists()
+    saved = json.loads(
+        (tmp_path / "zcu104_board_wrapper_axi_bridge_implementation_report.json").read_text(encoding="utf-8")
+    )
+    assert saved == report
+    result = json.loads(
+        (tmp_path / "zcu104_board_wrapper_axi_bridge_subagent_result.json").read_text(encoding="utf-8")
+    )
+    assert result["status"] == "blocked_by_missing_vivado"
+    assert result["final_signoff_still_blocked"] is True
+    assert any(command["missing_executable"] for command in result["commands_run"])
+
+
+def test_zcu104_board_wrapper_agent_passes_with_fake_routed_reports(monkeypatch, tmp_path: Path):
+    cfg = load_config("examples/zcu104_llama32_1b_gptq.yaml")
+
+    def fake_run(command, cwd, text, stdout, stderr, timeout, check):
+        assert text is True
+        assert stdout is not None
+        assert stderr is not None
+        assert check is False
+        if "-mode" in command:
+            (cwd / "zcu104_timing_summary.rpt").write_text(
+                "\n".join(
+                    [
+                        "setup_worst_slack_ns: 0.125",
+                        "hold_worst_slack_ns: 0.025",
+                        "pulse_width_worst_slack_ns: 0.500",
+                        "setup_failing_endpoints: 0",
+                        "hold_failing_endpoints: 0",
+                        "pulse_width_failing_endpoints: 0",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            (cwd / "zcu104_utilization.rpt").write_text(
+                "\n".join(["lut: 449", "ff: 512", "dsp: 0", "bram: 0", "uram: 0"]),
+                encoding="utf-8",
+            )
+            (cwd / "zcu104_drc.rpt").write_text(
+                "No board-wrapper blocking critical warnings.\n",
+                encoding="utf-8",
+            )
+            (cwd / "zcu104_clocks.rpt").write_text("clk_pl_0 5.000\n", encoding="utf-8")
+            (cwd / "zcu104_implemented_constraints.xdc").write_text(
+                "create_clock -period 5.000 -name clk_pl_0 [get_pins u_ps/pl_clk0]\n",
+                encoding="utf-8",
+            )
+            (cwd / "zcu104_post_route.dcp").write_text("fake checkpoint\n", encoding="utf-8")
+            return types.SimpleNamespace(returncode=0, stdout="route ok\n", stderr="")
+        return types.SimpleNamespace(returncode=0, stdout="Vivado v2024.1\n", stderr="")
+
+    monkeypatch.setattr("nl2hdl.llm_kernels.subprocess.run", fake_run)
+
+    report = run_zcu104_board_wrapper_axi_bridge_agent(cfg, tmp_path, run_vivado=True)
+
+    assert report["status"] == "passed"
+    assert report["vivado_available"] is True
+    assert report["route_completed"] is True
+    assert report["implementation_evidence_ready"] is True
+    assert report["final_board_signoff_still_blocked"] is True
+    assert report["static_integration_evidence"]["routed_top_instantiates_generated_bd_wrapper"] is True
+    assert report["static_integration_evidence"]["ps_axi_reaches_control_registers"] is True
+    assert report["static_integration_evidence"]["ddr_address_map_declared"] is True
+    assert report["route_report_analysis"]["timing"]["constraints_met"] is True
+    assert report["route_report_analysis"]["clock"]["observed_period_ns"] == 5.0
+    assert report["route_report_analysis"]["utilization_budget"]["passes"] is True
+    assert report["failures"] == []
+    assert "skill_update_candidate" not in report
+    assert not (tmp_path / "board_zcu104_signoff_evidence.json").exists()
 
 
 def test_board_zcu104_signoff_readiness_stays_blocked_after_pre_signoff_constraints_package(tmp_path: Path):
@@ -4835,6 +4946,10 @@ def test_hdl_subagent_execution_manifest_lists_next_codex_spawns(monkeypatch, tm
     execution = build_hdl_subagent_execution_manifest(dispatch_plan, initial_status)
 
     assert execution["artifact"] == "hdl_subagent_execution_manifest"
+    assert execution["agent_hierarchy"]["parent_agent"] == "single_orchestrator"
+    assert execution["agent_hierarchy"]["all_non_parent_workers_are_subagents"] is True
+    assert execution["agent_hierarchy"]["subagents_may_spawn_subagents"] is False
+    assert execution["agent_hierarchy"]["parent_owns_feedback_loop"] is True
     assert execution["spawn_entry_count"] == 15
     assert execution["implementation_spawn_count"] == 15
     assert execution["verification_spawn_count"] == 0
@@ -4859,6 +4974,10 @@ def test_hdl_subagent_execution_manifest_lists_next_codex_spawns(monkeypatch, tm
     assert spawn_batches["wave_1_non_gemm_kernels"]["entry_count"] == 8
     first_entry = execution["spawn_entries"][0]
     assert first_entry["spawn_kind"] == "implementation_agent"
+    assert first_entry["agent_hierarchy_role"] == "subagent"
+    assert first_entry["subagent_type"] == "hdl_implementation_subagent"
+    assert first_entry["subagent_may_spawn_subagents"] is False
+    assert first_entry["parent_feedback_channel"] == "feedback_packet.json"
     assert first_entry["agent"] == "Codex"
     assert first_entry["mode"] == "read_write_hdl_packet"
     assert first_entry["wave_id"] == "wave_1_projection_kernels"
@@ -4915,6 +5034,9 @@ def test_hdl_subagent_execution_manifest_lists_next_codex_spawns(monkeypatch, tm
     assert len(verification_entries) == 1
     verification_entry = verification_entries[0]
     assert verification_entry["spawn_kind"] == "verification_agent"
+    assert verification_entry["agent_hierarchy_role"] == "subagent"
+    assert verification_entry["subagent_type"] == "verification_subagent"
+    assert verification_entry["subagent_may_spawn_subagents"] is False
     assert verification_entry["agent"] == "Codex"
     assert verification_entry["mode"] == "read_only"
     assert verification_entry["wave_id"] == "wave_1_projection_kernels"
@@ -4926,7 +5048,7 @@ def test_hdl_subagent_execution_manifest_lists_next_codex_spawns(monkeypatch, tm
     assert verification_entry["runs_integration_synthesis"] is False
     assert verification_entry["blocking_findings"] == ["P0", "P1", "P2"]
     assert verification_entry["codex_spawn_message"].startswith(
-        "You are the Codex verification agent for this wave."
+        "You are the Codex verification sub-agent for this wave."
     )
     assert "verification_prompts/wave_1_projection_kernels__verification.md" in verification_entry[
         "codex_spawn_message"
@@ -4939,6 +5061,16 @@ def test_hdl_subagent_execution_manifest_lists_next_codex_spawns(monkeypatch, tm
     assert "verification_prompts/wave_1_projection_kernels__verification.md" in verification_markdown
     assert "## Does Not Claim" in verification_markdown
     assert "automatic sub-agent spawning inside package runtime" in verification_markdown
+    assert "The Parent Agent is the only orchestrator" in verification_markdown
+
+    parent_loop = build_parent_feedback_loop_state(dispatch_plan, ready_for_verification_status, verification_execution)
+    assert parent_loop["parent_loop_state"]["artifact"] == "parent_loop_state"
+    assert parent_loop["parent_loop_state"]["status"] == "ready_to_spawn_subagents"
+    assert parent_loop["parent_loop_state"]["next_parent_action"] == "spawn_ready_subagents"
+    assert parent_loop["feedback_packet"]["entry_count"] == (
+        verification_execution["spawn_entry_count"] + len(verification_execution["blocked_waves"])
+    )
+    assert parent_loop["retry_plan"]["retry_entry_count"] >= verification_execution["spawn_batch_count"]
 
 
 def test_hdl_subagent_spawn_ledger_tracks_external_agent_ids(monkeypatch, tmp_path: Path):

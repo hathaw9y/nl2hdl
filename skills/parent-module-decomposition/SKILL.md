@@ -8,6 +8,11 @@ description: Use when a parent agent interprets model, optimization, hardware sp
 The parent turns a user target into minimal, independently verifiable HDL
 packets. It does not write HDL.
 
+The parent is the only orchestration agent. Every implementation,
+verification, integration, board-wrapper, model-signoff, and board-signoff
+worker is a Sub-agent. Sub-agents return evidence and failure feedback to the
+parent; they do not spawn other Sub-agents.
+
 ## Input Interpretation
 
 Treat hardware design input as four axes, not one overloaded style:
@@ -75,6 +80,8 @@ with shape, address, and tiling parameters.
 Each module packet should define:
 
 - task id, agent role, semantic op, and target coverage level;
+- sub-agent type and the rule that the sub-agent may not spawn other
+  sub-agents;
 - exact source/generator scope and files that must not be edited;
 - interface contract, including clock/reset, `start_i`/`done_o`, packed vector
   layout, valid/ready streams when used, and memory/AXI ports;
@@ -100,6 +107,22 @@ Check that:
 - no target-scale claim bypasses blocked checkpoint/model dependencies;
 - integration can consume the selected child configuration without rewriting
   the child.
+
+## Feedback Packet And Retry Plan
+
+After each evidence refresh, the parent should emit:
+
+- `parent_loop_state.json`: whether the parent should spawn ready sub-agents,
+  collect missing failure detail, update a Skill, or wait for dependencies;
+- `feedback_packet.json`: the exact feedback/assignment bundle sent to each
+  ready or failed Sub-agent;
+- `retry_plan.json`: which retries are allowed now, which are blocked until a
+  Skill update or complete failure detail exists, and which parent action is
+  required.
+
+The parent decides all retries. A Sub-agent may suggest a retry through
+`skill_update_candidate` or `subagent_result.json`, but it must not launch that
+retry itself.
 
 ## Resource Objective
 

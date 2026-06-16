@@ -36,26 +36,26 @@ division of labor.
 
 The integration chain is intentionally separate:
 
-1. Module agents implement and self-verify individual GEMM and non-GEMM
+1. Module sub-agents implement and self-verify individual GEMM and non-GEMM
    kernels.
-2. Module agents or tuning agents run module-level out-of-context synthesis,
+2. Module sub-agents or tuning sub-agents run module-level out-of-context synthesis,
    record per-module resources, and tune only allowed knobs before integration.
-3. A decoder-block agent composes verified and tuned module fixtures.
-4. An integration verification agent runs simulation audit and integration-level
+3. A decoder-block sub-agent composes verified and tuned module fixtures.
+4. An integration verification sub-agent runs simulation audit and integration-level
    Vivado synthesis for the composed decoder-block top.
-5. A Layer FSM agent calls the verified decoder-block child inside one layer.
-6. An integration verification agent repeats simulation audit and synthesis for
+5. A Layer FSM sub-agent calls the verified decoder-block child inside one layer.
+6. An integration verification sub-agent repeats simulation audit and synthesis for
    the Layer FSM top.
-7. A Top FSM agent schedules verified Layer FSM calls and model-level control.
-8. A token-loop agent extends the Top FSM fixture to bounded prefill/decode
+7. A Top FSM sub-agent schedules verified Layer FSM calls and model-level control.
+8. A token-loop sub-agent extends the Top FSM fixture to bounded prefill/decode
    sequencing.
 9. Integration verification repeats after each higher-level integration wave.
-10. A DDR/AXI board-shell agent wraps the verified model FSM child with bounded
+10. A DDR/AXI board-shell sub-agent wraps the verified model FSM child with bounded
    external-memory request/status metadata without claiming PS/PL integration or
    board-level signoff.
 
-Every wave is followed by a verification agent. Module waves use a read-only
-audit. Integration waves use a no-source-edit verification agent that also runs
+Every wave is followed by a verification sub-agent. Module waves use a read-only
+audit. Integration waves use a no-source-edit verification sub-agent that also runs
 or inspects Vivado synthesis and writes generated integration evidence.
 Dependent waves do not start until the audit and required synthesis gate pass.
 
@@ -157,8 +157,8 @@ to the simulation/evidence audit.
   This artifact does not generate HDL and does not prove sub-agents ran; it
   records what evidence is still missing before the parent can advance.
 - `hdl_subagent_execution_manifest.json`: next-spawn instruction list derived
-  from the dispatch plan and wave status. It lists the implementation agents or
-  read-only verification agent that the interactive Codex parent or an external
+  from the dispatch plan and wave status. It lists the implementation
+  Sub-agents or read-only verification Sub-agent that the interactive Codex parent or an external
   runner should spawn next. It also groups ready entries into `spawn_batches`;
   implementation batches with `parallel_spawn_allowed: true` may be launched as
   separate Codex sub-agents in parallel, while verification batches remain
@@ -167,6 +167,16 @@ to the simulation/evidence audit.
   runners can enforce the HDL interface contract and launch Codex agents
   without scraping prompt prose. Package code still does not spawn agents
   itself.
+- `parent_loop_state.json`: parent-owned loop status. It records that the
+  Parent Agent is the only orchestrator, all non-parent workers are Sub-agents,
+  and the next parent action is to spawn ready Sub-agents, collect failure
+  detail, update a Skill, or wait for dependencies.
+- `feedback_packet.json`: parent-to-Sub-agent feedback bundle. Ready
+  Sub-agents receive their prompt/evidence paths from here; failed Sub-agents
+  receive the gate that must be fixed before retry.
+- `retry_plan.json`: parent-owned retry plan. It records which retries are
+  allowed immediately and which are blocked until a Skill update or complete
+  `skill_update_candidate` exists.
 - `subagent_prompts/*.md`: implementation prompts for individual HDL
   sub-agents. Each prompt includes the current target-level blocked gates, so a
   standalone prompt still tells the sub-agent which target-scale claims remain
@@ -239,10 +249,9 @@ also emits `board_zcu104_signoff_readiness.json`, which requires
 `board_zcu104_signoff_evidence.json` with ZCU104 part, board I/O, PS/PL, DDR,
 Vivado timing, resource, and report evidence after full execution passes.
 Package code still does not spawn agents; it tells the interactive Codex parent
-or external runner which implementation or read-only verification agents should
-run next. The same directory also receives `codex_spawn_instructions.md`, a
-compact Markdown handoff with spawn batches, prompt files, evidence paths, and
-the exact short message to send to each Codex sub-agent.
+or external runner which implementation or read-only verification Sub-agents
+should run next. The same directory also receives `codex_spawn_instructions.md`,
+`parent_loop_state.json`, `feedback_packet.json`, and `retry_plan.json`.
 
 After actually spawning external Codex sub-agents, create or refresh the
 parent-owned spawn ledger:
@@ -263,6 +272,9 @@ also reconciles records to `evidence_passed`,
 `evidence_failed_waiting_for_skill_update`, or
 `evidence_failed_missing_skill_candidate`. It is bookkeeping only; package code
 does not spawn Codex agents automatically.
+
+The ledger is parent-owned. A Sub-agent never marks another Sub-agent complete
+or spawns a retry; it only writes evidence that the parent later reconciles.
 
 If a `kernel_report.json` passes but `subagent_result.json` is missing or lacks
 the required final-response fields, wave status becomes

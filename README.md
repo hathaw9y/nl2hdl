@@ -69,10 +69,12 @@ This emits `llm_accelerator_plan.json` and `llm_accelerator_plan.md`. Direct RTL
 generation for `int4_gptq` + `llm_decoder_streaming` intentionally fails until
 the LLM kernel backend is implemented.
 
-LLM kernel work follows the HDL sub-agent workflow in
-`docs/subagent_hdl_workflow.md`: the parent agent plans and verifies, while HDL
-sub-agents write Verilog/SystemVerilog and failed reusable patterns are captured
-as Skills.
+LLM kernel work follows the Parent feedback loop in
+`docs/subagent_hdl_workflow.md`: the Parent Agent is the only orchestrator, and
+every non-parent worker is a Sub-agent. HDL, verification, integration,
+board-wrapper, model-signoff, and board-signoff Sub-agents return evidence to
+the Parent instead of spawning other agents. Failed reusable patterns are
+captured as Skills before the Parent retries the responsible Sub-agent.
 
 Small kernel examples:
 
@@ -86,14 +88,20 @@ python3 -m nl2hdl agent --model meta-llama/Llama-3.2-1B \
 Inspect mode also emits HDL sub-agent assignment packets:
 
 - `hdl_task_manifest.json`: semantic GEMM/non-GEMM work mapped to kernel,
-  Layer FSM, Top FSM, and token-loop agent roles.
+  Layer FSM, Top FSM, and token-loop sub-agent roles.
 - `hdl_subagent_tasks.json`: machine-readable implementation packets derived
   from the manifest.
 - `hdl_subagent_dispatch_plan.json`: dependency-aware waves for parallel
-  projection/non-GEMM agents followed by decoder block, Layer FSM, Top FSM, and
-  token-loop agents.
+  projection/non-GEMM Sub-agents followed by decoder block, Layer FSM, Top FSM,
+  and token-loop Sub-agents.
+- `hdl_subagent_execution_manifest.json`: next Sub-agents the Parent or an
+  external runner should spawn.
+- `parent_loop_state.json`: Parent-owned loop state and next parent action.
+- `feedback_packet.json`: feedback/assignment packet sent from Parent to
+  ready or failed Sub-agents.
+- `retry_plan.json`: retry gates, blocked waves, and required Parent action.
 - `subagent_prompts/*.md`: prompt files the parent can send to HDL
-  implementation agents. These prompts include the assigned contract, allowed
+  implementation Sub-agents. These prompts include the assigned contract, allowed
   write scope, required commands, common handshake expectations, timing
   evidence, and claims the sub-agent must not make.
 
