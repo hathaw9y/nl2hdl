@@ -75,6 +75,15 @@ When an HDL sub-agent says a kernel passed but timing shows hold/setup/PW failur
   downstream Decoder/Layer/Top FSM agents should avoid adding wide debug/status
   ports, keep child vectors internal where the contract allows, and rerun
   post-route timing after each integration layer before claiming progress.
+- Before marking a target-scale streaming child eligible, run or inspect timing
+  in a registered-source/registered-sink wrapper that constrains upstream
+  valid/data into downstream payload outputs at the target clock. A standalone
+  child top with unconstrained or directly driven inputs can hide single-cycle
+  payload math paths that fail when composed by a decoder-block parent.
+- If a streaming child uses DSP-heavy payload math, such as SwiGLU or softmax
+  approximation, require internal pipeline stages or a documented multicycle
+  protocol before integration. Do not rely on a later decoder integration agent
+  to absorb an unpipelined child path.
 
 ## Verification Commands
 

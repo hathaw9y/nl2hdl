@@ -1,17 +1,21 @@
 from pathlib import Path
 import json
 import math
+import os
 import struct
 import sys
 import types
 
 import pytest
 
+import nl2hdl.llm_kernels as llm_kernels_module
 from nl2hdl.cli import build_parser, main as cli_main
 from nl2hdl.config import load_config
 from nl2hdl.gptq import inspect_gptq_checkpoint_metadata
 from nl2hdl.llm_agent import run_llm_agent
 from nl2hdl.llm_kernels import (
+    _parse_kernel_vivado_utilization,
+    _parse_zcu104_vivado_utilization,
     build_zcu104_board_shell_constraints_package,
     build_model_level_execution_harness_report,
     build_gptq_weight_layout_preflight,
@@ -27,11 +31,14 @@ from nl2hdl.subagent_tasks import (
     build_board_zcu104_signoff_evidence_template,
     build_board_zcu104_signoff_readiness_report,
     build_codex_spawn_instructions,
+    build_full_model_target_rtl_generator_agent_task,
+    build_full_target_llama_accelerator_artifact_agent_task,
     build_full_llama_execution_evidence_agent_task,
     build_full_llama_execution_evidence_template,
     build_full_llama_execution_readiness_report,
     build_model_level_execution_harness_agent_task,
     build_parent_feedback_loop_state,
+    build_target_scale_child_packet_agent_task,
     build_zcu104_board_wrapper_axi_bridge_agent_task,
     build_hdl_subagent_dispatch_plan,
     build_hdl_subagent_execution_manifest,
@@ -42,6 +49,9 @@ from nl2hdl.subagent_tasks import (
     build_hdl_subagent_wave_status,
     build_skill_update_draft_markdown,
     build_target_evidence_execution_manifest,
+    run_board_zcu104_signoff_evidence_agent,
+    run_full_llama_execution_evidence_agent,
+    TARGET_SCALE_CHILD_PACKET_TASKS,
 )
 
 
@@ -91,6 +101,34 @@ def _hf_export_style_llama_block_mlir() -> str:
   }
 }
 """
+
+
+def test_kernel_and_board_vivado_utilization_parsers_keep_separate_schemas(tmp_path: Path):
+    kernel_report = tmp_path / "utilization.rpt"
+    kernel_report.write_text(
+        "| LUT as Logic | 12 | 0 | 0 | 230400 | 0.01 |\n"
+        "| CLB Registers | 34 | 0 | 0 | 460800 | 0.01 |\n"
+        "| Block RAM Tile | 2 | 0 | 0 | 312 | 0.64 |\n"
+        "| DSPs | 5 | 0 | 0 | 1728 | 0.29 |\n"
+        "| Bonded IOB | 9 | 0 | 0 | 464 | 1.94 |\n",
+        encoding="utf-8",
+    )
+    board_report_text = (
+        "| CLB LUTs | 464 | 0 | 0 | 230400 | 0.20 |\n"
+        "| CLB Registers | 706 | 0 | 0 | 460800 | 0.15 |\n"
+        "| Block RAM Tile | 0 | 0 | 0 | 312 | 0.00 |\n"
+        "| DSPs | 0 | 0 | 0 | 1728 | 0.00 |\n"
+    )
+
+    kernel = _parse_kernel_vivado_utilization(kernel_report)
+    board = _parse_zcu104_vivado_utilization(board_report_text)
+
+    assert kernel["lut_as_logic"]["used"] == 12
+    assert kernel["clb_registers"]["used"] == 34
+    assert kernel["block_ram_tile"]["used"] == 2
+    assert kernel["dsps"]["used"] == 5
+    assert kernel["bonded_iob"]["used"] == 9
+    assert board == {"lut": 464.0, "ff": 706.0, "dsp": 0.0, "bram": 0.0, "uram": None}
 
 
 def _sample_gptq_payload_probe(words: list[str] | None = None, projection: str = "q_proj") -> dict:
@@ -1134,6 +1172,70 @@ hardware:
     assert mlir_gate["status"] == "passed"
     assert "exported_model_MLIR_full_operation_coverage" not in target_readiness["does_not_claim"]
     assert target_readiness["safe_to_claim_target_accelerator"] is False
+
+
+def test_emit_inspect_artifacts_accepts_hf_config_model_structure_source(tmp_path: Path, monkeypatch):
+    def fake_metadata(model_name, config):
+        return {
+            "name": model_name,
+            "family": "llama_decoder_only_transformer",
+            "target_checkpoint": True,
+            "metadata_source": "huggingface_auto_config_local_cache",
+            "metadata_resolution": {"status": "resolved", "allow_download": False},
+            "model_type": "llama",
+            "hidden_size": 2048,
+            "intermediate_size": 8192,
+            "num_attention_heads": 32,
+            "num_key_value_heads": 8,
+            "head_dim": 64,
+            "decoder_layers": 16,
+            "sequence_length": 8,
+            "batch_size": 1,
+        }
+
+    monkeypatch.setattr(llm_kernels_module, "resolve_llama_model_metadata", fake_metadata)
+    config_path = tmp_path / "config.yaml"
+    config_path.write_text(
+        """
+model:
+  input_shape: [1, 1]
+  sequence_length: 8
+  model_structure_source: hf_config
+optimization:
+  quantization: int4_gptq
+design:
+  style: llm_decoder_streaming
+hardware:
+  memory_data_width: 128
+""",
+        encoding="utf-8",
+    )
+    cfg = load_config(config_path)
+
+    emit_inspect_artifacts(
+        tmp_path / "inspect",
+        "meta-llama/Llama-3.2-1B",
+        cfg,
+    )
+
+    readiness = json.loads((tmp_path / "inspect" / "mlir_model_analysis_readiness.json").read_text(encoding="utf-8"))
+    task_manifest = json.loads((tmp_path / "inspect" / "hdl_task_manifest.json").read_text(encoding="utf-8"))
+    dispatch_plan = json.loads((tmp_path / "inspect" / "hdl_subagent_dispatch_plan.json").read_text(encoding="utf-8"))
+    target_readiness = json.loads((tmp_path / "inspect" / "target_readiness_report.json").read_text(encoding="utf-8"))
+
+    assert readiness["status"] == "passed"
+    assert readiness["analysis_source"] == "hf_config_semantic_graph"
+    assert readiness["source_kind"] == "hf_config"
+    assert readiness["model_structure_source"] == "hf_config"
+    assert readiness["missing_semantic_gemm_ops"] == []
+    assert readiness["missing_semantic_non_gemm_ops"] == []
+    assert readiness["model_metadata_resolution"]["status"] == "resolved"
+    assert task_manifest["mlir_model_analysis"]["status"] == "passed"
+    assert dispatch_plan["source_replay"]["model_structure_source"] == "hf_config"
+    assert not any(task["task_id"] == "real_mlir_model_analysis" for task in task_manifest["blocked_target_tasks"])
+    assert "real_mlir_model_analysis" not in dispatch_plan["global_blocked_target_dependencies"]
+    mlir_gate = next(gate for gate in target_readiness["gates"] if gate["gate"] == "mlir_model_analysis")
+    assert mlir_gate["status"] == "passed"
 
 
 def test_emit_inspect_artifacts_maps_hf_export_style_mlir_paths_to_semantic_ops(tmp_path: Path):
@@ -2661,6 +2763,7 @@ def test_cli_inspect_marks_target_preflight_ready_when_mlir_and_gptq_payload_pas
         "model_name": "meta-llama/Llama-3.2-1B",
         "gptq_checkpoint": str(gptq_dir),
         "mlir_graph": str(mlir_path),
+        "model_structure_source": "mlir",
     }
     assert subagent_tasks["source_replay"] == manifest["source_replay"]
     assert dispatch_plan["source_replay"] == manifest["source_replay"]
@@ -3909,6 +4012,40 @@ def test_model_level_execution_harness_report_rejects_missing_decoder_layers():
         build_model_level_execution_harness_report(dispatch_plan)
 
 
+def test_run_full_llama_execution_evidence_agent_blocks_without_harness(tmp_path: Path):
+    dispatch_plan = _minimal_full_execution_dispatch_plan()
+    wave_status = _minimal_passed_full_execution_wave_status()
+
+    report = run_full_llama_execution_evidence_agent(dispatch_plan, wave_status, tmp_path)
+
+    assert report["status"] == "blocked_by_missing_or_incomplete_model_execution_evidence"
+    assert report["evidence_written"] is False
+    assert "model_level_execution_harness_report.json not found" in report["failures"]
+    assert not (tmp_path / "full_llama_execution_evidence.json").exists()
+    subagent_result = json.loads((tmp_path / "full_llama_execution_gate" / "subagent_result.json").read_text())
+    assert subagent_result["status"] == "blocked_by_missing_or_incomplete_model_execution_evidence"
+    assert "skill_update_candidate" in subagent_result
+
+
+def test_run_full_llama_execution_evidence_agent_writes_evidence_after_harness(tmp_path: Path):
+    dispatch_plan = _minimal_full_execution_dispatch_plan()
+    wave_status = _minimal_passed_full_execution_wave_status()
+    write_model_level_execution_harness_report(dispatch_plan, tmp_path / "full_llama_execution_gate")
+
+    report = run_full_llama_execution_evidence_agent(dispatch_plan, wave_status, tmp_path)
+
+    assert report["status"] == "passed"
+    assert report["evidence_written"] is True
+    evidence = json.loads((tmp_path / "full_llama_execution_evidence.json").read_text())
+    assert evidence["artifact"] == "full_llama_execution_evidence"
+    assert evidence["status"] == "passed"
+    assert evidence["full_model_layers_executed"] is True
+    assert evidence["executed_layer_count"] == dispatch_plan["model"]["decoder_layers"]
+    assert evidence["python_reference_comparison"]["passed"] is True
+    assert evidence["board_level_signoff"] is False
+    assert report["readiness"]["status"] == "passed"
+
+
 def test_full_llama_execution_evidence_agent_task_waits_for_model_harness(tmp_path: Path):
     dispatch_plan = _minimal_full_execution_dispatch_plan()
     wave_status = _minimal_passed_full_execution_wave_status()
@@ -4158,6 +4295,8 @@ def _minimal_board_signoff_evidence(**updates: object) -> dict:
         "board": "ZCU104",
         "fpga_part": "xczu7ev-ffvc1156-2-e",
         "full_llama_execution_status": "passed",
+        "target_scale_accelerator_bitstream": True,
+        "accelerator_scope": "full_target_llama_accelerator",
         "constraints": {
             "clock": True,
             "reset": True,
@@ -4175,12 +4314,25 @@ def _minimal_board_signoff_evidence(**updates: object) -> dict:
             "lut": 120000,
             "dsp": 900,
             "bram": 180,
+            "ff": 180000,
+            "uram": 8,
+            "io": 32,
         },
         "reports": {
             "timing_summary": "timing_summary.rpt",
             "utilization": "utilization.rpt",
             "constraints": "zcu104.xdc",
             "vivado_log": "vivado.log",
+            "drc": "drc.rpt",
+            "methodology": "methodology.rpt",
+            "clocks": "clocks.rpt",
+            "checkpoint": "zcu104_post_route.dcp",
+            "bitstream": "zcu104_board_wrapper.bit",
+        },
+        "bitstream": {
+            "generated": True,
+            "path": "zcu104_board_wrapper.bit",
+            "size_bytes": 4096,
         },
         "fixture_only": False,
     }
@@ -4213,6 +4365,8 @@ def test_board_zcu104_signoff_evidence_template_matches_readiness_gate_fields(tm
     assert template["template"]["artifact"] == "board_zcu104_signoff_evidence"
     assert template["template"]["board"] == "ZCU104"
     assert template["template"]["fpga_part"] == "xczu7ev-ffvc1156-2-e"
+    assert template["template"]["target_scale_accelerator_bitstream"] == "<true>"
+    assert template["template"]["accelerator_scope"] == "full_target_llama_accelerator"
     assert template["template"]["fixture_only"] is False
     assert set(template["required_fields"]) == {
         "artifact",
@@ -4220,10 +4374,13 @@ def test_board_zcu104_signoff_evidence_template_matches_readiness_gate_fields(tm
         "board",
         "fpga_part",
         "full_llama_execution_status",
+        "target_scale_accelerator_bitstream",
+        "accelerator_scope",
         "constraints",
         "timing",
         "resource_utilization",
         "reports",
+        "bitstream",
         "fixture_only",
     }
     assert set(template["template"]["constraints"]) == {
@@ -4238,6 +4395,12 @@ def test_board_zcu104_signoff_evidence_template_matches_readiness_gate_fields(tm
         "dsp": "<number <= 1728>",
         "bram": "<number <= 312>",
     }
+    assert template["template"]["bitstream"] == {
+        "generated": "<true>",
+        "path": "<path to generated .bit>",
+        "size_bytes": "<positive integer>",
+    }
+    assert template["template"]["reports"]["bitstream"] == "<path to generated .bit>"
     assert "hardware_lab_runtime_validation" in template["does_not_claim"]
 
 
@@ -4266,6 +4429,7 @@ def test_board_zcu104_signoff_evidence_agent_task_ready_after_full_execution(tmp
     assert task["expected_subagent_result"] == "build/board_zcu104_signoff_gate/subagent_result.json"
     assert "Target Evidence Sub-Agent Task: board_zcu104_signoff" in task["prompt"]
     assert "clock, reset, board I/O, PS/PL interface, and DDR interface" in task["prompt"]
+    assert "A generated bitstream exists" in task["prompt"]
     assert "Existing bounded fixture synthesis reports are insufficient" in task["prompt"]
     assert "fixture_only: true" in task["prompt"]
     assert execution["spawn_entry_count"] == 1
@@ -4274,7 +4438,476 @@ def test_board_zcu104_signoff_evidence_agent_task_ready_after_full_execution(tmp
     assert "Evidence file:" in markdown
 
 
-def test_zcu104_board_wrapper_axi_bridge_agent_task_requires_pre_signoff_package(tmp_path: Path):
+def test_board_zcu104_signoff_evidence_agent_task_waits_for_target_scale_wrapper(
+    tmp_path: Path,
+):
+    dispatch_plan = _minimal_full_execution_dispatch_plan()
+    full_execution = _passed_full_execution_readiness_for_board()
+    stale_evidence = _minimal_board_signoff_evidence(
+        target_scale_accelerator_bitstream=False,
+        accelerator_scope="zcu104_board_wrapper_control_scaffold",
+    )
+    (tmp_path / "board_zcu104_signoff_evidence.json").write_text(
+        json.dumps(stale_evidence),
+        encoding="utf-8",
+    )
+    readiness = build_board_zcu104_signoff_readiness_report(dispatch_plan, full_execution, tmp_path)
+    template = build_board_zcu104_signoff_evidence_template(dispatch_plan, full_execution, tmp_path)
+
+    task = build_board_zcu104_signoff_evidence_agent_task(
+        dispatch_plan,
+        full_execution,
+        readiness,
+        template,
+        tmp_path,
+        dispatch_plan_path="build/dispatch.json",
+    )
+    execution = build_target_evidence_execution_manifest(task)
+
+    assert readiness["status"] == "blocked_by_missing_or_incomplete_board_signoff_evidence"
+    assert "target_scale_accelerator_bitstream must be true" in readiness["evidence_failures"]
+    assert readiness["next_action"] == "run target-scale ZCU104 board-wrapper implementation before board signoff"
+    assert task["ready_to_spawn"] is False
+    assert (
+        "target-scale accelerator board-wrapper evidence must pass before board signoff"
+        in task["spawn_precondition_failures"]
+    )
+    assert execution["spawn_entry_count"] == 0
+
+
+def test_board_zcu104_signoff_readiness_reports_wrapper_target_scale_blocker_without_signoff_evidence(
+    tmp_path: Path,
+):
+    dispatch_plan = _minimal_full_execution_dispatch_plan()
+    full_execution = _passed_full_execution_readiness_for_board()
+    wrapper_dir = tmp_path / "board_zcu104_signoff_gate"
+    _write_fake_passed_board_wrapper_report(wrapper_dir, dispatch_plan)
+    report_path = wrapper_dir / "zcu104_board_wrapper_axi_bridge_implementation_report.json"
+    wrapper_report = json.loads(report_path.read_text(encoding="utf-8"))
+    wrapper_report["target_scale_accelerator_bitstream"] = False
+    wrapper_report["accelerator_scope"] = "ddr_axi_board_shell_fixture"
+    report_path.write_text(json.dumps(wrapper_report, indent=2), encoding="utf-8")
+
+    readiness = build_board_zcu104_signoff_readiness_report(dispatch_plan, full_execution, tmp_path)
+
+    assert readiness["status"] == "blocked_by_missing_or_incomplete_board_signoff_evidence"
+    assert "board_zcu104_signoff_evidence.json not found" in readiness["evidence_failures"]
+    assert "board-wrapper target_scale_accelerator_bitstream must be true" in readiness["evidence_failures"]
+    assert "board-wrapper accelerator_scope must be full_target_llama_accelerator" in readiness["evidence_failures"]
+    assert readiness["next_action"] == "run target-scale ZCU104 board-wrapper implementation before board signoff"
+    assert readiness["board_wrapper_report"]["accelerator_scope"] == "ddr_axi_board_shell_fixture"
+
+
+def test_target_scale_child_rtl_wave_ready_before_full_model_generator(
+    tmp_path: Path,
+):
+    dispatch_plan = _minimal_full_execution_dispatch_plan()
+    full_execution = _passed_full_execution_readiness_for_board()
+    wrapper_dir = tmp_path / "board_zcu104_signoff_gate"
+    _write_fake_passed_board_wrapper_report(wrapper_dir, dispatch_plan)
+    report_path = wrapper_dir / "zcu104_board_wrapper_axi_bridge_implementation_report.json"
+    wrapper_report = json.loads(report_path.read_text(encoding="utf-8"))
+    wrapper_report["target_scale_accelerator_bitstream"] = False
+    wrapper_report["accelerator_scope"] = "ddr_axi_board_shell_fixture"
+    report_path.write_text(json.dumps(wrapper_report, indent=2), encoding="utf-8")
+    readiness = build_board_zcu104_signoff_readiness_report(dispatch_plan, full_execution, tmp_path)
+
+    child_tasks = {
+        str(spec["task_id"]): build_target_scale_child_packet_agent_task(
+            dispatch_plan,
+            full_execution,
+            readiness,
+            tmp_path,
+            str(spec["task_id"]),
+            dispatch_plan_path="build/dispatch.json",
+        )
+        for spec in TARGET_SCALE_CHILD_PACKET_TASKS
+    }
+    generator_task = build_full_model_target_rtl_generator_agent_task(
+        dispatch_plan,
+        full_execution,
+        readiness,
+        tmp_path,
+        dispatch_plan_path="build/dispatch.json",
+    )
+    artifact_task = build_full_target_llama_accelerator_artifact_agent_task(
+        dispatch_plan,
+        full_execution,
+        readiness,
+        tmp_path,
+        dispatch_plan_path="build/dispatch.json",
+    )
+    board_wrapper_task = build_zcu104_board_wrapper_axi_bridge_agent_task(
+        dispatch_plan,
+        full_execution,
+        readiness,
+        tmp_path,
+        dispatch_plan_path="build/dispatch.json",
+    )
+    signoff_template = build_board_zcu104_signoff_evidence_template(dispatch_plan, full_execution, tmp_path)
+    board_signoff_task = build_board_zcu104_signoff_evidence_agent_task(
+        dispatch_plan,
+        full_execution,
+        readiness,
+        signoff_template,
+        tmp_path,
+        dispatch_plan_path="build/dispatch.json",
+    )
+    child_executions = {
+        task_id: build_target_evidence_execution_manifest(task)
+        for task_id, task in child_tasks.items()
+    }
+    generator_execution = build_target_evidence_execution_manifest(generator_task)
+    artifact_execution = build_target_evidence_execution_manifest(artifact_task)
+    wrapper_execution = build_target_evidence_execution_manifest(board_wrapper_task)
+    signoff_execution = build_target_evidence_execution_manifest(board_signoff_task)
+
+    assert child_tasks["target_gptq_projection_datapath_packets"]["ready_to_spawn"] is True
+    assert child_tasks["target_non_gemm_datapath_packets"]["ready_to_spawn"] is True
+    assert child_tasks["target_ddr_weight_stream_scheduler_packet"]["ready_to_spawn"] is True
+    assert child_tasks["target_decoder_block_integration_packet"]["ready_to_spawn"] is False
+    assert (
+        "target_gptq_projection_datapath_packets must pass before target_decoder_block_integration_packet"
+        in child_tasks["target_decoder_block_integration_packet"]["spawn_precondition_failures"]
+    )
+    assert child_tasks["target_token_loop_16_layer_model_fsm_packet"]["ready_to_spawn"] is False
+    assert (
+        "target_decoder_block_integration_packet must pass before target_token_loop_16_layer_model_fsm_packet"
+        in child_tasks["target_token_loop_16_layer_model_fsm_packet"]["spawn_precondition_failures"]
+    )
+    assert child_executions["target_gptq_projection_datapath_packets"]["spawn_entry_count"] == 1
+    assert child_executions["target_non_gemm_datapath_packets"]["spawn_entry_count"] == 1
+    assert child_executions["target_ddr_weight_stream_scheduler_packet"]["spawn_entry_count"] == 1
+    assert generator_task["ready_to_spawn"] is False
+    assert generator_task["task_id"] == "full_model_target_rtl_generator"
+    assert generator_task["subagent_type"] == "target_scale_model_rtl_generator_subagent"
+    assert generator_task["expected_evidence_file"].endswith("full_target_llama_accelerator_gate/kernel_report.json")
+    assert "board-wrapper-compatible interface" in generator_task["prompt"]
+    assert (
+        "target_scale_child_rtl_wave must pass before full-model target RTL generation"
+        in generator_task["spawn_precondition_failures"][0]
+    )
+    assert generator_execution["spawn_entry_count"] == 0
+    assert artifact_task["ready_to_spawn"] is False
+    assert artifact_task["task_id"] == "full_target_llama_accelerator_artifact"
+    assert (
+        "full_model_target_rtl_generator must pass before target-scale accelerator artifact validation"
+        in artifact_task["spawn_precondition_failures"]
+    )
+    assert artifact_execution["spawn_entry_count"] == 0
+    assert board_wrapper_task["ready_to_spawn"] is False
+    assert (
+        "full_target_llama_accelerator artifact must pass before rerouting board wrapper"
+        in board_wrapper_task["spawn_precondition_failures"]
+    )
+    assert wrapper_execution["spawn_entry_count"] == 0
+    assert board_signoff_task["ready_to_spawn"] is False
+    assert (
+        "target-scale accelerator board-wrapper evidence must pass before board signoff"
+        in board_signoff_task["spawn_precondition_failures"]
+    )
+    assert signoff_execution["spawn_entry_count"] == 0
+
+
+def test_target_scale_child_packet_blocks_retry_after_nonpassed_evidence(tmp_path: Path):
+    dispatch_plan = _minimal_full_execution_dispatch_plan()
+    full_execution = _passed_full_execution_readiness_for_board()
+    wrapper_dir = tmp_path / "board_zcu104_signoff_gate"
+    _write_fake_passed_board_wrapper_report(wrapper_dir, dispatch_plan)
+    report_path = wrapper_dir / "zcu104_board_wrapper_axi_bridge_implementation_report.json"
+    wrapper_report = json.loads(report_path.read_text(encoding="utf-8"))
+    wrapper_report["target_scale_accelerator_bitstream"] = False
+    wrapper_report["accelerator_scope"] = "ddr_axi_board_shell_fixture"
+    report_path.write_text(json.dumps(wrapper_report, indent=2), encoding="utf-8")
+    readiness = build_board_zcu104_signoff_readiness_report(dispatch_plan, full_execution, tmp_path)
+    evidence_dir = tmp_path / "target_non_gemm_datapath_packets_gate"
+    evidence_dir.mkdir()
+    (evidence_dir / "kernel_report.json").write_text(
+        json.dumps(
+            {
+                "status": "blocked",
+                "coverage_level": "target_non_gemm_scheduled_datapath_prototype",
+                "target_scale_child_eligible": False,
+                "numeric_policy": {"fixture_only": False},
+                "skill_update_candidate": {
+                    "failing_command": "python3 -m nl2hdl subagents status ...",
+                    "symptom": "checksum-only non-GEMM prototype lacks tensor payload streams",
+                    "root_cause_hypothesis": "payload stream contracts were not required",
+                    "prevention_rule": "require tensor payload streams before target_non_gemm pass",
+                    "minimal_regression_check": "reject target_non_gemm pass without tensor_payload_streams_present",
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    task = build_target_scale_child_packet_agent_task(
+        dispatch_plan,
+        full_execution,
+        readiness,
+        tmp_path,
+        "target_non_gemm_datapath_packets",
+        dispatch_plan_path="build/dispatch.json",
+    )
+    execution = build_target_evidence_execution_manifest(task)
+
+    assert task["ready_to_spawn"] is False
+    assert task["existing_child_blocker"]["skill_update_candidate_complete"] is True
+    assert (
+        "target_non_gemm_datapath_packets has existing non-passed target-scale child evidence"
+        in task["spawn_precondition_failures"][0]
+    )
+    assert execution["spawn_entry_count"] == 0
+    assert execution["skill_update_required"] is True
+    assert execution["blocked_target_evidence_tasks"][0]["next_action"] == (
+        "run_subagents_skill_draft_and_update_skill_before_retry"
+    )
+
+
+def test_target_scale_child_packet_blocks_retry_after_integration_timing_failure(tmp_path: Path):
+    dispatch_plan = _minimal_full_execution_dispatch_plan()
+    full_execution = _passed_full_execution_readiness_for_board()
+    wrapper_dir = tmp_path / "board_zcu104_signoff_gate"
+    _write_fake_passed_board_wrapper_report(wrapper_dir, dispatch_plan)
+    report_path = wrapper_dir / "zcu104_board_wrapper_axi_bridge_implementation_report.json"
+    wrapper_report = json.loads(report_path.read_text(encoding="utf-8"))
+    wrapper_report["target_scale_accelerator_bitstream"] = False
+    wrapper_report["accelerator_scope"] = "ddr_axi_board_shell_fixture"
+    report_path.write_text(json.dumps(wrapper_report, indent=2), encoding="utf-8")
+    readiness = build_board_zcu104_signoff_readiness_report(dispatch_plan, full_execution, tmp_path)
+    non_gemm_dir = tmp_path / "target_non_gemm_datapath_packets_gate"
+    non_gemm_dir.mkdir()
+    (non_gemm_dir / "kernel_report.json").write_text(
+        json.dumps(
+            {
+                "status": "passed",
+                "coverage_level": "target_non_gemm_tensor_payload_datapaths",
+                "target_scale_child_eligible": True,
+                "numeric_policy": {"fixture_only": False},
+                "interface_contract": {
+                    "tensor_payload_streams_present": True,
+                    "payload_streams": {
+                        "rmsnorm": {"present": True},
+                        "rope": {"present": True},
+                        "softmax": {"present": True},
+                        "kv_cache": {"present": True},
+                        "residual": {"present": True},
+                        "swiglu": {"present": True},
+                    },
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    decoder_dir = tmp_path / "target_decoder_block_integration_packet_gate"
+    decoder_dir.mkdir()
+    (decoder_dir / "kernel_report.json").write_text(
+        json.dumps(
+            {
+                "status": "blocked",
+                "coverage_level": "target_decoder_block_integration_timing_blocked",
+                "ooc_synthesis": {"status": "failed_timing", "setup_worst_slack_ns": -2.5},
+                "blocking_reason": "non-GEMM child timing failed in decoder integration",
+                "skill_update_candidate": {
+                    "failing_command": "vivado -mode batch -source run_ooc_synth.tcl",
+                    "symptom": "registered-source integration exposed non-GEMM timing failure",
+                    "root_cause_hypothesis": "child standalone OOC did not constrain registered source/sink paths",
+                    "prevention_rule": "require registered-source/registered-sink timing wrapper before child pass",
+                    "minimal_regression_check": "synthesize non-GEMM timing wrapper at 5ns and require WNS >= 0",
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    task = build_target_scale_child_packet_agent_task(
+        dispatch_plan,
+        full_execution,
+        readiness,
+        tmp_path,
+        "target_non_gemm_datapath_packets",
+        dispatch_plan_path="build/dispatch.json",
+    )
+
+    assert task["ready_to_spawn"] is False
+    assert task["integration_blocker"]["source_task"] == "target_decoder_block_integration_packet"
+    assert task["existing_child_blocker"]["skill_update_candidate_complete"] is True
+    assert any(
+        "run_subagents_skill_draft_and_update_skill_before_retry" in failure
+        for failure in task["spawn_precondition_failures"]
+    )
+
+
+def test_target_scale_child_packet_ignores_stale_integration_timing_failure(tmp_path: Path):
+    dispatch_plan = _minimal_full_execution_dispatch_plan()
+    full_execution = _passed_full_execution_readiness_for_board()
+    wrapper_dir = tmp_path / "board_zcu104_signoff_gate"
+    _write_fake_passed_board_wrapper_report(wrapper_dir, dispatch_plan)
+    report_path = wrapper_dir / "zcu104_board_wrapper_axi_bridge_implementation_report.json"
+    wrapper_report = json.loads(report_path.read_text(encoding="utf-8"))
+    wrapper_report["target_scale_accelerator_bitstream"] = False
+    wrapper_report["accelerator_scope"] = "ddr_axi_board_shell_fixture"
+    report_path.write_text(json.dumps(wrapper_report, indent=2), encoding="utf-8")
+    readiness = build_board_zcu104_signoff_readiness_report(dispatch_plan, full_execution, tmp_path)
+    decoder_dir = tmp_path / "target_decoder_block_integration_packet_gate"
+    decoder_dir.mkdir()
+    decoder_report = decoder_dir / "kernel_report.json"
+    decoder_report.write_text(
+        json.dumps(
+            {
+                "status": "blocked",
+                "coverage_level": "target_decoder_block_integration_timing_blocked",
+                "ooc_synthesis": {"status": "failed_timing", "setup_worst_slack_ns": -2.5},
+                "blocking_reason": "non-GEMM child timing failed in decoder integration",
+                "skill_update_candidate": {
+                    "failing_command": "vivado -mode batch -source run_ooc_synth.tcl",
+                    "symptom": "registered-source integration exposed non-GEMM timing failure",
+                    "root_cause_hypothesis": "child standalone OOC did not constrain registered source/sink paths",
+                    "prevention_rule": "require registered-source/registered-sink timing wrapper before child pass",
+                    "minimal_regression_check": "synthesize non-GEMM timing wrapper at 5ns and require WNS >= 0",
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    non_gemm_dir = tmp_path / "target_non_gemm_datapath_packets_gate"
+    non_gemm_dir.mkdir()
+    child_report = non_gemm_dir / "kernel_report.json"
+    child_report.write_text(
+        json.dumps(
+            {
+                "status": "passed",
+                "coverage_level": "target_non_gemm_tensor_payload_datapaths",
+                "target_scale_child_eligible": True,
+                "numeric_policy": {"fixture_only": False},
+                "interface_contract": {
+                    "tensor_payload_streams_present": True,
+                    "payload_streams": {
+                        "rmsnorm": {"present": True},
+                        "rope": {"present": True},
+                        "softmax": {"present": True},
+                        "kv_cache": {"present": True},
+                        "residual": {"present": True},
+                        "swiglu": {"present": True},
+                    },
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    os.utime(decoder_report, (1000, 1000))
+    os.utime(child_report, (2000, 2000))
+
+    task = build_target_scale_child_packet_agent_task(
+        dispatch_plan,
+        full_execution,
+        readiness,
+        tmp_path,
+        "target_non_gemm_datapath_packets",
+        dispatch_plan_path="build/dispatch.json",
+    )
+
+    assert task["integration_blocker"] is None
+    assert task["existing_child_blocker"] is None
+    assert task["spawn_precondition_failures"] == [
+        "target_non_gemm_datapath_packets already has target-scale eligible child evidence"
+    ]
+
+
+def test_decoder_integration_packet_retry_opens_after_newer_child_fix(tmp_path: Path):
+    dispatch_plan = _minimal_full_execution_dispatch_plan()
+    full_execution = _passed_full_execution_readiness_for_board()
+    wrapper_dir = tmp_path / "board_zcu104_signoff_gate"
+    _write_fake_passed_board_wrapper_report(wrapper_dir, dispatch_plan)
+    report_path = wrapper_dir / "zcu104_board_wrapper_axi_bridge_implementation_report.json"
+    wrapper_report = json.loads(report_path.read_text(encoding="utf-8"))
+    wrapper_report["target_scale_accelerator_bitstream"] = False
+    wrapper_report["accelerator_scope"] = "ddr_axi_board_shell_fixture"
+    report_path.write_text(json.dumps(wrapper_report, indent=2), encoding="utf-8")
+    readiness = build_board_zcu104_signoff_readiness_report(dispatch_plan, full_execution, tmp_path)
+
+    passed_child_reports = {
+        "target_gptq_projection_datapath_packets_gate": {
+            "status": "passed",
+            "coverage_level": "target_gptq_projection_datapath_packets",
+            "target_scale_child_eligible": True,
+            "numeric_policy": {"fixture_only": False},
+        },
+        "target_ddr_weight_stream_scheduler_packet_gate": {
+            "status": "passed",
+            "coverage_level": "target_ddr_weight_stream_scheduler",
+            "target_scale_child_eligible": True,
+            "numeric_policy": {"fixture_only": False},
+        },
+        "target_non_gemm_datapath_packets_gate": {
+            "status": "passed",
+            "coverage_level": "target_non_gemm_tensor_payload_datapaths",
+            "target_scale_child_eligible": True,
+            "numeric_policy": {"fixture_only": False},
+            "interface_contract": {
+                "tensor_payload_streams_present": True,
+                "payload_streams": {
+                    "rmsnorm": {"present": True},
+                    "rope": {"present": True},
+                    "softmax": {"present": True},
+                    "kv_cache": {"present": True},
+                    "residual": {"present": True},
+                    "swiglu": {"present": True},
+                },
+            },
+        },
+    }
+    for directory_name, report in passed_child_reports.items():
+        child_dir = tmp_path / directory_name
+        child_dir.mkdir()
+        child_report = child_dir / "kernel_report.json"
+        child_report.write_text(json.dumps(report), encoding="utf-8")
+        os.utime(child_report, (900, 900))
+
+    decoder_dir = tmp_path / "target_decoder_block_integration_packet_gate"
+    decoder_dir.mkdir()
+    decoder_report = decoder_dir / "kernel_report.json"
+    decoder_report.write_text(
+        json.dumps(
+            {
+                "status": "blocked",
+                "coverage_level": "target_decoder_block_integration_timing_blocked",
+                "ooc_synthesis": {"status": "failed_timing", "setup_worst_slack_ns": -2.5},
+                "blocking_reason": "non-GEMM child timing failed in decoder integration",
+                "skill_update_candidate": {
+                    "failing_command": "vivado -mode batch -source run_ooc_synth.tcl",
+                    "symptom": "registered-source integration exposed non-GEMM timing failure",
+                    "root_cause_hypothesis": "child standalone OOC did not constrain registered source/sink paths",
+                    "prevention_rule": "require registered-source/registered-sink timing wrapper before child pass",
+                    "minimal_regression_check": "synthesize non-GEMM timing wrapper at 5ns and require WNS >= 0",
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    os.utime(decoder_report, (1000, 1000))
+    os.utime(
+        tmp_path / "target_non_gemm_datapath_packets_gate" / "kernel_report.json",
+        (2000, 2000),
+    )
+
+    task = build_target_scale_child_packet_agent_task(
+        dispatch_plan,
+        full_execution,
+        readiness,
+        tmp_path,
+        "target_decoder_block_integration_packet",
+        dispatch_plan_path="build/dispatch.json",
+    )
+
+    assert task["ready_to_spawn"] is True
+    assert task["existing_child_blocker"] is None
+    assert task["spawn_precondition_failures"] == []
+
+
+def test_zcu104_board_wrapper_axi_bridge_agent_task_can_spawn_and_create_missing_pre_signoff_package(
+    tmp_path: Path,
+):
     dispatch_plan = _minimal_full_execution_dispatch_plan()
     full_execution = _passed_full_execution_readiness_for_board()
     readiness = build_board_zcu104_signoff_readiness_report(dispatch_plan, full_execution, tmp_path)
@@ -4290,12 +4923,12 @@ def test_zcu104_board_wrapper_axi_bridge_agent_task_requires_pre_signoff_package
 
     assert task["artifact"] == "zcu104_board_wrapper_axi_bridge_agent_task"
     assert task["spawn_kind"] == "target_evidence_implementation_agent"
-    assert task["ready_to_spawn"] is False
-    assert any(
-        "zcu104 pre-signoff constraints package must exist" in failure
-        for failure in task["spawn_precondition_failures"]
-    )
-    assert execution["spawn_entry_count"] == 0
+    assert task["ready_to_spawn"] is True
+    assert task["spawn_precondition_failures"] == []
+    assert task["pre_signoff_package_missing"] is True
+    assert "If the pre-signoff constraint package is missing" in task["prompt"]
+    assert execution["spawn_entry_count"] == 1
+    assert execution["spawn_entries"][0]["task_id"] == "zcu104_board_wrapper_axi_bridge"
 
 
 def test_zcu104_board_wrapper_axi_bridge_agent_task_ready_after_pre_signoff_package(tmp_path: Path):
@@ -4405,6 +5038,188 @@ def test_board_zcu104_signoff_readiness_passes_with_timing_constraints_and_resou
     assert report["next_action"] == "board-level ZCU104 signoff readiness passed"
 
 
+def _write_fake_passed_board_wrapper_report(wrapper_dir: Path, dispatch_plan: dict) -> None:
+    wrapper_dir.mkdir(parents=True, exist_ok=True)
+    file_names = {
+        "vivado_log": "vivado.log",
+        "timing_summary": "zcu104_timing_summary.rpt",
+        "utilization": "zcu104_utilization.rpt",
+        "drc": "zcu104_drc.rpt",
+        "methodology": "zcu104_methodology.rpt",
+        "clocks": "zcu104_clocks.rpt",
+        "implemented_constraints": "zcu104_implemented_constraints.xdc",
+        "checkpoint": "zcu104_post_route.dcp",
+        "bitstream": "zcu104_board_wrapper.bit",
+    }
+    for file_name in file_names.values():
+        path = wrapper_dir / file_name
+        if path.suffix == ".bit":
+            path.write_bytes(b"fake bitstream")
+        else:
+            path.write_text(f"fake {file_name}\n", encoding="utf-8")
+    (wrapper_dir / "zcu104_io.rpt").write_text(
+        "\n".join(
+            [
+                "+---------------+",
+                "| Total User IO |",
+                "+---------------+",
+                "|             9 |",
+                "+---------------+",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    report = {
+        "artifact": "zcu104_board_wrapper_axi_bridge_implementation_report",
+        "status": "passed",
+        "board": "AMD ZCU104",
+        "fpga_part": dispatch_plan["hardware"]["fpga_part"],
+        "target_clock_mhz": 200,
+        "target_scale_accelerator_bitstream": True,
+        "accelerator_scope": "full_target_llama_accelerator",
+        "route_completed": True,
+        "route_check_command_passed": True,
+        "vivado_available": True,
+        "bitstream_generated": True,
+        "bitstream_file": str(wrapper_dir / "zcu104_board_wrapper.bit"),
+        "bitstream_size_bytes": (wrapper_dir / "zcu104_board_wrapper.bit").stat().st_size,
+        "static_integration_evidence": {
+            "routed_top_instantiates_generated_bd_wrapper": True,
+            "ps_fclk_reset_drive_accelerator": True,
+            "ps_axi_reaches_control_registers": True,
+            "ddr_address_map_declared": True,
+            "axi_lite_interface_metadata_present": True,
+            "board_visible_ports_are_compact": True,
+        },
+        "route_report_analysis": {
+            "timing": {
+                "constraints_met": True,
+                "setup_worst_slack_ns": 0.5,
+                "hold_worst_slack_ns": 0.02,
+                "pulse_width_worst_slack_ns": 1.0,
+            },
+            "drc": {"passes": True, "blocking_rules": [], "critical_warning_count": 0},
+            "clock": {
+                "observed_period_ns": 5.0,
+                "implemented_xdc_period_ns": 5.0,
+                "target_period_ns": 5.0,
+                "target_clock_mhz": 200,
+            },
+            "utilization": {"lut": 464, "ff": 706, "dsp": 0, "bram": 0, "uram": 0},
+            "utilization_budget": {"passes": True, "failures": []},
+            "gate_failures": [],
+            "reports_present": {
+                "timing_summary": True,
+                "utilization": True,
+                "drc": True,
+                "clocks": True,
+                "implemented_constraints": True,
+                "checkpoint": True,
+                "bitstream": True,
+            },
+        },
+        "evidence_files": {key: str(wrapper_dir / file_name) for key, file_name in file_names.items()},
+    }
+    (wrapper_dir / "zcu104_board_wrapper_axi_bridge_implementation_report.json").write_text(
+        json.dumps(report, indent=2),
+        encoding="utf-8",
+    )
+
+
+def test_run_board_zcu104_signoff_evidence_agent_writes_evidence_from_wrapper_report(tmp_path: Path):
+    dispatch_plan = _minimal_full_execution_dispatch_plan()
+    full_execution = _passed_full_execution_readiness_for_board()
+    wrapper_dir = tmp_path / "board_zcu104_signoff_gate"
+    _write_fake_passed_board_wrapper_report(wrapper_dir, dispatch_plan)
+
+    report = run_board_zcu104_signoff_evidence_agent(
+        dispatch_plan,
+        full_execution,
+        tmp_path,
+        board_wrapper_dir=wrapper_dir,
+    )
+
+    assert report["status"] == "passed"
+    assert report["evidence_written"] is True
+    assert report["readiness"]["status"] == "passed"
+    evidence = json.loads((tmp_path / "board_zcu104_signoff_evidence.json").read_text())
+    assert evidence["artifact"] == "board_zcu104_signoff_evidence"
+    assert evidence["status"] == "passed"
+    assert evidence["target_scale_accelerator_bitstream"] is True
+    assert evidence["accelerator_scope"] == "full_target_llama_accelerator"
+    assert evidence["bitstream"]["generated"] is True
+    assert evidence["bitstream"]["size_bytes"] > 0
+    assert evidence["resource_utilization"]["io"] == 9
+    assert evidence["fixture_only"] is False
+    subagent_result = json.loads((wrapper_dir / "subagent_result.json").read_text())
+    assert subagent_result["status"] == "passed"
+
+
+def test_run_board_zcu104_signoff_evidence_agent_uses_utilization_iob_when_io_report_missing(
+    tmp_path: Path,
+):
+    dispatch_plan = _minimal_full_execution_dispatch_plan()
+    full_execution = _passed_full_execution_readiness_for_board()
+    wrapper_dir = tmp_path / "board_zcu104_signoff_gate"
+    _write_fake_passed_board_wrapper_report(wrapper_dir, dispatch_plan)
+    (wrapper_dir / "zcu104_io.rpt").unlink()
+    (wrapper_dir / "zcu104_utilization.rpt").write_text(
+        "\n".join(
+            [
+                "5. I/O",
+                "+------------------+------+",
+                "| Site Type        | Used |",
+                "+------------------+------+",
+                "| Bonded IOB       |    9 |",
+                "+------------------+------+",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    report = run_board_zcu104_signoff_evidence_agent(
+        dispatch_plan,
+        full_execution,
+        tmp_path,
+        board_wrapper_dir=wrapper_dir,
+    )
+
+    assert report["status"] == "passed"
+    evidence = json.loads((tmp_path / "board_zcu104_signoff_evidence.json").read_text())
+    assert evidence["resource_utilization"]["io"] == 9
+
+
+def test_run_board_zcu104_signoff_evidence_agent_rejects_control_scaffold_bitstream(
+    tmp_path: Path,
+):
+    dispatch_plan = _minimal_full_execution_dispatch_plan()
+    full_execution = _passed_full_execution_readiness_for_board()
+    wrapper_dir = tmp_path / "board_zcu104_signoff_gate"
+    _write_fake_passed_board_wrapper_report(wrapper_dir, dispatch_plan)
+    report_path = wrapper_dir / "zcu104_board_wrapper_axi_bridge_implementation_report.json"
+    wrapper_report = json.loads(report_path.read_text(encoding="utf-8"))
+    wrapper_report["target_scale_accelerator_bitstream"] = False
+    wrapper_report["accelerator_scope"] = "zcu104_board_wrapper_control_scaffold"
+    wrapper_report["does_not_claim"] = [
+        "board_level_ZCU104_signoff",
+        "full_target_scale_LLaMA_accelerator_bitstream",
+    ]
+    report_path.write_text(json.dumps(wrapper_report, indent=2), encoding="utf-8")
+
+    report = run_board_zcu104_signoff_evidence_agent(
+        dispatch_plan,
+        full_execution,
+        tmp_path,
+        board_wrapper_dir=wrapper_dir,
+    )
+
+    assert report["status"] == "blocked_by_missing_or_incomplete_board_signoff_evidence"
+    assert report["evidence_written"] is False
+    assert "board-wrapper target_scale_accelerator_bitstream must be true" in report["failures"]
+    assert "board-wrapper accelerator_scope must be full_target_llama_accelerator" in report["failures"]
+    assert not (tmp_path / "board_zcu104_signoff_evidence.json").exists()
+
+
 def test_board_zcu104_signoff_readiness_rejects_fixture_only_or_timing_failure(tmp_path: Path):
     dispatch_plan = _minimal_full_execution_dispatch_plan()
     full_execution = _passed_full_execution_readiness_for_board()
@@ -4508,8 +5323,8 @@ def test_zcu104_board_shell_constraints_package_distinguishes_pre_signoff_from_e
     assert "create_bd_cell -type ip -vlnv xilinx.com:ip:zynq_ultra_ps_e:* zynq_ultra_ps_e_0" in bd_tcl_text
     assert "CONFIG.PSU__USE__M_AXI_GP0 1" in bd_tcl_text
     assert "CONFIG.PSU__USE__S_AXI_GP0 0" in bd_tcl_text
-    assert "CONFIG.PSU__CRL_APB__PL0_REF_CTRL__SRCSEL IOPLL" in bd_tcl_text
-    assert "CONFIG.PSU__CRL_APB__PL0_REF_CTRL__DIVISOR0 5" in bd_tcl_text
+    assert "CONFIG.PSU__CRL_APB__PL0_REF_CTRL__SRCSEL RPLL" in bd_tcl_text
+    assert "CONFIG.PSU__CRL_APB__PL0_REF_CTRL__DIVISOR0 6" in bd_tcl_text
     assert "PS PL0 clock resolved below 200 MHz target" in bd_tcl_text
     assert "proc_sys_reset_0" in bd_tcl_text
     assert "axi_interconnect_0" in bd_tcl_text
@@ -4547,6 +5362,7 @@ def test_zcu104_board_shell_constraints_package_distinguishes_pre_signoff_from_e
     assert "report_methodology -file zcu104_methodology.rpt" in route_tcl_text
     assert "write_xdc -force zcu104_implemented_constraints.xdc" in route_tcl_text
     assert "write_checkpoint -force zcu104_post_route.dcp" in route_tcl_text
+    assert "write_bitstream -force zcu104_board_wrapper.bit" in route_tcl_text
 
     saved = json.loads(
         (tmp_path / "zcu104_board_shell_signoff_readiness_report.json").read_text(encoding="utf-8")
@@ -4569,6 +5385,7 @@ def test_zcu104_board_wrapper_agent_blocks_when_vivado_is_missing(tmp_path: Path
     assert report["status"] == "blocked_by_missing_vivado"
     assert report["vivado_available"] is False
     assert report["route_completed"] is False
+    assert report["bitstream_generated"] is False
     assert report["implementation_evidence_ready"] is False
     assert report["board_zcu104_signoff_evidence_written"] is False
     assert report["final_board_signoff_still_blocked"] is True
@@ -4586,6 +5403,146 @@ def test_zcu104_board_wrapper_agent_blocks_when_vivado_is_missing(tmp_path: Path
     assert result["status"] == "blocked_by_missing_vivado"
     assert result["final_signoff_still_blocked"] is True
     assert any(command["missing_executable"] for command in result["commands_run"])
+
+
+def test_zcu104_board_shell_constraints_package_wraps_generated_accelerator_artifact(
+    tmp_path: Path,
+):
+    cfg = load_config("examples/zcu104_llama32_1b_gptq.yaml")
+    artifact_dir = tmp_path / "generated_accelerator"
+    artifact_dir.mkdir()
+    (artifact_dir / "generated_model_top.sv").write_text(
+        """module generated_model_top(
+    input logic aclk,
+    input logic aresetn,
+    input logic start_i,
+    output logic done_o,
+    output logic [31:0] status_o
+);
+    assign done_o = start_i & aresetn;
+    assign status_o = 32'h1234_5678;
+endmodule
+""",
+        encoding="utf-8",
+    )
+    kernel_report = {
+        "status": "passed",
+        "kernel": "generated_model_top",
+        "coverage_level": "model_fsm_axi_decoder_block_fixture",
+        "numeric_policy": {
+            "full_llama_model": False,
+            "board_level_signoff": False,
+        },
+    }
+    (artifact_dir / "kernel_report.json").write_text(json.dumps(kernel_report), encoding="utf-8")
+
+    report = build_zcu104_board_shell_constraints_package(
+        cfg,
+        tmp_path / "board_gate",
+        accelerator_artifact_dir=artifact_dir,
+    )
+
+    board_gate = tmp_path / "board_gate"
+    core_text = (board_gate / "zcu104_accelerator_core.sv").read_text(encoding="utf-8")
+    route_tcl = (board_gate / "zcu104_board_route_check.tcl").read_text(encoding="utf-8")
+    bd_tcl = (board_gate / "zcu104_ps_pl_ddr_bd.tcl").read_text(encoding="utf-8")
+
+    assert (board_gate / "generated_model_top.sv").exists()
+    assert "generated_model_top u_target_accelerator" in core_text
+    assert "read_verilog -sv generated_model_top.sv" in route_tcl
+    assert "foreach rtl_file [list generated_model_top.sv zcu104_accelerator_core.sv" in bd_tcl
+    assert report["accelerator_binding"]["source"] == "generated_accelerator_artifact"
+    assert report["accelerator_binding"]["target_scale_eligible"] is False
+    assert "kernel_report.numeric_policy.full_llama_model is not true" in report["accelerator_binding"][
+        "target_scale_blockers"
+    ]
+
+
+def test_zcu104_board_wrapper_agent_marks_target_scale_only_with_eligible_artifact(
+    monkeypatch,
+    tmp_path: Path,
+):
+    cfg = load_config("examples/zcu104_llama32_1b_gptq.yaml")
+    artifact_dir = tmp_path / "generated_accelerator"
+    artifact_dir.mkdir()
+    (artifact_dir / "generated_model_top.sv").write_text(
+        """module generated_model_top(
+    input logic aclk,
+    input logic aresetn,
+    input logic start_i,
+    output logic done_o,
+    output logic [31:0] status_o
+);
+    assign done_o = start_i & aresetn;
+    assign status_o = 32'hfeed_cafe;
+endmodule
+""",
+        encoding="utf-8",
+    )
+    (artifact_dir / "kernel_report.json").write_text(
+        json.dumps(
+            {
+                "status": "passed",
+                "kernel": "generated_model_top",
+                "coverage_level": "full_target_llama_accelerator",
+                "numeric_policy": {
+                    "full_llama_model": True,
+                    "board_level_signoff": True,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    def fake_run(command, cwd, text, stdout, stderr, timeout, check):
+        assert text is True
+        assert stdout is not None
+        assert stderr is not None
+        assert check is False
+        if "-mode" in command:
+            (cwd / "zcu104_timing_summary.rpt").write_text(
+                "\n".join(
+                    [
+                        "setup_worst_slack_ns: 0.250",
+                        "hold_worst_slack_ns: 0.025",
+                        "pulse_width_worst_slack_ns: 0.500",
+                        "setup_failing_endpoints: 0",
+                        "hold_failing_endpoints: 0",
+                        "pulse_width_failing_endpoints: 0",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            (cwd / "zcu104_utilization.rpt").write_text(
+                "\n".join(["lut: 1200", "ff: 2100", "dsp: 8", "bram: 4", "uram: 0"]),
+                encoding="utf-8",
+            )
+            (cwd / "zcu104_drc.rpt").write_text("No board-wrapper blocking critical warnings.\n", encoding="utf-8")
+            (cwd / "zcu104_clocks.rpt").write_text("clk_pl_0 5.000\n", encoding="utf-8")
+            (cwd / "zcu104_implemented_constraints.xdc").write_text(
+                "create_clock -period 5.000 -name clk_pl_0 [get_pins u_ps/pl_clk0]\n",
+                encoding="utf-8",
+            )
+            (cwd / "zcu104_post_route.dcp").write_text("fake checkpoint\n", encoding="utf-8")
+            (cwd / "zcu104_board_wrapper.bit").write_bytes(b"fake target bitstream\n")
+            return types.SimpleNamespace(returncode=0, stdout="route ok\n", stderr="")
+        return types.SimpleNamespace(returncode=0, stdout="Vivado v2024.1\n", stderr="")
+
+    monkeypatch.setattr("nl2hdl.llm_kernels.subprocess.run", fake_run)
+
+    report = run_zcu104_board_wrapper_axi_bridge_agent(
+        cfg,
+        tmp_path / "board_gate",
+        accelerator_artifact_dir=artifact_dir,
+        run_vivado=True,
+    )
+
+    assert report["status"] == "passed"
+    assert report["bitstream_generated"] is True
+    assert report["target_scale_accelerator_bitstream"] is True
+    assert report["accelerator_scope"] == "full_target_llama_accelerator"
+    assert report["accelerator_binding"]["top_module"] == "generated_model_top"
+    assert "full_target_scale_LLaMA_accelerator_bitstream" not in report["does_not_claim"]
 
 
 def test_zcu104_board_wrapper_agent_passes_with_fake_routed_reports(monkeypatch, tmp_path: Path):
@@ -4624,6 +5581,7 @@ def test_zcu104_board_wrapper_agent_passes_with_fake_routed_reports(monkeypatch,
                 encoding="utf-8",
             )
             (cwd / "zcu104_post_route.dcp").write_text("fake checkpoint\n", encoding="utf-8")
+            (cwd / "zcu104_board_wrapper.bit").write_bytes(b"fake bitstream\n")
             return types.SimpleNamespace(returncode=0, stdout="route ok\n", stderr="")
         return types.SimpleNamespace(returncode=0, stdout="Vivado v2024.1\n", stderr="")
 
@@ -4634,6 +5592,9 @@ def test_zcu104_board_wrapper_agent_passes_with_fake_routed_reports(monkeypatch,
     assert report["status"] == "passed"
     assert report["vivado_available"] is True
     assert report["route_completed"] is True
+    assert report["bitstream_generated"] is True
+    assert report["bitstream_size_bytes"] > 0
+    assert report["bitstream_ready_for_bounded_board_wrapper"] is True
     assert report["implementation_evidence_ready"] is True
     assert report["final_board_signoff_still_blocked"] is True
     assert report["static_integration_evidence"]["routed_top_instantiates_generated_bd_wrapper"] is True
@@ -4642,9 +5603,61 @@ def test_zcu104_board_wrapper_agent_passes_with_fake_routed_reports(monkeypatch,
     assert report["route_report_analysis"]["timing"]["constraints_met"] is True
     assert report["route_report_analysis"]["clock"]["observed_period_ns"] == 5.0
     assert report["route_report_analysis"]["utilization_budget"]["passes"] is True
+    assert report["route_report_analysis"]["reports_present"]["bitstream"] is True
     assert report["failures"] == []
     assert "skill_update_candidate" not in report
     assert not (tmp_path / "board_zcu104_signoff_evidence.json").exists()
+
+
+def test_zcu104_board_wrapper_agent_prioritizes_clock_gate_failure_over_missing_bitstream(
+    monkeypatch, tmp_path: Path
+):
+    cfg = load_config("examples/zcu104_llama32_1b_gptq.yaml")
+
+    def fake_run(command, cwd, text, stdout, stderr, timeout, check):
+        assert text is True
+        assert stdout is not None
+        assert stderr is not None
+        assert check is False
+        if "-mode" in command:
+            (cwd / "zcu104_timing_summary.rpt").write_text(
+                "\n".join(
+                    [
+                        "setup_worst_slack_ns: 0.125",
+                        "hold_worst_slack_ns: 0.025",
+                        "pulse_width_worst_slack_ns: 0.500",
+                        "setup_failing_endpoints: 0",
+                        "hold_failing_endpoints: 0",
+                        "pulse_width_failing_endpoints: 0",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            (cwd / "zcu104_utilization.rpt").write_text(
+                "\n".join(["lut: 449", "ff: 512", "dsp: 0", "bram: 0", "uram: 0"]),
+                encoding="utf-8",
+            )
+            (cwd / "zcu104_drc.rpt").write_text("No board-wrapper blocking critical warnings.\n", encoding="utf-8")
+            (cwd / "zcu104_clocks.rpt").write_text("clk_pl_0 5.333\n", encoding="utf-8")
+            (cwd / "zcu104_implemented_constraints.xdc").write_text(
+                "create_clock -period 5.333 -name clk_pl_0 [get_pins u_ps/pl_clk0]\n",
+                encoding="utf-8",
+            )
+            (cwd / "zcu104_post_route.dcp").write_text("fake checkpoint\n", encoding="utf-8")
+            return types.SimpleNamespace(returncode=1, stdout="clock gate failed\n", stderr="")
+        return types.SimpleNamespace(returncode=0, stdout="Vivado v2024.1\n", stderr="")
+
+    monkeypatch.setattr("nl2hdl.llm_kernels.subprocess.run", fake_run)
+
+    report = run_zcu104_board_wrapper_axi_bridge_agent(cfg, tmp_path, run_vivado=True)
+
+    assert report["status"] == "failed_board_wrapper_gates"
+    assert report["route_completed"] is True
+    assert report["route_check_command_passed"] is False
+    assert report["bitstream_generated"] is False
+    assert "report_clocks period exceeds target clock period" in report["failures"]
+    assert "implemented XDC period exceeds target clock period" in report["failures"]
+    assert "write_bitstream did not produce zcu104_board_wrapper.bit" not in report["failures"]
 
 
 def test_board_zcu104_signoff_readiness_stays_blocked_after_pre_signoff_constraints_package(tmp_path: Path):
@@ -5818,6 +6831,67 @@ def test_cli_subagents_skill_draft_writes_candidate_artifacts(tmp_path: Path):
     assert draft["candidate_count"] == 1
     assert draft["candidates"][0]["candidate"]["minimal_regression_check"] == "rmsnorm kernel golden-vector simulation"
     assert "pin RMSNorm approximation tables" in draft_markdown
+
+
+def test_cli_subagents_skill_draft_collects_target_evidence_candidate(tmp_path: Path):
+    dispatch_plan = {
+        "waves": [],
+        "model": {"name": "meta-llama/Llama-3.2-1B"},
+        "hardware": {"board": "ZCU104"},
+        "optimization": {"quantization": "int4_gptq"},
+    }
+    dispatch_plan_path = tmp_path / "hdl_subagent_dispatch_plan.json"
+    dispatch_plan_path.write_text(json.dumps(dispatch_plan), encoding="utf-8")
+    evidence_dir = tmp_path / "full_target_llama_accelerator_gate"
+    evidence_dir.mkdir()
+    (evidence_dir / "subagent_result.json").write_text(
+        json.dumps(
+            {
+                "artifact": "full_model_target_rtl_generator_subagent_result",
+                "task_id": "full_model_target_rtl_generator",
+                "status": "blocked",
+                "changed_files": [str(evidence_dir / "subagent_result.json")],
+                "commands_run": ["python3 -m nl2hdl subagents status ..."],
+                "evidence_paths": {"subagent_result": str(evidence_dir / "subagent_result.json")},
+                "remaining_risks": ["target-scale child prerequisites are missing"],
+                "skill_update_candidate": {
+                    "failing_command": "python3 -m nl2hdl subagents status ...",
+                    "symptom": "full-model RTL generator blocked on fixture child coverage",
+                    "root_cause_hypothesis": "target-scale projection and non-GEMM child packets are not yet available",
+                    "prevention_rule": "queue target-scale child packet generators before retrying full_model_target_rtl_generator",
+                    "minimal_regression_check": "skill-draft surfaces target-evidence skill_update_candidate",
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    rc = cli_main(
+        [
+            "subagents",
+            "skill-draft",
+            "--dispatch-plan",
+            str(dispatch_plan_path),
+            "--evidence-root",
+            str(tmp_path),
+            "--out",
+            str(tmp_path / "skill_out"),
+            "--target-skill",
+            "multi-agent-hdl-generation",
+        ]
+    )
+
+    assert rc == 0
+    draft = json.loads((tmp_path / "skill_out" / "skill_update_candidates.json").read_text())
+    assert draft["status"] == "skill_update_required"
+    assert draft["candidate_count"] == 1
+    assert draft["candidates"][0]["wave_id"] == "target_evidence"
+    assert draft["candidates"][0]["task_id"] == "full_model_target_rtl_generator"
+    assert draft["candidates"][0]["candidate_source"] == "target_evidence"
+    assert (
+        draft["candidates"][0]["candidate"]["prevention_rule"]
+        == "queue target-scale child packet generators before retrying full_model_target_rtl_generator"
+    )
 
 
 def test_hdl_task_manifest_unblocks_real_gptq_metadata_when_parsed(monkeypatch):
@@ -7097,9 +8171,8 @@ def test_emit_projection_adapter_stream_integration_kernel_bridges_adapter_to_pr
     assert "payload_word_r <= mem_word_r[int'(next_payload_idx_w)*PAYLOAD_WIDTH +: PAYLOAD_WIDTH]" in sv_text
     assert "packed_weight_r[int'(projection_consume_count_r)*PAYLOAD_WIDTH +: PAYLOAD_WIDTH] <= payload_word_r" in sv_text
     assert "MAC_PAIR" in sv_text
-    assert "product_lane0_r <=" in sv_text
-    assert "product_lane1_r <=" in sv_text
-    assert "pair_sum_w = product_lane0_r + product_lane1_r" in sv_text
+    assert "product_lane_r[lane_seq_idx*32 +: 32] <=" in sv_text
+    assert "pair_sum_w = pair_sum_w + product_lane_at(lane_comb_idx)" in sv_text
 
     report = json.loads((tmp_path / "kernel_report.json").read_text(encoding="utf-8"))
     assert report["kernel"] == "projection_adapter_stream_integration"
@@ -7161,7 +8234,7 @@ def test_emit_projection_target_stream_plan_reports_target_metadata_and_fixture_
     assert "BACKPRESSURE_TRACE projection_target_stream_plan ready_low_payload_idx=0,3,4" in result.simulation[
         "output"
     ]
-    assert "PARALLEL_TRACE projection_target_stream_plan true_lanes=2" in result.simulation["output"]
+    assert "PARALLEL_TRACE projection_target_stream_plan true_lanes=64" in result.simulation["output"]
     assert (tmp_path / "projection_target_stream_plan_golden.json").exists()
     golden = json.loads((tmp_path / "projection_target_stream_plan_golden.json").read_text(encoding="utf-8"))
 
@@ -7178,8 +8251,8 @@ def test_emit_projection_target_stream_plan_reports_target_metadata_and_fixture_
     assert "payload_link_valid_w" in sv_text
     assert "payload_link_ready_w" in sv_text
     assert "MAC_PAIR" in sv_text
-    assert "product_lane0_r <=" in sv_text
-    assert "product_lane1_r <=" in sv_text
+    assert "product_lane_r[lane_seq_idx*32 +: 32] <=" in sv_text
+    assert "TRUE_PARALLEL_LANES = 64" in sv_text
 
     report = json.loads((tmp_path / "kernel_report.json").read_text(encoding="utf-8"))
     assert report["kernel"] == "projection_target_stream_plan"
@@ -7252,9 +8325,10 @@ def test_emit_projection_target_stream_plan_reports_target_metadata_and_fixture_
     assert report["fixture_tile_parameters"]["payload_count"] == 16
     assert report["lane_policy"]["requested_pe_lanes"] == 64
     assert report["lane_policy"]["selected_target_planning_lanes"] == 64
-    assert report["lane_policy"]["effective_fixture_lanes"] == 2
-    assert report["lane_policy"]["true_parallel_datapath_lanes"] == 2
-    assert report["lane_policy"]["parallel_products_per_cycle"] == 2
+    assert report["lane_policy"]["effective_fixture_lanes"] == 64
+    assert report["lane_policy"]["true_parallel_datapath_lanes"] == 64
+    assert report["lane_policy"]["parallel_products_per_cycle"] == 64
+    assert report["lane_policy"]["pe_count_controls_true_parallel_datapath"] is True
     assert report["round_trip_passed"] is True
     assert report["board_level_signoff"] is False
     assert "AXI_interface" in report["does_not_claim"]
@@ -7323,7 +8397,7 @@ def test_emit_projection_target_stream_plan_uses_env_selected_v_proj(
         assert artifact["packed_int4_streaming_evidence"]["memory_word_count"] == 4
         assert artifact["packed_int4_streaming_evidence"]["payload_count"] == 16
         assert artifact["packed_int4_streaming_evidence"]["payload_link_match_passed"] is True
-        assert artifact["packed_int4_streaming_evidence"]["true_parallel_datapath_lanes"] == 2
+        assert artifact["packed_int4_streaming_evidence"]["true_parallel_datapath_lanes"] == 64
         assert artifact["target_fixture_distinction"]["selected_projection"] == "v_proj"
         assert artifact["target_fixture_distinction"]["full_target_projection_execution"] is False
         assert "selected projection is v_proj" in artifact["target_fixture_distinction"]["distinction"]

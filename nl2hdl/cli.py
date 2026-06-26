@@ -9,17 +9,23 @@ from dataclasses import replace
 from .agent import run_agent
 from .config import AgentConfig, load_config, validate_config
 from .llm_agent import run_llm_agent
-from .llm_kernels import run_zcu104_board_wrapper_axi_bridge_agent
+from .llm_kernels import run_zcu104_board_wrapper_axi_bridge_agent, write_model_level_execution_harness_report
 from .llm_plan import write_llm_accelerator_plan
 from .parent_loop import ParentLoopOptions, run_parent_loop
 from .subagent_tasks import (
     build_board_zcu104_signoff_evidence_agent_task,
     build_board_zcu104_signoff_evidence_template,
     build_board_zcu104_signoff_readiness_report,
+    build_full_model_target_rtl_generator_agent_task,
+    build_full_target_llama_accelerator_artifact_agent_task,
     build_full_llama_execution_evidence_agent_task,
     build_full_llama_execution_evidence_template,
     build_full_llama_execution_readiness_report,
     build_model_level_execution_harness_agent_task,
+    build_target_scale_child_packet_agent_task,
+    TARGET_SCALE_CHILD_PACKET_TASKS,
+    run_board_zcu104_signoff_evidence_agent,
+    run_full_llama_execution_evidence_agent,
     build_zcu104_board_wrapper_axi_bridge_agent_task,
     build_hdl_subagent_execution_manifest,
     build_hdl_subagent_wave_status,
@@ -35,13 +41,16 @@ from .subagent_tasks import (
 def _apply_cli_overrides(config: AgentConfig, args: argparse.Namespace) -> AgentConfig:
     gptq_checkpoint = getattr(args, "gptq_checkpoint", None)
     mlir_graph = getattr(args, "mlir_graph", None)
-    if gptq_checkpoint is None and mlir_graph is None:
+    model_structure_source = getattr(args, "model_structure_source", None)
+    if gptq_checkpoint is None and mlir_graph is None and model_structure_source is None:
         return config
     model_updates = {}
     if gptq_checkpoint is not None:
         model_updates["gptq_checkpoint"] = str(gptq_checkpoint).strip()
     if mlir_graph is not None:
         model_updates["mlir_graph"] = str(mlir_graph).strip()
+    if model_structure_source is not None:
+        model_updates["model_structure_source"] = str(model_structure_source).strip()
     updated = replace(config, model=replace(config.model, **model_updates))
     validate_config(updated)
     return updated
@@ -57,6 +66,11 @@ def _add_generate_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--mlir-graph",
         help="Optional provided/exported MLIR graph path; overrides model.mlir_graph in --spec for inspect gating.",
+    )
+    parser.add_argument(
+        "--model-structure-source",
+        choices=("mlir", "hf_config"),
+        help="Model-structure proof source. hf_config accepts resolved Hugging Face AutoConfig semantic coverage without MLIR.",
     )
     parser.add_argument("--out", required=True, help="Output directory")
     parser.add_argument(
@@ -157,6 +171,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--mlir-graph",
         help="Optional provided/exported MLIR graph path; overrides model.mlir_graph in --spec for planning metadata.",
     )
+    plan.add_argument(
+        "--model-structure-source",
+        choices=("mlir", "hf_config"),
+        help="Model-structure proof source recorded in planning metadata.",
+    )
     plan.add_argument("--out", required=True, help="Output directory")
     parent_loop = subparsers.add_parser(
         "parent-loop",
@@ -171,6 +190,11 @@ def build_parser() -> argparse.ArgumentParser:
     parent_loop.add_argument(
         "--mlir-graph",
         help="Optional provided/exported MLIR graph path; overrides model.mlir_graph in --spec for inspect gating.",
+    )
+    parent_loop.add_argument(
+        "--model-structure-source",
+        choices=("mlir", "hf_config"),
+        help="Model-structure proof source. hf_config accepts resolved Hugging Face AutoConfig semantic coverage without MLIR.",
     )
     parent_loop.add_argument("--out", required=True, help="Output directory")
     parent_loop.add_argument(
@@ -207,9 +231,24 @@ def build_parser() -> argparse.ArgumentParser:
         help="Vivado executable name/path used by local board-wrapper backend",
     )
     parent_loop.add_argument(
+        "--board-wrapper-evidence-dir",
+        help="Import an existing ZCU104 board-wrapper Vivado evidence directory into this parent-loop run",
+    )
+    parent_loop.add_argument(
         "--local-verification",
         action="store_true",
         help="Use deterministic verification smoke reports instead of queueing Codex verification sub-agents",
+    )
+    parent_loop.add_argument(
+        "--auto-tune-ooc",
+        action="store_true",
+        help="Apply allowed OOC tuning recommendations such as pe_count before rerunning a local module backend",
+    )
+    parent_loop.add_argument(
+        "--max-ooc-tuning-attempts",
+        type=int,
+        default=1,
+        help="Maximum local OOC tuning reruns per module evidence directory",
     )
     parent_loop.add_argument("--verbose", action="store_true", help="Print the full parent loop report")
     subagents = subparsers.add_parser("subagents", help="Inspect and refresh HDL sub-agent orchestration state")
@@ -272,6 +311,18 @@ def build_parser() -> argparse.ArgumentParser:
         help="Optional strongest bounded fixture kernel_report.json used to reject fixture-only signoff claims",
     )
     board_wrapper.add_argument(
+        "--accelerator-artifact-dir",
+        help="Optional generated accelerator RTL directory to wrap under the ZCU104 PS/PL/DDR shell",
+    )
+    board_wrapper.add_argument(
+        "--accelerator-top-module",
+        help="Top module name inside --accelerator-artifact-dir. Defaults to kernel_report.kernel when present.",
+    )
+    board_wrapper.add_argument(
+        "--accelerator-kernel-report",
+        help="Optional kernel_report.json for the generated accelerator artifact.",
+    )
+    board_wrapper.add_argument(
         "--skip-vivado-route",
         action="store_true",
         help="Generate package and reports but do not run Vivado route/check",
@@ -281,6 +332,29 @@ def build_parser() -> argparse.ArgumentParser:
         default="vivado",
         help="Vivado executable name/path to use for version and route/check commands",
     )
+    model_harness = subagent_subparsers.add_parser(
+        "model-harness",
+        help="Run the local model-level execution harness sub-agent backend",
+    )
+    model_harness.add_argument("--dispatch-plan", required=True, help="Path to hdl_subagent_dispatch_plan.json")
+    model_harness.add_argument("--evidence-root", required=True, help="Parent evidence root")
+    full_execution = subagent_subparsers.add_parser(
+        "full-execution",
+        help="Run the local full LLaMA execution evidence sub-agent backend",
+    )
+    full_execution.add_argument("--dispatch-plan", required=True, help="Path to hdl_subagent_dispatch_plan.json")
+    full_execution.add_argument("--evidence-root", required=True, help="Parent evidence root")
+    board_signoff = subagent_subparsers.add_parser(
+        "board-signoff",
+        help="Run the local board-level ZCU104 signoff evidence sub-agent backend",
+    )
+    board_signoff.add_argument("--dispatch-plan", required=True, help="Path to hdl_subagent_dispatch_plan.json")
+    board_signoff.add_argument("--evidence-root", required=True, help="Parent evidence root")
+    board_signoff.add_argument(
+        "--board-wrapper-dir",
+        help="Directory containing zcu104_board_wrapper_axi_bridge_implementation_report.json",
+    )
+    board_signoff.add_argument("--out", help="Directory for board signoff subagent_result.json")
     return parser
 
 
@@ -342,8 +416,41 @@ def _run_subagent_status(args: argparse.Namespace) -> int:
         evidence_root,
         dispatch_plan_path=str(dispatch_plan_path),
     )
+    target_scale_child_agent_tasks = {
+        str(spec["task_id"]): build_target_scale_child_packet_agent_task(
+            dispatch_plan,
+            full_execution_readiness,
+            board_signoff_readiness,
+            evidence_root,
+            str(spec["task_id"]),
+            dispatch_plan_path=str(dispatch_plan_path),
+        )
+        for spec in TARGET_SCALE_CHILD_PACKET_TASKS
+    }
+    full_model_target_rtl_agent_task = build_full_model_target_rtl_generator_agent_task(
+        dispatch_plan,
+        full_execution_readiness,
+        board_signoff_readiness,
+        evidence_root,
+        dispatch_plan_path=str(dispatch_plan_path),
+    )
+    full_target_artifact_agent_task = build_full_target_llama_accelerator_artifact_agent_task(
+        dispatch_plan,
+        full_execution_readiness,
+        board_signoff_readiness,
+        evidence_root,
+        dispatch_plan_path=str(dispatch_plan_path),
+    )
     model_harness_execution_manifest = build_target_evidence_execution_manifest(model_harness_agent_task)
     target_evidence_execution_manifest = build_target_evidence_execution_manifest(full_execution_agent_task)
+    target_scale_child_execution_manifests = {
+        task_id: build_target_evidence_execution_manifest(task)
+        for task_id, task in target_scale_child_agent_tasks.items()
+    }
+    full_model_target_rtl_execution_manifest = build_target_evidence_execution_manifest(
+        full_model_target_rtl_agent_task
+    )
+    full_target_artifact_execution_manifest = build_target_evidence_execution_manifest(full_target_artifact_agent_task)
     board_signoff_execution_manifest = build_target_evidence_execution_manifest(board_signoff_agent_task)
     board_wrapper_execution_manifest = build_target_evidence_execution_manifest(board_wrapper_agent_task)
     wave_status_path = out_dir / "hdl_subagent_wave_status.json"
@@ -362,6 +469,18 @@ def _run_subagent_status(args: argparse.Namespace) -> int:
     board_signoff_spawn_instructions_path = out_dir / "board_zcu104_signoff_spawn_instructions.md"
     board_wrapper_execution_manifest_path = out_dir / "zcu104_board_wrapper_axi_bridge_execution_manifest.json"
     board_wrapper_spawn_instructions_path = out_dir / "zcu104_board_wrapper_axi_bridge_spawn_instructions.md"
+    target_scale_child_execution_manifest_paths = {
+        task_id: out_dir / f"{task_id}_execution_manifest.json"
+        for task_id in target_scale_child_agent_tasks
+    }
+    target_scale_child_spawn_instruction_paths = {
+        task_id: out_dir / f"{task_id}_spawn_instructions.md"
+        for task_id in target_scale_child_agent_tasks
+    }
+    full_model_target_rtl_execution_manifest_path = out_dir / "full_model_target_rtl_generator_execution_manifest.json"
+    full_model_target_rtl_spawn_instructions_path = out_dir / "full_model_target_rtl_generator_spawn_instructions.md"
+    full_target_artifact_execution_manifest_path = out_dir / "full_target_llama_accelerator_artifact_execution_manifest.json"
+    full_target_artifact_spawn_instructions_path = out_dir / "full_target_llama_accelerator_artifact_spawn_instructions.md"
     full_execution_readiness_path = out_dir / "full_llama_execution_readiness.json"
     board_signoff_readiness_path = out_dir / "board_zcu104_signoff_readiness.json"
     full_execution_template_path = out_dir / "full_llama_execution_evidence_template.json"
@@ -374,6 +493,18 @@ def _run_subagent_status(args: argparse.Namespace) -> int:
     board_signoff_agent_task_path = out_dir / "board_zcu104_signoff_evidence_agent_task.json"
     board_wrapper_prompt_path = out_dir / board_wrapper_agent_task["prompt_file"]
     board_wrapper_agent_task_path = out_dir / "zcu104_board_wrapper_axi_bridge_agent_task.json"
+    target_scale_child_prompt_paths = {
+        task_id: out_dir / task["prompt_file"]
+        for task_id, task in target_scale_child_agent_tasks.items()
+    }
+    target_scale_child_agent_task_paths = {
+        task_id: out_dir / f"{task_id}_agent_task.json"
+        for task_id in target_scale_child_agent_tasks
+    }
+    full_model_target_rtl_prompt_path = out_dir / full_model_target_rtl_agent_task["prompt_file"]
+    full_model_target_rtl_agent_task_path = out_dir / "full_model_target_rtl_generator_agent_task.json"
+    full_target_artifact_prompt_path = out_dir / full_target_artifact_agent_task["prompt_file"]
+    full_target_artifact_agent_task_path = out_dir / "full_target_llama_accelerator_artifact_agent_task.json"
     wave_status_path.write_text(json.dumps(wave_status, indent=2), encoding="utf-8")
     execution_manifest_path.write_text(json.dumps(execution_manifest, indent=2), encoding="utf-8")
     model_harness_execution_manifest_path.write_text(
@@ -408,6 +539,31 @@ def _run_subagent_status(args: argparse.Namespace) -> int:
         build_codex_spawn_instructions(board_wrapper_execution_manifest),
         encoding="utf-8",
     )
+    for task_id, manifest in target_scale_child_execution_manifests.items():
+        target_scale_child_execution_manifest_paths[task_id].write_text(
+            json.dumps(manifest, indent=2),
+            encoding="utf-8",
+        )
+        target_scale_child_spawn_instruction_paths[task_id].write_text(
+            build_codex_spawn_instructions(manifest),
+            encoding="utf-8",
+        )
+    full_model_target_rtl_execution_manifest_path.write_text(
+        json.dumps(full_model_target_rtl_execution_manifest, indent=2),
+        encoding="utf-8",
+    )
+    full_model_target_rtl_spawn_instructions_path.write_text(
+        build_codex_spawn_instructions(full_model_target_rtl_execution_manifest),
+        encoding="utf-8",
+    )
+    full_target_artifact_execution_manifest_path.write_text(
+        json.dumps(full_target_artifact_execution_manifest, indent=2),
+        encoding="utf-8",
+    )
+    full_target_artifact_spawn_instructions_path.write_text(
+        build_codex_spawn_instructions(full_target_artifact_execution_manifest),
+        encoding="utf-8",
+    )
     full_execution_readiness_path.write_text(json.dumps(full_execution_readiness, indent=2), encoding="utf-8")
     board_signoff_readiness_path.write_text(json.dumps(board_signoff_readiness, indent=2), encoding="utf-8")
     full_execution_template_path.write_text(json.dumps(full_execution_template, indent=2), encoding="utf-8")
@@ -432,6 +588,33 @@ def _run_subagent_status(args: argparse.Namespace) -> int:
         key: value for key, value in board_wrapper_agent_task.items() if key != "prompt"
     }
     board_wrapper_agent_task_path.write_text(json.dumps(board_wrapper_task_without_prompt, indent=2), encoding="utf-8")
+    for task_id, task in target_scale_child_agent_tasks.items():
+        prompt_path = target_scale_child_prompt_paths[task_id]
+        prompt_path.parent.mkdir(parents=True, exist_ok=True)
+        prompt_path.write_text(task["prompt"], encoding="utf-8")
+        task_without_prompt = {key: value for key, value in task.items() if key != "prompt"}
+        target_scale_child_agent_task_paths[task_id].write_text(
+            json.dumps(task_without_prompt, indent=2),
+            encoding="utf-8",
+        )
+    full_model_target_rtl_prompt_path.parent.mkdir(parents=True, exist_ok=True)
+    full_model_target_rtl_prompt_path.write_text(full_model_target_rtl_agent_task["prompt"], encoding="utf-8")
+    full_model_target_rtl_task_without_prompt = {
+        key: value for key, value in full_model_target_rtl_agent_task.items() if key != "prompt"
+    }
+    full_model_target_rtl_agent_task_path.write_text(
+        json.dumps(full_model_target_rtl_task_without_prompt, indent=2),
+        encoding="utf-8",
+    )
+    full_target_artifact_prompt_path.parent.mkdir(parents=True, exist_ok=True)
+    full_target_artifact_prompt_path.write_text(full_target_artifact_agent_task["prompt"], encoding="utf-8")
+    full_target_artifact_task_without_prompt = {
+        key: value for key, value in full_target_artifact_agent_task.items() if key != "prompt"
+    }
+    full_target_artifact_agent_task_path.write_text(
+        json.dumps(full_target_artifact_task_without_prompt, indent=2),
+        encoding="utf-8",
+    )
     spawn_instructions_path = write_codex_spawn_instructions(execution_manifest, out_dir)
     print(
         json.dumps(
@@ -450,6 +633,28 @@ def _run_subagent_status(args: argparse.Namespace) -> int:
                 "model_level_harness_spawn_count": model_harness_execution_manifest["target_evidence_spawn_count"],
                 "board_signoff_spawn_count": board_signoff_execution_manifest["target_evidence_spawn_count"],
                 "board_wrapper_implementation_spawn_count": board_wrapper_execution_manifest[
+                    "implementation_spawn_count"
+                ],
+                "target_scale_child_rtl_wave_spawn_count": sum(
+                    manifest["implementation_spawn_count"]
+                    for manifest in target_scale_child_execution_manifests.values()
+                ),
+                "target_scale_child_rtl_wave_ready_tasks": [
+                    task_id for task_id, task in target_scale_child_agent_tasks.items() if task["ready_to_spawn"]
+                ],
+                "target_scale_child_rtl_wave_skill_update_required": any(
+                    manifest.get("skill_update_required") is True
+                    for manifest in target_scale_child_execution_manifests.values()
+                ),
+                "target_scale_child_rtl_wave_blocked_tasks": {
+                    task_id: manifest.get("blocked_target_evidence_tasks", [])
+                    for task_id, manifest in target_scale_child_execution_manifests.items()
+                    if manifest.get("blocked_target_evidence_tasks")
+                },
+                "full_model_target_rtl_generator_spawn_count": full_model_target_rtl_execution_manifest[
+                    "implementation_spawn_count"
+                ],
+                "full_target_llama_accelerator_artifact_spawn_count": full_target_artifact_execution_manifest[
                     "implementation_spawn_count"
                 ],
                 "skill_update_required": execution_manifest["skill_update_required"],
@@ -490,6 +695,40 @@ def _run_subagent_status(args: argparse.Namespace) -> int:
                 "zcu104_board_wrapper_axi_bridge_agent_ready": board_wrapper_agent_task["ready_to_spawn"],
                 "zcu104_board_wrapper_axi_bridge_execution_manifest": str(board_wrapper_execution_manifest_path),
                 "zcu104_board_wrapper_axi_bridge_spawn_instructions": str(board_wrapper_spawn_instructions_path),
+                "target_scale_child_rtl_wave_agent_tasks": {
+                    task_id: str(path) for task_id, path in target_scale_child_agent_task_paths.items()
+                },
+                "target_scale_child_rtl_wave_agent_prompts": {
+                    task_id: str(path) for task_id, path in target_scale_child_prompt_paths.items()
+                },
+                "target_scale_child_rtl_wave_execution_manifests": {
+                    task_id: str(path) for task_id, path in target_scale_child_execution_manifest_paths.items()
+                },
+                "target_scale_child_rtl_wave_spawn_instructions": {
+                    task_id: str(path) for task_id, path in target_scale_child_spawn_instruction_paths.items()
+                },
+                "full_model_target_rtl_generator_agent_task": str(full_model_target_rtl_agent_task_path),
+                "full_model_target_rtl_generator_agent_prompt": str(full_model_target_rtl_prompt_path),
+                "full_model_target_rtl_generator_agent_ready": full_model_target_rtl_agent_task[
+                    "ready_to_spawn"
+                ],
+                "full_model_target_rtl_generator_execution_manifest": str(
+                    full_model_target_rtl_execution_manifest_path
+                ),
+                "full_model_target_rtl_generator_spawn_instructions": str(
+                    full_model_target_rtl_spawn_instructions_path
+                ),
+                "full_target_llama_accelerator_artifact_agent_task": str(full_target_artifact_agent_task_path),
+                "full_target_llama_accelerator_artifact_agent_prompt": str(full_target_artifact_prompt_path),
+                "full_target_llama_accelerator_artifact_agent_ready": full_target_artifact_agent_task[
+                    "ready_to_spawn"
+                ],
+                "full_target_llama_accelerator_artifact_execution_manifest": str(
+                    full_target_artifact_execution_manifest_path
+                ),
+                "full_target_llama_accelerator_artifact_spawn_instructions": str(
+                    full_target_artifact_spawn_instructions_path
+                ),
                 "codex_spawn_instructions": str(spawn_instructions_path),
             },
             indent=2,
@@ -569,6 +808,9 @@ def _run_subagent_board_wrapper(args: argparse.Namespace) -> int:
         config,
         Path(args.out),
         fixture_report_path=Path(args.fixture_report) if args.fixture_report else None,
+        accelerator_artifact_dir=Path(args.accelerator_artifact_dir) if args.accelerator_artifact_dir else None,
+        accelerator_top_module=args.accelerator_top_module,
+        accelerator_kernel_report_path=Path(args.accelerator_kernel_report) if args.accelerator_kernel_report else None,
         run_vivado=not args.skip_vivado_route,
         vivado_executable=args.vivado_executable,
     )
@@ -581,7 +823,97 @@ def _run_subagent_board_wrapper(args: argparse.Namespace) -> int:
                 "subagent_result": report["evidence_files"]["subagent_result"],
                 "route_completed": report["route_completed"],
                 "vivado_available": report["vivado_available"],
+                "bitstream_generated": report["bitstream_generated"],
+                "bitstream_file": report["bitstream_file"],
                 "final_board_signoff_still_blocked": report["final_board_signoff_still_blocked"],
+            },
+            indent=2,
+        )
+    )
+    return 0 if report["status"] == "passed" else 1
+
+
+def _run_subagent_model_harness(args: argparse.Namespace) -> int:
+    dispatch_plan = json.loads(Path(args.dispatch_plan).read_text(encoding="utf-8"))
+    evidence_root = Path(args.evidence_root)
+    out_dir = evidence_root / "full_llama_execution_gate"
+    report = write_model_level_execution_harness_report(dispatch_plan, out_dir)
+    subagent_result = {
+        "artifact": "model_level_execution_harness_subagent_result",
+        "task_id": "model_level_execution_harness",
+        "status": report["status"],
+        "changed_files": [str(out_dir / "model_level_execution_harness_report.json")],
+        "commands_run": ["local model-level execution harness backend"],
+        "evidence_paths": {
+            "model_level_execution_harness_report": str(out_dir / "model_level_execution_harness_report.json"),
+        },
+        "remaining_risks": [
+            "Software harness evidence only; full execution evidence remains a downstream gate.",
+        ],
+    }
+    (out_dir / "model_level_harness_subagent_result.json").write_text(
+        json.dumps(subagent_result, indent=2),
+        encoding="utf-8",
+    )
+    print(
+        json.dumps(
+            {
+                "status": report["status"],
+                "out": str(out_dir),
+                "model_level_execution_harness_report": str(out_dir / "model_level_execution_harness_report.json"),
+                "subagent_result": str(out_dir / "model_level_harness_subagent_result.json"),
+            },
+            indent=2,
+        )
+    )
+    return 0 if report["status"] == "passed" else 1
+
+
+def _run_subagent_full_execution(args: argparse.Namespace) -> int:
+    dispatch_plan_path = Path(args.dispatch_plan)
+    evidence_root = Path(args.evidence_root)
+    dispatch_plan = json.loads(dispatch_plan_path.read_text(encoding="utf-8"))
+    wave_status = build_hdl_subagent_wave_status(dispatch_plan, evidence_root)
+    report = run_full_llama_execution_evidence_agent(dispatch_plan, wave_status, evidence_root)
+    print(
+        json.dumps(
+            {
+                "status": report["status"],
+                "evidence_written": report["evidence_written"],
+                "evidence_file": report["evidence_file"],
+                "subagent_result": report["subagent_result"],
+            },
+            indent=2,
+        )
+    )
+    return 0 if report["status"] == "passed" else 1
+
+
+def _run_subagent_board_signoff(args: argparse.Namespace) -> int:
+    dispatch_plan_path = Path(args.dispatch_plan)
+    evidence_root = Path(args.evidence_root)
+    dispatch_plan = json.loads(dispatch_plan_path.read_text(encoding="utf-8"))
+    wave_status = build_hdl_subagent_wave_status(dispatch_plan, evidence_root)
+    full_execution_readiness = build_full_llama_execution_readiness_report(
+        dispatch_plan,
+        wave_status,
+        evidence_root,
+    )
+    report = run_board_zcu104_signoff_evidence_agent(
+        dispatch_plan,
+        full_execution_readiness,
+        evidence_root,
+        board_wrapper_dir=Path(args.board_wrapper_dir) if args.board_wrapper_dir else None,
+        out_dir=Path(args.out) if args.out else None,
+    )
+    print(
+        json.dumps(
+            {
+                "status": report["status"],
+                "evidence_written": report["evidence_written"],
+                "evidence_file": report["evidence_file"],
+                "subagent_result": report["subagent_result"],
+                "readiness_status": report["readiness"]["status"],
             },
             indent=2,
         )
@@ -601,6 +933,12 @@ def main(argv: list[str] | None = None) -> int:
                 return _run_subagent_ledger(args)
             if args.subagent_command == "board-wrapper":
                 return _run_subagent_board_wrapper(args)
+            if args.subagent_command == "model-harness":
+                return _run_subagent_model_harness(args)
+            if args.subagent_command == "full-execution":
+                return _run_subagent_full_execution(args)
+            if args.subagent_command == "board-signoff":
+                return _run_subagent_board_signoff(args)
             raise ValueError(f"unsupported subagents command: {args.subagent_command}")
         config = load_config(args.spec)
         config = _apply_cli_overrides(config, args)
@@ -637,6 +975,11 @@ def main(argv: list[str] | None = None) -> int:
                     backend=args.backend,
                     local_verification=args.local_verification,
                     verbose=args.verbose,
+                    board_wrapper_evidence_dir=Path(args.board_wrapper_evidence_dir)
+                    if args.board_wrapper_evidence_dir
+                    else None,
+                    auto_tune_ooc=args.auto_tune_ooc,
+                    max_ooc_tuning_attempts=args.max_ooc_tuning_attempts,
                 ),
             )
             if args.verbose:
@@ -650,6 +993,14 @@ def main(argv: list[str] | None = None) -> int:
                             "parent_loop_run_report": str(Path(args.out) / "parent_loop_run_report.json"),
                             "parent_loop_state": str(Path(args.out) / "status" / "parent_loop_state.json"),
                             "parent_loop_queue": str(Path(args.out) / "status" / "parent_loop_queue.json"),
+                            "bitstream_generated": report.get("bitstream_evidence", {}).get("generated"),
+                            "bitstream_file": report.get("bitstream_evidence", {}).get("bitstream_file"),
+                            "full_execution_readiness_status": report.get("final_state", {}).get(
+                                "full_execution_readiness_status"
+                            ),
+                            "board_signoff_readiness_status": report.get("final_state", {}).get(
+                                "board_signoff_readiness_status"
+                            ),
                         },
                         indent=2,
                     )

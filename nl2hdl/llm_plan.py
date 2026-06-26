@@ -19,6 +19,7 @@ def build_llm_accelerator_plan(model_name: str, config: AgentConfig) -> dict[str
             "gptq_checkpoint_source_kind": "configured_override" if config.model.gptq_checkpoint else "same_as_model_name",
             "mlir_graph_source": config.model.mlir_graph,
             "mlir_graph_source_kind": "configured_override" if config.model.mlir_graph else "synthetic_or_export_required",
+            "model_structure_source": config.model.model_structure_source,
             "target_family": "LLaMA decoder-only transformer",
             "target_instance": "LLaMA-3.2-1B when model_name selects that checkpoint",
             "required_extraction": [
@@ -99,6 +100,7 @@ def _markdown(plan: dict[str, Any]) -> str:
         f"GPTQ metadata source kind: `{plan['model']['gptq_checkpoint_source_kind']}`",
         f"MLIR graph source: `{plan['model']['mlir_graph_source'] or 'not_provided'}`",
         f"MLIR graph source kind: `{plan['model']['mlir_graph_source_kind']}`",
+        f"Model structure source: `{plan['model']['model_structure_source']}`",
         f"Target board/device: `{plan['zcu104_assumptions']['board']}` / `{plan['hardware']['fpga_part']}`",
         (
             "Device resources: "

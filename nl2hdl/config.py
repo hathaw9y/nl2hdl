@@ -15,6 +15,7 @@ class ModelConfig:
     sequence_length: int = 8
     gptq_checkpoint: str | None = None
     mlir_graph: str | None = None
+    model_structure_source: str = "mlir"
 
 
 @dataclass(frozen=True)
@@ -136,6 +137,7 @@ def default_config_dict() -> dict[str, Any]:
             "sequence_length": ModelConfig().sequence_length,
             "gptq_checkpoint": ModelConfig().gptq_checkpoint,
             "mlir_graph": ModelConfig().mlir_graph,
+            "model_structure_source": ModelConfig().model_structure_source,
         },
         "hardware": HardwareConfig().__dict__,
         "optimization": OptimizationConfig().__dict__,
@@ -168,6 +170,7 @@ def load_config(path: str | Path | None) -> AgentConfig:
             str(model_raw["gptq_checkpoint"]).strip() if model_raw.get("gptq_checkpoint") is not None else None
         ),
         mlir_graph=(str(model_raw["mlir_graph"]).strip() if model_raw.get("mlir_graph") is not None else None),
+        model_structure_source=str(model_raw.get("model_structure_source", ModelConfig().model_structure_source)).strip(),
     )
     hardware = HardwareConfig(**data["hardware"])
     optimization_raw = _split_extra_options(data["optimization"], OptimizationConfig, "extra_options")
@@ -205,6 +208,8 @@ def validate_config(config: AgentConfig) -> None:
         raise ValueError("model.gptq_checkpoint must be a non-empty path or Hugging Face repo id when provided")
     if config.model.mlir_graph is not None and not config.model.mlir_graph:
         raise ValueError("model.mlir_graph must be a non-empty path when provided")
+    if config.model.model_structure_source not in {"mlir", "hf_config"}:
+        raise ValueError("model.model_structure_source must be one of: mlir, hf_config")
     if config.optimization.pruning_threshold < 0.0:
         raise ValueError("optimization.pruning_threshold must be non-negative")
     if not isinstance(config.optimization.optimization_candidates, list):

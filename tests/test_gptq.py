@@ -5,6 +5,7 @@ import struct
 import sys
 import types
 
+import nl2hdl.gptq as gptq_module
 from nl2hdl.gptq import (
     GPTQ_CHECKPOINT_ALLOW_PATTERNS,
     build_gptq_checkpoint_source_preflight_report,
@@ -57,6 +58,22 @@ def _write_safetensors_payload(path, entries):
         payload.extend(raw_payload)
     raw = json.dumps(header).encode("utf-8")
     path.write_bytes(struct.pack("<Q", len(raw)) + raw + bytes(payload))
+
+
+def _safetensors_payload_bytes(entries):
+    header = {"__metadata__": {"format": "pt"}}
+    offset = 0
+    payload = bytearray()
+    for key, dtype, shape, raw_payload in entries:
+        header[key] = {
+            "dtype": dtype,
+            "shape": shape,
+            "data_offsets": [offset, offset + len(raw_payload)],
+        }
+        offset += len(raw_payload)
+        payload.extend(raw_payload)
+    raw = json.dumps(header).encode("utf-8")
+    return struct.pack("<Q", len(raw)) + raw + bytes(payload)
 
 
 def test_pack_unpack_signed_int4_round_trip():
@@ -182,6 +199,37 @@ def test_gptq_checkpoint_source_preflight_reports_gated_network_failure(monkeypa
     assert report["network_download_probe"]["status"] == "unresolved"
     assert "gated repository access denied" in report["network_download_probe"]["error"]
     assert "authenticate" in report["next_action"]
+
+
+def test_gptq_checkpoint_source_preflight_resolves_remote_lightweight(monkeypatch):
+    fake_hub = types.ModuleType("huggingface_hub")
+
+    def fake_snapshot_download(repo_id, local_files_only, allow_patterns):
+        assert local_files_only is True
+        raise RuntimeError("not cached")
+
+    fake_hub.snapshot_download = fake_snapshot_download
+    monkeypatch.setitem(sys.modules, "huggingface_hub", fake_hub)
+    monkeypatch.setenv("NL2HDL_ALLOW_HF_REMOTE_PREFLIGHT", "1")
+    monkeypatch.setattr(
+        gptq_module,
+        "_hf_remote_list_repo_files",
+        lambda repo_id, revision=None: [
+            "quantize_config.json",
+            "model.safetensors.index.json",
+            "model-00001.safetensors",
+        ],
+    )
+
+    report = build_gptq_checkpoint_source_preflight_report("org/remote-gptq")
+
+    assert report["status"] == "resolved_huggingface_remote_lightweight"
+    assert report["checkpoint_source_dependency"] == "satisfied_by_huggingface_remote_lightweight_preflight"
+    assert report["remote_lightweight_preflight_allowed"] is True
+    assert report["remote_lightweight_probe"]["attempted"] is True
+    assert report["artifact_inventory"]["has_weight_index"] is True
+    assert report["artifact_inventory"]["missing_metadata_json"] is False
+    assert report["network_download_probe"]["attempted"] is False
 
 
 def test_inspect_gptq_checkpoint_metadata_reads_indexed_safetensors_headers(tmp_path):
@@ -451,3 +499,76 @@ def test_gptq_payload_probe_reports_partial_when_tensor_summary_missing(tmp_path
     assert report["tensors"]["qzeros"]["status"] == "unavailable"
     assert report["tensors"]["scales"]["status"] == "unavailable"
     assert "could not be sampled" in report["reason"]
+
+
+def test_remote_gptq_metadata_and_payload_probe_sample_bounded_ranges(monkeypatch):
+    fake_hub = types.ModuleType("huggingface_hub")
+
+    def fake_snapshot_download(repo_id, local_files_only, allow_patterns):
+        assert local_files_only is True
+        raise RuntimeError("not cached")
+
+    fake_hub.snapshot_download = fake_snapshot_download
+    monkeypatch.setitem(sys.modules, "huggingface_hub", fake_hub)
+    monkeypatch.setenv("NL2HDL_ALLOW_HF_REMOTE_PREFLIGHT", "1")
+
+    repo_files = [
+        "quantize_config.json",
+        "model.safetensors.index.json",
+        "model-00001.safetensors",
+    ]
+    qweight = bytes(range(16))
+    qzeros = bytes([0x11, 0x22, 0x33, 0x44])
+    scales = bytes([0x55, 0x66, 0x77, 0x88])
+    blob = _safetensors_payload_bytes(
+        [
+            ("model.layers.0.self_attn.q_proj.qweight", "I32", [4, 1], qweight),
+            ("model.layers.0.self_attn.q_proj.qzeros", "I32", [1, 1], qzeros),
+            ("model.layers.0.self_attn.q_proj.scales", "F16", [1, 2], scales),
+        ]
+    )
+
+    def fake_read_json(repo_id, filename, revision=None):
+        if filename == "quantize_config.json":
+            return {"bits": 4, "group_size": 128, "desc_act": False, "sym": True}
+        if filename == "model.safetensors.index.json":
+            return {
+                "weight_map": {
+                    "model.layers.0.self_attn.q_proj.qweight": "model-00001.safetensors",
+                    "model.layers.0.self_attn.q_proj.qzeros": "model-00001.safetensors",
+                    "model.layers.0.self_attn.q_proj.scales": "model-00001.safetensors",
+                }
+            }
+        raise AssertionError(filename)
+
+    observed_ranges = []
+
+    def fake_get_bytes(repo_id, filename, start, end_inclusive, revision=None):
+        assert filename == "model-00001.safetensors"
+        observed_ranges.append((start, end_inclusive))
+        return blob[start : end_inclusive + 1]
+
+    monkeypatch.setattr(gptq_module, "_hf_remote_list_repo_files", lambda repo_id, revision=None: repo_files)
+    monkeypatch.setattr(gptq_module, "_hf_remote_read_json", fake_read_json)
+    monkeypatch.setattr(gptq_module, "_hf_remote_get_bytes", fake_get_bytes)
+
+    metadata = inspect_gptq_checkpoint_metadata("org/remote-gptq")
+    payload = build_gptq_payload_probe_report("org/remote-gptq", projection_name="q_proj", sample_bytes=16)
+
+    assert metadata["status"] == "parsed"
+    assert metadata["metadata_resolution"]["source"] == "huggingface_remote_lightweight"
+    assert metadata["bits"] == 4
+    assert metadata["group_size"] == 128
+    assert metadata["tensor_summary_source"] == "remote_safetensors_header_from_weight_index"
+    assert metadata["complete_gptq_projection_metadata_count"] == 1
+    assert payload["status"] == "sampled"
+    assert payload["target_checkpoint_payload_dependency"] == "satisfied_by_payload_probe"
+    assert payload["tensors"]["qweight"]["source"] == "remote_safetensors_payload_prefix"
+    assert payload["tensors"]["qweight"]["sample_bytes_hex"] == qweight.hex()
+    assert payload["qweight_payload_words32_le_hex"] == [
+        "0x03020100",
+        "0x07060504",
+        "0x0b0a0908",
+        "0x0f0e0d0c",
+    ]
+    assert observed_ranges

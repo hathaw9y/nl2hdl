@@ -57,6 +57,12 @@ evidence for the active target:
 - implemented clock period satisfies the configured target clock and the
   hardware profile's clocking requirements.
 
+Board signoff evidence is tied to one routed board-wrapper implementation.
+When a new board-wrapper report, checkpoint, or bitstream is imported or
+regenerated, invalidate any older `board_zcu104_signoff_evidence.json` before
+refreshing readiness. Preserve the stale file as archived evidence when
+possible, but do not let it coexist as current proof for a different wrapper.
+
 ## Evidence Report
 
 Board evidence JSON must record:

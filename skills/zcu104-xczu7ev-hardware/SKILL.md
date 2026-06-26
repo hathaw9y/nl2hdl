@@ -99,6 +99,10 @@ If the board wrapper misses the target clock or routes the wrong clock:
 - when `report_clocks` shows `clk_pl_0` at `5.333 ns / 187.512 MHz`, treat the
   implementation as failed even if route completed, timing slack is positive,
   DRC passes, and utilization is within budget;
+- for Vivado 2024.1 ZCU104 PS PL0 clocking, do not reuse an IOPLL PL0
+  configuration that resolves to 187.5 MHz; use the verified RPLL PL0 source
+  path for the 200 MHz board-wrapper attempt and prove the result from
+  `report_clocks` plus implemented XDC;
 - retry the Zynq UltraScale+ PS PL clocking setup and board-automation order,
   then prove the fix from generated routed reports rather than from requested
   BD properties;

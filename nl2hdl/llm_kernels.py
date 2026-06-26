@@ -1944,6 +1944,7 @@ def build_hdl_task_manifest(
             "model_name": model["name"],
             "gptq_checkpoint": config.model.gptq_checkpoint if config is not None else None,
             "mlir_graph": config.model.mlir_graph if config is not None else None,
+            "model_structure_source": config.model.model_structure_source if config is not None else "mlir",
         },
         "model": {
             "name": model["name"],
@@ -2688,6 +2689,75 @@ def build_mlir_model_analysis_readiness(
     }
 
 
+def build_hf_config_model_structure_readiness(semantic_graph: dict[str, Any]) -> dict[str, Any]:
+    model = semantic_graph.get("model", {})
+    metadata_source = model.get("metadata_source")
+    metadata_resolution = model.get("metadata_resolution")
+    resolved = (
+        isinstance(metadata_source, str)
+        and metadata_source.startswith("huggingface_auto_config")
+        and isinstance(metadata_resolution, dict)
+        and metadata_resolution.get("status") == "resolved"
+    )
+    semantic_gemm = list(semantic_graph["partition"]["gemm"])
+    semantic_non_gemm = list(semantic_graph["partition"]["non_gemm"])
+    semantic_node_names = semantic_gemm + semantic_non_gemm
+    if resolved:
+        status = "passed"
+        coverage_level = "hf_config_semantic_graph_full_operation_coverage"
+        blocking_reason = None
+        next_action = "HF config model-structure gate passed; continue resolving checkpoint, execution, and board-signoff gates"
+        missing_gemm: list[str] = []
+        missing_non_gemm: list[str] = []
+    else:
+        status = "blocked"
+        coverage_level = "hf_config_semantic_graph_unresolved_or_fallback"
+        blocking_reason = "HF config model-structure source requires a resolved LLaMA AutoConfig, not fallback fixture metadata"
+        next_action = "pre-populate the Hugging Face config cache, enable NL2HDL_ALLOW_HF_CONFIG_DOWNLOAD=1, or provide --mlir-graph"
+        missing_gemm = semantic_gemm
+        missing_non_gemm = semantic_non_gemm
+    return {
+        "artifact": "mlir_model_analysis_readiness",
+        "status": status,
+        "analysis_source": "hf_config_semantic_graph",
+        "source_kind": "hf_config",
+        "source_path": None,
+        "copied_path": None,
+        "target_claim_allowed_by_source": resolved,
+        "coverage_level": coverage_level,
+        "mlir_entry": None,
+        "mlir_op_count": 0,
+        "mlir_supported_ops": [],
+        "mlir_unsupported_ops": [],
+        "mlir_node_names": [],
+        "mlir_semantic_node_names": semantic_node_names if resolved else [],
+        "mlir_semantic_alias_map": {},
+        "model_structure_source": "hf_config",
+        "model_metadata_source": metadata_source,
+        "model_metadata_resolution": metadata_resolution,
+        "model_structure_node_names": semantic_node_names,
+        "semantic_gemm_coverage": {
+            "covered_count": len(semantic_gemm) if resolved else 0,
+            "required_count": len(semantic_gemm),
+            "covered": semantic_gemm if resolved else [],
+        },
+        "semantic_non_gemm_coverage": {
+            "covered_count": len(semantic_non_gemm) if resolved else 0,
+            "required_count": len(semantic_non_gemm),
+            "covered": semantic_non_gemm if resolved else [],
+        },
+        "missing_semantic_gemm_ops": missing_gemm,
+        "missing_semantic_non_gemm_ops": missing_non_gemm,
+        "blocking_reason": blocking_reason,
+        "next_action": next_action,
+        "does_not_claim": [
+            "exported_HuggingFace_model_MLIR",
+            "checkpoint_weight_loading",
+            "full_LLaMA_execution",
+        ],
+    }
+
+
 def emit_inspect_artifacts(
     out_dir: Path,
     model_name: str = "meta-llama/Llama-3.2-1B",
@@ -2703,7 +2773,10 @@ def emit_inspect_artifacts(
     semantic_graph_path = out_dir / "model_semantic_graph.json"
     semantic_graph = build_llama_semantic_graph(model_name, config)
     semantic_graph_path.write_text(json.dumps(semantic_graph, indent=2), encoding="utf-8")
-    mlir_readiness = build_mlir_model_analysis_readiness(analysis, semantic_graph, mlir_source_info)
+    if config is not None and config.model.model_structure_source == "hf_config":
+        mlir_readiness = build_hf_config_model_structure_readiness(semantic_graph)
+    else:
+        mlir_readiness = build_mlir_model_analysis_readiness(analysis, semantic_graph, mlir_source_info)
     mlir_readiness_path = out_dir / "mlir_model_analysis_readiness.json"
     mlir_readiness_path.write_text(json.dumps(mlir_readiness, indent=2), encoding="utf-8")
     gptq_metadata_source = (
@@ -3521,11 +3594,11 @@ synth_design -top {top} -part {config.hardware.fpga_part}
     result["utilization_report"] = "utilization.rpt"
     result["utilization_report_available"] = (out_dir / "utilization.rpt").exists()
     result["resource_status"] = "available" if result["utilization_report_available"] else "not_available"
-    result["resource_utilization"] = _parse_vivado_utilization(out_dir / "utilization.rpt")
+    result["resource_utilization"] = _parse_kernel_vivado_utilization(out_dir / "utilization.rpt")
     return result
 
 
-def _parse_vivado_utilization(path: Path) -> dict[str, Any]:
+def _parse_kernel_vivado_utilization(path: Path) -> dict[str, Any]:
     if not path.exists():
         return {}
     text = path.read_text(encoding="utf-8", errors="ignore")
@@ -6023,18 +6096,12 @@ module {module_name} #(
     logic [ROW_IDX_W-1:0] row_idx_r;
     logic [PAIR_IDX_W-1:0] pair_idx_r;
     logic signed [OUT_WIDTH-1:0] acc_r;
-    logic [3:0] nibble_lane0_r;
-    logic [3:0] nibble_lane1_r;
-    logic signed [ZERO_WIDTH-1:0] zero_lane0_r;
-    logic signed [ZERO_WIDTH-1:0] zero_lane1_r;
-    logic signed [SCALE_WIDTH-1:0] scale_lane0_r;
-    logic signed [SCALE_WIDTH-1:0] scale_lane1_r;
-    logic signed [ACT_WIDTH-1:0] activation_lane0_r;
-    logic signed [ACT_WIDTH-1:0] activation_lane1_r;
-    logic signed [31:0] dequant_lane0_r;
-    logic signed [31:0] dequant_lane1_r;
-    logic signed [31:0] product_lane0_r;
-    logic signed [31:0] product_lane1_r;
+    logic [TRUE_PARALLEL_LANES*4-1:0] nibble_lane_r;
+    logic [TRUE_PARALLEL_LANES*ZERO_WIDTH-1:0] zero_lane_r;
+    logic [TRUE_PARALLEL_LANES*SCALE_WIDTH-1:0] scale_lane_r;
+    logic [TRUE_PARALLEL_LANES*ACT_WIDTH-1:0] activation_lane_r;
+    logic [TRUE_PARALLEL_LANES*32-1:0] dequant_lane_r;
+    logic [TRUE_PARALLEL_LANES*32-1:0] product_lane_r;
     logic signed [TILE_ROWS*OUT_WIDTH-1:0] output_r;
     logic [PAIRS_PER_ROW*TILE_ROWS-1:0] parallel_pair_trace_r;
     logic done_r;
@@ -6046,15 +6113,9 @@ module {module_name} #(
     logic [CHUNK_IDX_W-1:0] next_payload_idx_w;
     logic last_chunk_w;
     logic final_payload_w;
-    logic [31:0] col_lane0_w;
-    logic [31:0] col_lane1_w;
-    logic [31:0] group_lane0_w;
-    logic [31:0] group_lane1_w;
-    logic signed [7:0] unpacked_lane0_w;
-    logic signed [7:0] unpacked_lane1_w;
-    logic signed [8:0] centered_lane0_w;
-    logic signed [8:0] centered_lane1_w;
     logic signed [31:0] pair_sum_w;
+    integer lane_comb_idx;
+    integer lane_seq_idx;
 
     assign mem_ready_o = (state_r == MEM_LOAD) && (int'(input_count_r) < MAX_MEM_WORDS);
     assign done_o = done_r;
@@ -6083,15 +6144,13 @@ module {module_name} #(
     assign next_payload_idx_w = payload_idx_r + CHUNK_IDX_W'(1);
     assign last_chunk_w = (payload_idx_r == LAST_CHUNK);
     assign final_payload_w = last_chunk_w && current_mem_last_r;
-    assign col_lane0_w = int'(pair_idx_r) * TRUE_PARALLEL_LANES;
-    assign col_lane1_w = col_lane0_w + 32'd1;
-    assign group_lane0_w = col_lane0_w / GROUP_SIZE;
-    assign group_lane1_w = col_lane1_w / GROUP_SIZE;
-    assign unpacked_lane0_w = sign_extend_int4(nibble_lane0_r);
-    assign unpacked_lane1_w = sign_extend_int4(nibble_lane1_r);
-    assign centered_lane0_w = $signed({{unpacked_lane0_w[7], unpacked_lane0_w}}) - $signed({{zero_lane0_r[ZERO_WIDTH-1], zero_lane0_r}});
-    assign centered_lane1_w = $signed({{unpacked_lane1_w[7], unpacked_lane1_w}}) - $signed({{zero_lane1_r[ZERO_WIDTH-1], zero_lane1_r}});
-    assign pair_sum_w = product_lane0_r + product_lane1_r;
+
+    always_comb begin
+        pair_sum_w = 32'sd0;
+        for (lane_comb_idx = 0; lane_comb_idx < TRUE_PARALLEL_LANES; lane_comb_idx = lane_comb_idx + 1) begin
+            pair_sum_w = pair_sum_w + product_lane_at(lane_comb_idx);
+        end
+    end
 
     function automatic logic signed [7:0] sign_extend_int4(input logic [3:0] nibble_i);
         begin
@@ -6147,6 +6206,40 @@ module {module_name} #(
         end
     endfunction
 
+    function automatic logic signed [31:0] centered_lane_ext_at(input int lane_idx_i);
+        logic signed [7:0] unpacked_lane;
+        logic signed [ZERO_WIDTH-1:0] zero_lane;
+        logic signed [8:0] centered_lane;
+        begin
+            unpacked_lane = sign_extend_int4(nibble_lane_r[lane_idx_i*4 +: 4]);
+            zero_lane = $signed(zero_lane_r[lane_idx_i*ZERO_WIDTH +: ZERO_WIDTH]);
+            centered_lane = $signed({{unpacked_lane[7], unpacked_lane}}) - $signed({{zero_lane[ZERO_WIDTH-1], zero_lane}});
+            centered_lane_ext_at = {{{{23{{centered_lane[8]}}}}, centered_lane}};
+        end
+    endfunction
+
+    function automatic logic signed [31:0] scale_lane_ext_at(input int lane_idx_i);
+        logic signed [SCALE_WIDTH-1:0] scale_lane;
+        begin
+            scale_lane = $signed(scale_lane_r[lane_idx_i*SCALE_WIDTH +: SCALE_WIDTH]);
+            scale_lane_ext_at = {{{{24{{scale_lane[SCALE_WIDTH-1]}}}}, scale_lane}};
+        end
+    endfunction
+
+    function automatic logic signed [31:0] activation_lane_ext_at(input int lane_idx_i);
+        logic signed [ACT_WIDTH-1:0] activation_lane;
+        begin
+            activation_lane = $signed(activation_lane_r[lane_idx_i*ACT_WIDTH +: ACT_WIDTH]);
+            activation_lane_ext_at = {{{{24{{activation_lane[ACT_WIDTH-1]}}}}, activation_lane}};
+        end
+    endfunction
+
+    function automatic logic signed [31:0] product_lane_at(input int lane_idx_i);
+        begin
+            product_lane_at = $signed(product_lane_r[lane_idx_i*32 +: 32]);
+        end
+    endfunction
+
     always_ff @(posedge aclk) begin
         if (!aresetn) begin
             state_r <= IDLE;
@@ -6168,18 +6261,12 @@ module {module_name} #(
             row_idx_r <= '0;
             pair_idx_r <= '0;
             acc_r <= '0;
-            nibble_lane0_r <= '0;
-            nibble_lane1_r <= '0;
-            zero_lane0_r <= '0;
-            zero_lane1_r <= '0;
-            scale_lane0_r <= '0;
-            scale_lane1_r <= '0;
-            activation_lane0_r <= '0;
-            activation_lane1_r <= '0;
-            dequant_lane0_r <= '0;
-            dequant_lane1_r <= '0;
-            product_lane0_r <= '0;
-            product_lane1_r <= '0;
+            nibble_lane_r <= '0;
+            zero_lane_r <= '0;
+            scale_lane_r <= '0;
+            activation_lane_r <= '0;
+            dequant_lane_r <= '0;
+            product_lane_r <= '0;
             output_r <= '0;
             parallel_pair_trace_r <= '0;
             done_r <= 1'b0;
@@ -6207,6 +6294,12 @@ module {module_name} #(
                         row_idx_r <= '0;
                         pair_idx_r <= '0;
                         acc_r <= '0;
+                        nibble_lane_r <= '0;
+                        zero_lane_r <= '0;
+                        scale_lane_r <= '0;
+                        activation_lane_r <= '0;
+                        dequant_lane_r <= '0;
+                        product_lane_r <= '0;
                         output_r <= '0;
                         parallel_pair_trace_r <= '0;
                     end
@@ -6255,24 +6348,35 @@ module {module_name} #(
                     end
                 end
                 LOAD_PAIR: begin
-                    nibble_lane0_r <= packed_nibble_at(row_idx_r, int'(col_lane0_w));
-                    nibble_lane1_r <= packed_nibble_at(row_idx_r, int'(col_lane1_w));
-                    zero_lane0_r <= zero_at(row_idx_r, int'(group_lane0_w));
-                    zero_lane1_r <= zero_at(row_idx_r, int'(group_lane1_w));
-                    scale_lane0_r <= scale_at(row_idx_r, int'(group_lane0_w));
-                    scale_lane1_r <= scale_at(row_idx_r, int'(group_lane1_w));
-                    activation_lane0_r <= activation_at(int'(col_lane0_w));
-                    activation_lane1_r <= activation_at(int'(col_lane1_w));
+                    for (lane_seq_idx = 0; lane_seq_idx < TRUE_PARALLEL_LANES; lane_seq_idx = lane_seq_idx + 1) begin
+                        nibble_lane_r[lane_seq_idx*4 +: 4] <= packed_nibble_at(
+                            row_idx_r,
+                            (int'(pair_idx_r) * TRUE_PARALLEL_LANES) + lane_seq_idx
+                        );
+                        zero_lane_r[lane_seq_idx*ZERO_WIDTH +: ZERO_WIDTH] <= zero_at(
+                            row_idx_r,
+                            ((int'(pair_idx_r) * TRUE_PARALLEL_LANES) + lane_seq_idx) / GROUP_SIZE
+                        );
+                        scale_lane_r[lane_seq_idx*SCALE_WIDTH +: SCALE_WIDTH] <= scale_at(
+                            row_idx_r,
+                            ((int'(pair_idx_r) * TRUE_PARALLEL_LANES) + lane_seq_idx) / GROUP_SIZE
+                        );
+                        activation_lane_r[lane_seq_idx*ACT_WIDTH +: ACT_WIDTH] <= activation_at(
+                            (int'(pair_idx_r) * TRUE_PARALLEL_LANES) + lane_seq_idx
+                        );
+                    end
                     state_r <= DEQUANT_PAIR;
                 end
                 DEQUANT_PAIR: begin
-                    dequant_lane0_r <= {{{{23{{centered_lane0_w[8]}}}}, centered_lane0_w}} * {{{{24{{scale_lane0_r[SCALE_WIDTH-1]}}}}, scale_lane0_r}};
-                    dequant_lane1_r <= {{{{23{{centered_lane1_w[8]}}}}, centered_lane1_w}} * {{{{24{{scale_lane1_r[SCALE_WIDTH-1]}}}}, scale_lane1_r}};
+                    for (lane_seq_idx = 0; lane_seq_idx < TRUE_PARALLEL_LANES; lane_seq_idx = lane_seq_idx + 1) begin
+                        dequant_lane_r[lane_seq_idx*32 +: 32] <= centered_lane_ext_at(lane_seq_idx) * scale_lane_ext_at(lane_seq_idx);
+                    end
                     state_r <= MAC_PAIR;
                 end
                 MAC_PAIR: begin
-                    product_lane0_r <= dequant_lane0_r * {{{{24{{activation_lane0_r[ACT_WIDTH-1]}}}}, activation_lane0_r}};
-                    product_lane1_r <= dequant_lane1_r * {{{{24{{activation_lane1_r[ACT_WIDTH-1]}}}}, activation_lane1_r}};
+                    for (lane_seq_idx = 0; lane_seq_idx < TRUE_PARALLEL_LANES; lane_seq_idx = lane_seq_idx + 1) begin
+                        product_lane_r[lane_seq_idx*32 +: 32] <= $signed(dequant_lane_r[lane_seq_idx*32 +: 32]) * activation_lane_ext_at(lane_seq_idx);
+                    end
                     state_r <= ACC_PAIR;
                 end
                 ACC_PAIR: begin
@@ -6538,10 +6642,12 @@ def _emit_projection_target_stream_plan(
     tile_cols = 64
     group_size = 4
     groups = tile_cols // group_size
-    true_parallel_lanes = 2
     memory_data_width = config.hardware.memory_data_width
     requested_pe_lanes = config.design.pe_count
     selected_target_planning_lanes = max(1, min(requested_pe_lanes, 64))
+    true_parallel_lanes = selected_target_planning_lanes
+    while tile_cols % true_parallel_lanes != 0:
+        true_parallel_lanes -= 1
     effective_fixture_lanes = true_parallel_lanes
     target_tile_rows = selected_target_planning_lanes
     target_tile_cols = 128
@@ -6635,7 +6741,7 @@ def _emit_projection_target_stream_plan(
             expected[row] += int(lane_products[row, col])
         for pair in range(tile_cols // true_parallel_lanes):
             left_col = pair * true_parallel_lanes
-            pair_sums[row, pair] = int(lane_products[row, left_col]) + int(lane_products[row, left_col + 1])
+            pair_sums[row, pair] = int(np.sum(lane_products[row, left_col : left_col + true_parallel_lanes]))
 
     memory_words_hex = [f"0x{word:0{memory_data_width // 4}x}" for word in memory_words]
     payload_words_hex = [f"0x{word:0{payload_width // 4}x}" for word in payload_words]
@@ -6666,10 +6772,14 @@ def _emit_projection_target_stream_plan(
         "effective_fixture_lanes": effective_fixture_lanes,
         "effective_fixture_pe_lanes": effective_fixture_lanes,
         "true_parallel_datapath_lanes": true_parallel_lanes,
-        "parallel_stage": "MAC_PAIR",
-        "parallel_products_per_cycle": 2,
+        "max_fixture_true_parallel_lanes": tile_cols,
+        "parallel_stage": "MAC_LANE_ARRAY",
+        "parallel_products_per_cycle": true_parallel_lanes,
         "contributes_to_same_output_accumulator": True,
         "not_merely_lane_index_scheduling": True,
+        "pe_count_controls_true_parallel_datapath": True,
+        "pe_count_headroom_in_fixture": requested_pe_lanes < tile_cols,
+        "fixture_lanes_saturated_by_tile_cols": requested_pe_lanes > true_parallel_lanes,
     }
     target_planning_tile_parameters = {
         "selected_projection": selected_projection,
@@ -6693,6 +6803,7 @@ def _emit_projection_target_stream_plan(
         "selected_effective_fixture_lanes": effective_fixture_lanes,
         "true_parallel_datapath_lanes": true_parallel_lanes,
         "schedule": "MEM_LOAD_to_adapter_EMIT_valid_ready_to_projection_payload_buffer_then_LOAD_PAIR_DEQUANT_PAIR_MAC_PAIR_ACC_PAIR",
+        "pe_count_controls_true_parallel_datapath": True,
     }
     stream_interface: dict[str, Any] = {
         "mem_word_port": "mem_word_i",
@@ -6819,7 +6930,7 @@ def _emit_projection_target_stream_plan(
             "target_max_ff": config.hardware.max_ff,
             "target_max_uram": config.hardware.max_uram,
             "true_parallel_datapath_lanes": true_parallel_lanes,
-            "estimated_fixture_dsp": 6,
+            "estimated_fixture_dsp": true_parallel_lanes * 2,
             "estimated_fixture_bram": 0,
         },
     }
@@ -6899,6 +7010,7 @@ def _emit_projection_target_stream_plan(
             ready_low_payload_indices=ready_low_payload_indices,
             rows=tile_rows,
             cols=tile_cols,
+            true_parallel_lanes=true_parallel_lanes,
         ),
         encoding="utf-8",
     )
@@ -7019,7 +7131,7 @@ module projection_target_stream_plan #(
     logic [PAIRS_PER_ROW*TILE_ROWS-1:0] parallel_pair_trace_w;
     logic [6:0] parallel_pair_count_w;
 
-    assign parallel_pair_count_w = (parallel_pair_trace_w == {{(PAIRS_PER_ROW*TILE_ROWS){{1'b1}}}}) ? 7'd64 : 7'd0;
+    assign parallel_pair_count_w = (parallel_pair_trace_w == {{(PAIRS_PER_ROW*TILE_ROWS){{1'b1}}}}) ? 7'(PAIRS_PER_ROW * TILE_ROWS) : 7'd0;
     assign debug_trace_o = {{
         7'b0,
         parallel_pair_count_w,
@@ -7080,10 +7192,11 @@ def _projection_target_stream_plan_tb(
     ready_low_payload_indices: list[int],
     rows: int,
     cols: int,
+    true_parallel_lanes: int,
 ) -> str:
     input_words = len(memory_words)
     payload_count = len(payload_words)
-    pairs_per_row = cols // 2
+    pairs_per_row = cols // true_parallel_lanes
     mem_hex_width = memory_data_width // 4
     payload_hex_width = payload_width // 4
     mem_assigns = "\n".join(
@@ -7293,7 +7406,7 @@ module tb_projection_target_stream_plan;
         $display("INPUT_HANDSHAKE_TRACE projection_target_stream_plan accepted=0x%0h last=0x%0h words={input_words}", debug_trace_o[3:0], debug_trace_o[7:4]);
         $display("BACKPRESSURE_TRACE projection_target_stream_plan ready_low_payload_idx={','.join(str(idx) for idx in ready_low_payload_indices)} trace=0x%0h", observed_ready_low_trace);
         $display("PAYLOAD_LINK_TRACE projection_target_stream_plan payloads=%0d", projection_observed_count);
-        $display("PARALLEL_TRACE projection_target_stream_plan true_lanes=2 pair_count=%0d", debug_trace_o[40:34]);
+        $display("PARALLEL_TRACE projection_target_stream_plan true_lanes={true_parallel_lanes} pair_count=%0d", debug_trace_o[40:34]);
         start_i = 1'b0;
         #20;
         if (done_o) begin
@@ -31312,13 +31425,127 @@ endmodule
     return template.replace("__CHECKS__", checks).replace("__PROJECTION_LINES__", projection_lines)
 
 
+def _zcu104_accelerator_binding(
+    out_dir: Path,
+    *,
+    accelerator_artifact_dir: Path | None = None,
+    accelerator_top_module: str | None = None,
+    accelerator_kernel_report_path: Path | None = None,
+) -> dict[str, Any]:
+    if accelerator_artifact_dir is None:
+        return {
+            "source": "bounded_control_scaffold",
+            "top_module": "zcu104_accelerator_core_scaffold",
+            "coverage_level": "zcu104_board_wrapper_control_scaffold",
+            "kernel_report": None,
+            "rtl_files": [],
+            "copied_rtl_files": [],
+            "target_scale_eligible": False,
+            "target_scale_blockers": ["no generated accelerator artifact was provided"],
+            "wrapper_kind": "internal_control_scaffold",
+        }
+
+    artifact_dir = Path(accelerator_artifact_dir)
+    kernel_report_path = Path(accelerator_kernel_report_path) if accelerator_kernel_report_path else artifact_dir / "kernel_report.json"
+    kernel_report = json.loads(kernel_report_path.read_text(encoding="utf-8")) if kernel_report_path.exists() else {}
+    top_module = accelerator_top_module or str(kernel_report.get("kernel") or "").strip()
+    if not top_module:
+        raise ValueError("accelerator_top_module must be provided when no kernel_report.kernel exists")
+    _require_sv_identifier(top_module, "accelerator_top_module")
+
+    rtl_files = [
+        path
+        for path in sorted(artifact_dir.glob("*.sv"))
+        if path.is_file() and not path.name.startswith("tb_")
+    ]
+    if not rtl_files:
+        raise ValueError(f"accelerator_artifact_dir contains no non-testbench .sv files: {artifact_dir}")
+    top_rtl = artifact_dir / f"{top_module}.sv"
+    if not top_rtl.exists():
+        raise ValueError(f"accelerator_top_module RTL not found: {top_rtl}")
+
+    numeric_policy = kernel_report.get("numeric_policy", {}) if isinstance(kernel_report, dict) else {}
+    coverage_level = str(kernel_report.get("coverage_level") or top_module)
+    target_scale_blockers: list[str] = []
+    if numeric_policy.get("full_llama_model") is not True:
+        target_scale_blockers.append("kernel_report.numeric_policy.full_llama_model is not true")
+    if numeric_policy.get("board_level_signoff") is not True:
+        target_scale_blockers.append("kernel_report.numeric_policy.board_level_signoff is not true")
+    if kernel_report.get("fixture_only") is True or "fixture" in coverage_level:
+        target_scale_blockers.append("accelerator coverage level is fixture-only")
+    target_scale_eligible = not target_scale_blockers
+
+    return {
+        "source": "generated_accelerator_artifact",
+        "artifact_dir": str(artifact_dir),
+        "top_module": top_module,
+        "coverage_level": coverage_level,
+        "kernel_report": str(kernel_report_path),
+        "rtl_files": [str(path) for path in rtl_files],
+        "copied_rtl_files": [str(out_dir / path.name) for path in rtl_files],
+        "target_scale_eligible": target_scale_eligible,
+        "target_scale_blockers": target_scale_blockers,
+        "wrapper_kind": _zcu104_accelerator_wrapper_kind(top_module),
+    }
+
+
+def _require_sv_identifier(value: str, field_name: str) -> None:
+    if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_$]*", value):
+        raise ValueError(f"{field_name} must be a valid SystemVerilog identifier")
+
+
+def _zcu104_accelerator_wrapper_kind(top_module: str) -> str:
+    if top_module == "ddr_axi_board_shell_fixture":
+        return "ddr_axi_board_shell_fixture"
+    return "standard_start_done_status"
+
+
+def _copy_zcu104_target_accelerator_rtl(accelerator_binding: dict[str, Any], out_dir: Path) -> None:
+    if accelerator_binding.get("source") != "generated_accelerator_artifact":
+        return
+    for rtl_file in accelerator_binding.get("rtl_files", []):
+        src = Path(str(rtl_file))
+        dest = out_dir / src.name
+        if src.resolve() == dest.resolve():
+            continue
+        shutil.copy2(src, dest)
+
+
+def _zcu104_board_wrapper_sv_rtl_files(accelerator_binding: dict[str, Any]) -> list[str]:
+    files = []
+    if accelerator_binding.get("source") == "generated_accelerator_artifact":
+        files.extend(Path(str(path)).name for path in accelerator_binding.get("rtl_files", []))
+    files.extend(
+        [
+            "zcu104_accelerator_core.sv",
+            "zcu104_axi_lite_accel_bridge.sv",
+            "zcu104_board_shell_axi_subsystem.sv",
+            "zcu104_board_shell_top.sv",
+        ]
+    )
+    deduped: list[str] = []
+    for file_name in files:
+        if file_name not in deduped:
+            deduped.append(file_name)
+    return deduped
+
+
 def build_zcu104_board_shell_constraints_package(
     config: AgentConfig,
     out_dir: Path,
     *,
     fixture_report_path: Path | None = None,
+    accelerator_artifact_dir: Path | None = None,
+    accelerator_top_module: str | None = None,
+    accelerator_kernel_report_path: Path | None = None,
 ) -> dict[str, Any]:
     out_dir.mkdir(parents=True, exist_ok=True)
+    accelerator_binding = _zcu104_accelerator_binding(
+        out_dir,
+        accelerator_artifact_dir=accelerator_artifact_dir,
+        accelerator_top_module=accelerator_top_module,
+        accelerator_kernel_report_path=accelerator_kernel_report_path,
+    )
     xdc_path = out_dir / "zcu104_board_shell_constraints.xdc"
     accel_core_path = out_dir / "zcu104_accelerator_core.sv"
     axi_bridge_path = out_dir / "zcu104_axi_lite_accel_bridge.sv"
@@ -31332,14 +31559,21 @@ def build_zcu104_board_shell_constraints_package(
 
     period_ns = 1000.0 / config.hardware.target_clock_mhz
     xdc_path.write_text(_zcu104_board_shell_constraints_xdc(period_ns), encoding="utf-8")
-    accel_core_path.write_text(_zcu104_accelerator_core_sv(), encoding="utf-8")
+    _copy_zcu104_target_accelerator_rtl(accelerator_binding, out_dir)
+    accel_core_path.write_text(_zcu104_accelerator_core_sv(accelerator_binding), encoding="utf-8")
     axi_bridge_path.write_text(_zcu104_axi_lite_accel_bridge_sv(), encoding="utf-8")
     axi_subsystem_path.write_text(_zcu104_board_shell_axi_subsystem_sv(), encoding="utf-8")
     board_top_path.write_text(_zcu104_board_shell_top_sv(), encoding="utf-8")
     bd_wrapper_path.write_text(_zcu104_board_shell_axi_subsystem_bd_v(), encoding="utf-8")
     bd_top_path.write_text(_zcu104_board_ps_pl_ddr_top_v(), encoding="utf-8")
-    bd_tcl_path.write_text(_zcu104_ps_pl_ddr_bd_tcl(config.hardware.fpga_part), encoding="utf-8")
-    route_tcl_path.write_text(_zcu104_board_route_check_tcl(config.hardware.fpga_part), encoding="utf-8")
+    bd_tcl_path.write_text(
+        _zcu104_ps_pl_ddr_bd_tcl(config.hardware.fpga_part, accelerator_binding),
+        encoding="utf-8",
+    )
+    route_tcl_path.write_text(
+        _zcu104_board_route_check_tcl(config.hardware.fpga_part, accelerator_binding),
+        encoding="utf-8",
+    )
 
     fixture_report: dict[str, Any] = {}
     if fixture_report_path is not None and fixture_report_path.exists():
@@ -31375,11 +31609,14 @@ def build_zcu104_board_shell_constraints_package(
             "routed_top_module": "zcu104_board_ps_pl_ddr_top",
             "bd_axi_subsystem_module": "zcu104_board_shell_axi_subsystem",
             "child_accelerator": "zcu104_accelerator_core",
+            "child_accelerator_source": accelerator_binding["source"],
+            "wrapped_accelerator_top": accelerator_binding["top_module"],
             "bridge_module": "zcu104_axi_lite_accel_bridge",
             "control_path": "PS AXI-lite writes control register 0x00 bit0 to drive child start_i",
             "status_path": "child done/status are returned through AXI-lite status register 0x04 and compact PMOD0 bits",
             "board_level_ports_kept_compact": True,
         },
+        "accelerator_binding": accelerator_binding,
         "constraint_intent": {
             "clock": {
                 "present": True,
@@ -31452,6 +31689,9 @@ def run_zcu104_board_wrapper_axi_bridge_agent(
     out_dir: Path,
     *,
     fixture_report_path: Path | None = None,
+    accelerator_artifact_dir: Path | None = None,
+    accelerator_top_module: str | None = None,
+    accelerator_kernel_report_path: Path | None = None,
     run_vivado: bool = True,
     vivado_executable: str = "vivado",
 ) -> dict[str, Any]:
@@ -31466,11 +31706,15 @@ def run_zcu104_board_wrapper_axi_bridge_agent(
         config,
         out_dir,
         fixture_report_path=fixture_report_path,
+        accelerator_artifact_dir=accelerator_artifact_dir,
+        accelerator_top_module=accelerator_top_module,
+        accelerator_kernel_report_path=accelerator_kernel_report_path,
     )
     implementation_report_path = out_dir / "zcu104_board_wrapper_axi_bridge_implementation_report.json"
     subagent_result_path = out_dir / "zcu104_board_wrapper_axi_bridge_subagent_result.json"
     route_tcl_path = out_dir / "zcu104_board_route_check.tcl"
     signoff_evidence_path = out_dir / "board_zcu104_signoff_evidence.json"
+    bitstream_path = out_dir / "zcu104_board_wrapper.bit"
 
     commands: list[dict[str, Any]] = []
     vivado_timeout = max(60, int(config.verification.vivado_timeout_sec))
@@ -31507,6 +31751,9 @@ def run_zcu104_board_wrapper_axi_bridge_agent(
     )
     route_completed = bool(route_result and (route_result.get("returncode") == 0 or route_reports_present))
     route_check_command_passed = bool(route_result and route_result.get("returncode") == 0)
+    bitstream_generated = bitstream_path.exists() and bitstream_path.stat().st_size > 0
+    bitstream_size_bytes = bitstream_path.stat().st_size if bitstream_path.exists() else 0
+    gate_failures = list(route_analysis.get("gate_failures", []))
 
     status = "passed"
     failures: list[str] = []
@@ -31521,11 +31768,15 @@ def run_zcu104_board_wrapper_axi_bridge_agent(
     elif route_result and route_result.get("returncode") != 0 and not route_completed:
         status = "failed_vivado_route_check"
         failures.append("vivado route/check command returned non-zero")
-    else:
-        gate_failures = list(route_analysis.get("gate_failures", []))
+    elif gate_failures:
+        status = "failed_board_wrapper_gates"
         failures.extend(gate_failures)
-        if gate_failures:
-            status = "failed_board_wrapper_gates"
+        if route_result and route_result.get("returncode") != 0:
+            failures.append("vivado route/check command returned non-zero after routed report generation")
+    elif route_completed and not bitstream_generated:
+        status = "failed_bitstream_generation"
+        failures.append("write_bitstream did not produce zcu104_board_wrapper.bit")
+    else:
         if route_result and route_result.get("returncode") != 0:
             failures.append("vivado route/check command returned non-zero after routed report generation")
             if status == "passed":
@@ -31543,6 +31794,18 @@ def run_zcu104_board_wrapper_axi_bridge_agent(
                 failures.append(f"static board-wrapper evidence missing: {key}")
         if failures:
             status = "failed_board_wrapper_gates"
+
+    accelerator_binding = pre_signoff_report.get("accelerator_binding", {})
+    target_scale_accelerator_bitstream = bool(
+        status == "passed"
+        and bitstream_generated
+        and accelerator_binding.get("target_scale_eligible") is True
+    )
+    accelerator_scope = (
+        "full_target_llama_accelerator"
+        if target_scale_accelerator_bitstream
+        else str(accelerator_binding.get("coverage_level") or "zcu104_board_wrapper_control_scaffold")
+    )
 
     skill_update_candidate = None
     if status != "passed":
@@ -31571,6 +31834,14 @@ def run_zcu104_board_wrapper_axi_bridge_agent(
             ),
         }
 
+    does_not_claim = [
+        "board_level_ZCU104_signoff",
+        "hardware_lab_runtime_validation",
+        "real_time_LLaMA_inference_performance",
+    ]
+    if not target_scale_accelerator_bitstream:
+        does_not_claim.append("full_target_scale_LLaMA_accelerator_bitstream")
+
     report = {
         "artifact": "zcu104_board_wrapper_axi_bridge_implementation_report",
         "status": status,
@@ -31592,6 +31863,13 @@ def run_zcu104_board_wrapper_axi_bridge_agent(
         "route_completed": route_completed,
         "route_check_command_passed": route_check_command_passed,
         "vivado_available": vivado_available,
+        "bitstream_generated": bitstream_generated,
+        "bitstream_file": str(bitstream_path),
+        "bitstream_size_bytes": bitstream_size_bytes,
+        "bitstream_ready_for_bounded_board_wrapper": status == "passed" and bitstream_generated,
+        "target_scale_accelerator_bitstream": target_scale_accelerator_bitstream,
+        "accelerator_scope": accelerator_scope,
+        "accelerator_binding": accelerator_binding,
         "commands": commands,
         "static_integration_evidence": static_evidence,
         "route_report_analysis": route_analysis,
@@ -31599,11 +31877,7 @@ def run_zcu104_board_wrapper_axi_bridge_agent(
         "implementation_evidence_ready": status == "passed",
         "board_zcu104_signoff_evidence_written": False,
         "final_board_signoff_still_blocked": True,
-        "does_not_claim": [
-            "board_level_ZCU104_signoff",
-            "hardware_lab_runtime_validation",
-            "real_time_LLaMA_inference_performance",
-        ],
+        "does_not_claim": does_not_claim,
         "evidence_files": {
             "implementation_report": str(implementation_report_path),
             "subagent_result": str(subagent_result_path),
@@ -31616,6 +31890,7 @@ def run_zcu104_board_wrapper_axi_bridge_agent(
             "clocks": str(out_dir / "zcu104_clocks.rpt"),
             "implemented_constraints": str(out_dir / "zcu104_implemented_constraints.xdc"),
             "checkpoint": str(out_dir / "zcu104_post_route.dcp"),
+            "bitstream": str(bitstream_path),
         },
     }
     if skill_update_candidate is not None:
@@ -31640,6 +31915,12 @@ def run_zcu104_board_wrapper_axi_bridge_agent(
         "remaining_risks": _zcu104_board_wrapper_remaining_risks(status, failures),
         "final_signoff_still_blocked": True,
         "board_zcu104_signoff_evidence_written": False,
+        "bitstream_generated": bitstream_generated,
+        "bitstream_file": str(bitstream_path),
+        "bitstream_size_bytes": bitstream_size_bytes,
+        "target_scale_accelerator_bitstream": target_scale_accelerator_bitstream,
+        "accelerator_scope": accelerator_scope,
+        "accelerator_binding": accelerator_binding,
     }
     if skill_update_candidate is not None:
         subagent_result["skill_update_candidate"] = skill_update_candidate
@@ -31709,6 +31990,7 @@ def _zcu104_board_wrapper_static_evidence(out_dir: Path) -> dict[str, Any]:
     bd_top = _read_text_if_exists(out_dir / "zcu104_board_ps_pl_ddr_top.v")
     bd_ref = _read_text_if_exists(out_dir / "zcu104_board_shell_axi_subsystem_bd.v")
     bridge = _read_text_if_exists(out_dir / "zcu104_axi_lite_accel_bridge.sv")
+    accel_core = _read_text_if_exists(out_dir / "zcu104_accelerator_core.sv")
     route_tcl = _read_text_if_exists(out_dir / "zcu104_board_route_check.tcl")
     return {
         "routed_top_instantiates_generated_bd_wrapper": (
@@ -31746,6 +32028,7 @@ def _zcu104_board_wrapper_static_evidence(out_dir: Path) -> dict[str, Any]:
             and "input  aclk" not in bd_top
             and "input  aresetn" not in bd_top
         ),
+        "accelerator_core_wraps_generated_top": "u_target_accelerator" in accel_core,
     }
 
 
@@ -31756,7 +32039,7 @@ def _analyze_zcu104_board_route_reports(config: AgentConfig, out_dir: Path) -> d
     clocks_text = _read_text_if_exists(out_dir / "zcu104_clocks.rpt")
     xdc_text = _read_text_if_exists(out_dir / "zcu104_implemented_constraints.xdc")
     timing = _parse_vivado_timing_summary(timing_text)
-    utilization = _parse_vivado_utilization(utilization_text)
+    utilization = _parse_zcu104_vivado_utilization(utilization_text)
     drc = _parse_vivado_drc(drc_text)
     clocks = _parse_vivado_clock_evidence(clocks_text, xdc_text)
     target_period_ns = 1000.0 / config.hardware.target_clock_mhz
@@ -31796,6 +32079,7 @@ def _analyze_zcu104_board_route_reports(config: AgentConfig, out_dir: Path) -> d
             "clocks": bool(clocks_text),
             "implemented_constraints": bool(xdc_text),
             "checkpoint": (out_dir / "zcu104_post_route.dcp").exists(),
+            "bitstream": (out_dir / "zcu104_board_wrapper.bit").exists(),
         },
     }
 
@@ -31887,7 +32171,7 @@ def _parse_vivado_timing_summary(text: str) -> dict[str, Any]:
     }
 
 
-def _parse_vivado_utilization(text: str) -> dict[str, Any]:
+def _parse_zcu104_vivado_utilization(text: str) -> dict[str, Any]:
     return {
         "lut": _first_number([r"lut\s*[:=]\s*([0-9,.]+)", r"CLB LUTs\s*\|\s*([0-9,.]+)"], text),
         "ff": _first_number([r"ff\s*[:=]\s*([0-9,.]+)", r"CLB Registers\s*\|\s*([0-9,.]+)"], text),
@@ -32027,7 +32311,63 @@ set_false_path -to [get_ports {{pmod0_o[*]}}]
 """
 
 
-def _zcu104_accelerator_core_sv() -> str:
+def _zcu104_accelerator_core_sv(accelerator_binding: dict[str, Any] | None = None) -> str:
+    accelerator_binding = accelerator_binding or {"source": "bounded_control_scaffold"}
+    if accelerator_binding.get("source") == "generated_accelerator_artifact":
+        top_module = str(accelerator_binding["top_module"])
+        if accelerator_binding.get("wrapper_kind") == "ddr_axi_board_shell_fixture":
+            return f"""`timescale 1ns/1ps
+
+module zcu104_accelerator_core #(
+    parameter int STATUS_WIDTH = 32
+) (
+    input  logic                    aclk,
+    input  logic                    aresetn,
+    input  logic                    start_i,
+    output logic                    done_o,
+    output logic [STATUS_WIDTH-1:0] status_o
+);
+    logic signed [63:0] target_final_output_w;
+    logic [63:0]        target_status_w;
+
+    {top_module} #(
+        .VALUES(4),
+        .ELEM_WIDTH(16),
+        .SHELL_TRACE_WIDTH(16),
+        .MODEL_STATUS_WIDTH(64),
+        .STATUS_WIDTH(64)
+    ) u_target_accelerator (
+        .aclk(aclk),
+        .aresetn(aresetn),
+        .start_i(start_i),
+        .done_o(done_o),
+        .final_output_o(target_final_output_w),
+        .status_o(target_status_w)
+    );
+
+    assign status_o = target_status_w[STATUS_WIDTH-1:0] ^ target_final_output_w[STATUS_WIDTH-1:0];
+endmodule
+"""
+        return f"""`timescale 1ns/1ps
+
+module zcu104_accelerator_core #(
+    parameter int STATUS_WIDTH = 32
+) (
+    input  logic                    aclk,
+    input  logic                    aresetn,
+    input  logic                    start_i,
+    output logic                    done_o,
+    output logic [STATUS_WIDTH-1:0] status_o
+);
+    {top_module} u_target_accelerator (
+        .aclk(aclk),
+        .aresetn(aresetn),
+        .start_i(start_i),
+        .done_o(done_o),
+        .status_o(status_o)
+    );
+endmodule
+"""
     return """`timescale 1ns/1ps
 
 module zcu104_accelerator_core #(
@@ -32445,7 +32785,8 @@ endmodule
 """
 
 
-def _zcu104_ps_pl_ddr_bd_tcl(fpga_part: str) -> str:
+def _zcu104_ps_pl_ddr_bd_tcl(fpga_part: str, accelerator_binding: dict[str, Any] | None = None) -> str:
+    sv_rtl_files = " ".join(_zcu104_board_wrapper_sv_rtl_files(accelerator_binding or {}))
     return f"""# ZCU104 PS/PL/DDR block-design wiring for nl2hdl.
 # This TCL creates the PS, reset, AXI interconnect, module-reference wrapper,
 # and address map used before any board_zcu104_signoff_evidence.json is valid.
@@ -32458,7 +32799,7 @@ if {{[llength $board_part_candidates] > 0}} {{
     set_property board_part [lindex $board_part_candidates 0] [current_project]
 }}
 set origin_dir [file dirname [file normalize [info script]]]
-foreach rtl_file [list zcu104_accelerator_core.sv zcu104_axi_lite_accel_bridge.sv zcu104_board_shell_axi_subsystem.sv zcu104_board_shell_top.sv] {{
+foreach rtl_file [list {sv_rtl_files}] {{
     if {{[llength [get_files -quiet $rtl_file]] == 0}} {{
         read_verilog -sv [file join $origin_dir $rtl_file]
     }}
@@ -32476,13 +32817,15 @@ set_property -dict [list \\
     CONFIG.PSU__CRL_APB__PL0_REF_CTRL__FREQMHZ 200 \\
 ] [get_bd_cells zynq_ultra_ps_e_0]
 apply_bd_automation -rule xilinx.com:bd_rule:zynq_ultra_ps_e -config {{apply_board_preset "1"}} [get_bd_cells zynq_ultra_ps_e_0]
+# Vivado 2024.1 resolves the ZCU104 IOPLL PL0 request to 187.5 MHz.
+# RPLL resolves the requested 200 MHz PL0 clock to a routed 5.000 ns clock.
 set_property -dict [list \\
     CONFIG.PSU__FPGA_PL0_ENABLE 1 \\
     CONFIG.PSU__USE__M_AXI_GP0 0 \\
     CONFIG.PSU__USE__M_AXI_GP1 0 \\
     CONFIG.PSU__USE__M_AXI_GP2 1 \\
-    CONFIG.PSU__CRL_APB__PL0_REF_CTRL__SRCSEL IOPLL \\
-    CONFIG.PSU__CRL_APB__PL0_REF_CTRL__DIVISOR0 5 \\
+    CONFIG.PSU__CRL_APB__PL0_REF_CTRL__SRCSEL RPLL \\
+    CONFIG.PSU__CRL_APB__PL0_REF_CTRL__DIVISOR0 6 \\
     CONFIG.PSU__CRL_APB__PL0_REF_CTRL__DIVISOR1 1 \\
     CONFIG.PSU__CRL_APB__PL0_REF_CTRL__FREQMHZ 200 \\
     CONFIG.PSU__CRL_APB__PL0_REF_CTRL__ACT_FREQMHZ 200 \\
@@ -32560,15 +32903,15 @@ save_bd_design
 """
 
 
-def _zcu104_board_route_check_tcl(fpga_part: str) -> str:
+def _zcu104_board_route_check_tcl(fpga_part: str, accelerator_binding: dict[str, Any] | None = None) -> str:
+    read_sv_commands = "\n".join(
+        f"read_verilog -sv {file_name}" for file_name in _zcu104_board_wrapper_sv_rtl_files(accelerator_binding or {})
+    )
     return f"""# ZCU104 board wrapper route check for nl2hdl.
 # Run from the directory containing generated RTL, BD TCL, and zcu104_board_shell_constraints.xdc.
 create_project nl2hdl_zcu104_board_route ./zcu104_board_route_vivado -part {fpga_part} -force
 set_property target_language Verilog [current_project]
-read_verilog -sv zcu104_accelerator_core.sv
-read_verilog -sv zcu104_axi_lite_accel_bridge.sv
-read_verilog -sv zcu104_board_shell_axi_subsystem.sv
-read_verilog -sv zcu104_board_shell_top.sv
+{read_sv_commands}
 read_verilog zcu104_board_shell_axi_subsystem_bd.v
 read_verilog zcu104_board_ps_pl_ddr_top.v
 set bd_status [catch {{source zcu104_ps_pl_ddr_bd.tcl}} bd_message]
@@ -32628,6 +32971,7 @@ if {{![regexp {{create_clock\\s+-period\\s+([0-9.]+)\\s+-name\\s+clk_pl_0}} $imp
 if {{[expr {{double($impl_clk_pl_0_period)}}] > 5.000}} {{
     error "Implemented XDC clk_pl_0 period exceeds 200 MHz target: $impl_clk_pl_0_period ns"
 }}
+write_bitstream -force zcu104_board_wrapper.bit
 close_project
 """
 

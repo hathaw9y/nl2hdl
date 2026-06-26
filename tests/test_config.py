@@ -22,6 +22,7 @@ def test_default_config_is_model_only_agent_ready():
     assert cfg.model.input_shape == (1, 4)
     assert cfg.model.gptq_checkpoint is None
     assert cfg.model.mlir_graph is None
+    assert cfg.model.model_structure_source == "mlir"
 
 
 def test_accepts_free_form_optimization_method(tmp_path):
@@ -79,6 +80,33 @@ def test_accepts_llama_zcu104_planning_config():
     assert cfg.design.design_candidates
     assert cfg.model.gptq_checkpoint is None
     assert cfg.model.mlir_graph is None
+    assert cfg.model.model_structure_source == "mlir"
+
+
+def test_accepts_hf_config_model_structure_source(tmp_path):
+    config = tmp_path / "hf_config_structure.yaml"
+    config.write_text(
+        """
+model:
+  model_structure_source: hf_config
+""",
+        encoding="utf-8",
+    )
+    cfg = load_config(config)
+    assert cfg.model.model_structure_source == "hf_config"
+
+
+def test_rejects_unknown_model_structure_source(tmp_path):
+    config = tmp_path / "bad_structure_source.yaml"
+    config.write_text(
+        """
+model:
+  model_structure_source: handwritten_guess
+""",
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="model.model_structure_source"):
+        load_config(config)
 
 
 def test_legacy_design_style_populates_execution_alias(tmp_path):

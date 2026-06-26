@@ -147,6 +147,9 @@ def _source_replay_cli_args(task: dict[str, Any]) -> str:
     mlir_graph = source_replay.get("mlir_graph")
     if mlir_graph:
         args.extend(["--mlir-graph", str(mlir_graph)])
+    model_structure_source = source_replay.get("model_structure_source")
+    if model_structure_source:
+        args.extend(["--model-structure-source", str(model_structure_source)])
     return " ".join(shlex.quote(arg) for arg in args)
 
 
@@ -281,6 +284,7 @@ def _prompt_for_task(task: dict[str, Any], manifest: dict[str, Any]) -> str:
         f"- Contract: `{contract}`",
         f"- Replay GPTQ checkpoint override: `{manifest.get('source_replay', {}).get('gptq_checkpoint') or 'not_configured'}`",
         f"- Replay MLIR graph override: `{manifest.get('source_replay', {}).get('mlir_graph') or 'not_configured'}`",
+        f"- Replay model structure source: `{manifest.get('source_replay', {}).get('model_structure_source') or 'mlir'}`",
         "",
         "## Assigned Operation",
         "",
@@ -828,6 +832,7 @@ def _verification_prompt_for_wave(wave: dict[str, Any], dispatch_plan: dict[str,
         f"- Design candidates: `{dispatch_plan['optimization'].get('design_candidates') or []}`",
         f"- Replay GPTQ checkpoint override: `{dispatch_plan.get('source_replay', {}).get('gptq_checkpoint') or 'not_configured'}`",
         f"- Replay MLIR graph override: `{dispatch_plan.get('source_replay', {}).get('mlir_graph') or 'not_configured'}`",
+        f"- Replay model structure source: `{dispatch_plan.get('source_replay', {}).get('model_structure_source') or 'mlir'}`",
         "",
         "## Wave Scope",
         "",
@@ -1221,6 +1226,55 @@ def _load_task_skill_update_candidate(evidence_dir: Path) -> dict[str, Any] | No
     return None
 
 
+def _target_evidence_skill_update_candidates(collection_root: Path, target_skill: str) -> list[dict[str, Any]]:
+    candidates: list[dict[str, Any]] = []
+    seen_paths: set[Path] = set()
+    target_dirs = [
+        collection_root / "full_llama_execution_gate",
+        collection_root / "full_target_llama_accelerator_gate",
+        collection_root / "board_zcu104_signoff_gate",
+    ]
+    target_dirs.extend(collection_root / str(spec["artifact_dir"]) for spec in TARGET_SCALE_CHILD_PACKET_TASKS)
+    target_files = [
+        collection_root / "full_llama_execution_evidence.json",
+        collection_root / "board_zcu104_signoff_evidence.json",
+    ]
+    for directory in target_dirs:
+        for file_name in (
+            "subagent_result.json",
+            "kernel_report.json",
+            "model_level_execution_harness_report.json",
+            "zcu104_board_wrapper_axi_bridge_subagent_result.json",
+            "zcu104_board_wrapper_axi_bridge_implementation_report.json",
+        ):
+            target_files.append(directory / file_name)
+    for path in target_files:
+        if path in seen_paths:
+            continue
+        seen_paths.add(path)
+        payload = _load_json(path)
+        if not isinstance(payload, dict) or payload.get("_load_error"):
+            continue
+        candidate = _candidate_payload(payload.get("skill_update_candidate"))
+        if candidate is None:
+            continue
+        task_id = str(payload.get("task_id") or payload.get("artifact") or path.parent.name)
+        candidates.append(
+            {
+                "wave_id": "target_evidence",
+                "task_id": task_id,
+                "agent_role": payload.get("subagent_role") or "target_evidence_subagent",
+                "current_regression_kernel": payload.get("kernel") or payload.get("artifact") or "target_evidence",
+                "evidence_dir": str(path.parent),
+                "evidence_file": str(path),
+                "target_skill": target_skill,
+                "candidate_source": "target_evidence",
+                "candidate": candidate,
+            }
+        )
+    return candidates
+
+
 def _subagent_result_status(task: dict[str, Any], evidence_dir: Path) -> dict[str, Any]:
     result_path = evidence_dir / "subagent_result.json"
     result = _load_json(result_path)
@@ -1583,6 +1637,16 @@ def _verification_status(wave: dict[str, Any], collection_root: Path) -> dict[st
             "verification_report": str(report_path),
             "reason": report["_load_error"],
         }
+    if (
+        wave.get("verification_agent", {}).get("runs_integration_synthesis")
+        and report.get("verification_backend") == "local_deterministic_smoke"
+        and report.get("status") == "blocked_by_integration_synthesis_requirement"
+    ):
+        return {
+            "status": "missing",
+            "verification_report": str(report_path),
+            "reason": "stale local verification placeholder requires integration synthesis rerun",
+        }
     blocking_findings = []
     for finding in report.get("findings", []):
         if isinstance(finding, dict) and finding.get("severity") in {"P0", "P1", "P2"}:
@@ -1914,6 +1978,131 @@ def build_full_llama_execution_evidence_template(
             "board_level_ZCU104_signoff",
             "hardware_lab_runtime_validation",
         ],
+    }
+
+
+def _first_passed_wave_id(wave_status: dict[str, Any], *needles: str) -> str | None:
+    lowered_needles = tuple(needle.lower() for needle in needles)
+    for wave in wave_status.get("waves", []):
+        if not isinstance(wave, dict) or wave.get("status") != "passed":
+            continue
+        haystack = " ".join(
+            str(wave.get(field, ""))
+            for field in ("wave_id", "task_id", "target_scope", "kernel", "semantic_op")
+        ).lower()
+        if all(needle in haystack for needle in lowered_needles):
+            wave_id = wave.get("wave_id")
+            return str(wave_id) if wave_id is not None else None
+    return None
+
+
+def run_full_llama_execution_evidence_agent(
+    dispatch_plan: dict[str, Any],
+    wave_status: dict[str, Any],
+    collection_root: Path,
+) -> dict[str, Any]:
+    """Run the local bounded full-execution evidence sub-agent backend."""
+
+    out_dir = collection_root / "full_llama_execution_gate"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    evidence_path = collection_root / "full_llama_execution_evidence.json"
+    subagent_result_path = out_dir / "subagent_result.json"
+    harness_path = _model_level_harness_report_path(collection_root)
+    harness_report = _load_json(harness_path)
+    readiness_before = build_full_llama_execution_readiness_report(dispatch_plan, wave_status, collection_root)
+    target_preflight = readiness_before.get("target_preflight", {})
+    non_passed_waves = readiness_before.get("subagent_waves", {}).get("non_passed_waves", [])
+    harness_failures = _model_level_harness_failures(harness_report, dispatch_plan)
+    failures: list[str] = []
+    if target_preflight.get("status") != "passed":
+        failures.append("target_preflight.status must be passed")
+    if non_passed_waves:
+        failures.append("all sub-agent waves must be passed before full execution evidence")
+    failures.extend(harness_failures)
+
+    evidence_written = False
+    evidence: dict[str, Any] | None = None
+    if failures:
+        status = "blocked_by_missing_or_incomplete_model_execution_evidence"
+    else:
+        reference = harness_report.get("python_reference_comparison", {}) if isinstance(harness_report, dict) else {}
+        evidence = {
+            "artifact": "full_llama_execution_evidence",
+            "status": "passed",
+            "model": dispatch_plan.get("model", {}).get("name"),
+            "target_preflight_status": "passed",
+            "full_model_layers_executed": True,
+            "executed_layer_count": harness_report.get("executed_layer_count"),
+            "token_loop_evidence": {
+                "passed": True,
+                "source_wave_id": _first_passed_wave_id(wave_status, "token", "loop"),
+                "report": str(harness_path),
+            },
+            "model_fsm_evidence": {
+                "passed": True,
+                "source_wave_id": _first_passed_wave_id(wave_status, "model", "fsm"),
+                "report": str(harness_path),
+            },
+            "checkpoint_payload_evidence": {
+                "passed": True,
+                "source": "dispatch_plan_and_gptq_payload_probe",
+                "projection_payloads_verified": True,
+            },
+            "python_reference_comparison": {
+                "passed": True,
+                "tolerance_lsb": reference.get("tolerance_lsb"),
+                "max_abs_error": reference.get("max_abs_error"),
+                "reference_artifact": str(harness_path),
+                "rtl_artifact": "local_model_level_harness",
+            },
+            "board_level_signoff": False,
+        }
+        evidence_failures = _full_execution_evidence_failures(evidence, dispatch_plan)
+        if evidence_failures:
+            status = "failed_internal_evidence_validation"
+            failures.extend(evidence_failures)
+        else:
+            evidence_path.write_text(json.dumps(evidence, indent=2), encoding="utf-8")
+            evidence_written = True
+            status = "passed"
+
+    readiness_after = build_full_llama_execution_readiness_report(dispatch_plan, wave_status, collection_root)
+    subagent_result = {
+        "artifact": "full_llama_execution_evidence_subagent_result",
+        "task_id": "full_llama_execution_evidence",
+        "status": status,
+        "changed_files": [str(evidence_path)] if evidence_written else [str(subagent_result_path)],
+        "commands_run": ["local full execution evidence backend"],
+        "evidence_paths": {
+            "full_llama_execution_evidence": str(evidence_path) if evidence_written else None,
+            "model_level_harness": str(harness_path),
+            "subagent_result": str(subagent_result_path),
+        },
+        "failures": failures,
+        "readiness_before": readiness_before.get("status"),
+        "readiness_after": readiness_after.get("status"),
+        "remaining_risks": [
+            "Model-level execution evidence is a deterministic software harness, not hardware lab runtime.",
+            "Board-level signoff remains a separate downstream gate.",
+        ],
+    }
+    if status != "passed":
+        subagent_result["skill_update_candidate"] = {
+            "failing_command": "local full execution evidence backend",
+            "symptom": "; ".join(failures) if failures else "full execution evidence was not written",
+            "root_cause_hypothesis": "Required model harness or sub-agent wave evidence is incomplete.",
+            "prevention_rule": "Run the model-level harness and require all wave evidence before writing full_llama_execution_evidence.json.",
+            "minimal_regression_check": "Call run_full_llama_execution_evidence_agent with missing harness and assert evidence is not written.",
+        }
+    subagent_result_path.write_text(json.dumps(subagent_result, indent=2), encoding="utf-8")
+    return {
+        "artifact": "full_llama_execution_evidence_agent_report",
+        "status": status,
+        "evidence_written": evidence_written,
+        "evidence_file": str(evidence_path),
+        "subagent_result": str(subagent_result_path),
+        "failures": failures,
+        "readiness": readiness_after,
     }
 
 
@@ -2264,7 +2453,8 @@ def build_target_evidence_execution_manifest(target_task: dict[str, Any]) -> dic
             "spawn_key": f"target_evidence::{task_id}",
             "spawn_kind": spawn_kind,
             "agent_hierarchy_role": "subagent",
-            "subagent_type": (
+            "subagent_type": target_task.get("subagent_type")
+            or (
                 "board_wrapper_implementation_subagent"
                 if spawn_kind == "target_evidence_implementation_agent"
                 else "target_evidence_subagent"
@@ -2293,12 +2483,23 @@ def build_target_evidence_execution_manifest(target_task: dict[str, Any]) -> dic
         }
         spawn_entries.append(entry)
     else:
+        existing_child_blocker = target_task.get("existing_child_blocker")
+        skill_update_candidate_complete = (
+            isinstance(existing_child_blocker, dict)
+            and existing_child_blocker.get("skill_update_candidate_complete") is True
+        )
         blocked_target_evidence_tasks.append(
             {
                 "task_id": task_id,
                 "status": "blocked_by_precondition",
                 "precondition_failures": target_task.get("spawn_precondition_failures", []),
-                "next_action": "resolve preconditions before spawning target-evidence agent",
+                "existing_child_blocker": existing_child_blocker,
+                "skill_update_candidate_complete": skill_update_candidate_complete,
+                "next_action": (
+                    "run_subagents_skill_draft_and_update_skill_before_retry"
+                    if skill_update_candidate_complete
+                    else "resolve preconditions before spawning target-evidence agent"
+                ),
             }
         )
     spawn_batches = []
@@ -2321,6 +2522,9 @@ def build_target_evidence_execution_manifest(target_task: dict[str, Any]) -> dic
     target_evidence_spawn_count = sum(
         1 for entry in spawn_entries if entry.get("spawn_kind") != "target_evidence_implementation_agent"
     )
+    skill_update_required = any(
+        task.get("skill_update_candidate_complete") is True for task in blocked_target_evidence_tasks
+    )
     return {
         "artifact": "target_evidence_execution_manifest",
         "coverage_level": "target_readiness_gap_to_codex_evidence_agent_spawn",
@@ -2337,7 +2541,7 @@ def build_target_evidence_execution_manifest(target_task: dict[str, Any]) -> dic
         "spawn_batch_count": len(spawn_batches),
         "parallel_spawn_allowed": False,
         "max_parallel_batch_size": 0,
-        "skill_update_required": False,
+        "skill_update_required": skill_update_required,
         "missing_skill_update_candidate": False,
         "spawn_batches": spawn_batches,
         "spawn_entries": spawn_entries,
@@ -2387,6 +2591,10 @@ def _board_signoff_evidence_failures(
         failures.append("fpga_part must match dispatch plan")
     if evidence.get("full_llama_execution_status") != "passed":
         failures.append("full_llama_execution_status must be passed")
+    if evidence.get("target_scale_accelerator_bitstream") is not True:
+        failures.append("target_scale_accelerator_bitstream must be true")
+    if evidence.get("accelerator_scope") != "full_target_llama_accelerator":
+        failures.append("accelerator_scope must be full_target_llama_accelerator")
     failures.extend(full_execution_failure)
     required_constraints = {
         "clock",
@@ -2436,9 +2644,30 @@ def _board_signoff_evidence_failures(
     if not isinstance(reports, dict):
         failures.append("reports must list generated Vivado artifacts")
     else:
-        for name in ("timing_summary", "utilization", "constraints", "vivado_log"):
+        for name in (
+            "timing_summary",
+            "utilization",
+            "constraints",
+            "vivado_log",
+            "drc",
+            "methodology",
+            "clocks",
+            "checkpoint",
+            "bitstream",
+        ):
             if not reports.get(name):
                 failures.append(f"reports.{name} must be provided")
+    bitstream = evidence.get("bitstream")
+    if not isinstance(bitstream, dict):
+        failures.append("bitstream must be an object")
+    else:
+        if bitstream.get("generated") is not True:
+            failures.append("bitstream.generated must be true")
+        if not bitstream.get("path"):
+            failures.append("bitstream.path must be provided")
+        size_bytes = bitstream.get("size_bytes")
+        if not isinstance(size_bytes, (int, float)) or size_bytes <= 0:
+            failures.append("bitstream.size_bytes must be positive")
     if evidence.get("fixture_only") is True:
         failures.append("fixture_only board evidence cannot satisfy board-level signoff")
     return failures
@@ -2451,6 +2680,32 @@ def build_board_zcu104_signoff_readiness_report(
 ) -> dict[str, Any]:
     evidence = _load_board_signoff_evidence(collection_root)
     evidence_failures = _board_signoff_evidence_failures(evidence, dispatch_plan, full_execution_readiness)
+    wrapper_report_path = (
+        collection_root
+        / "board_zcu104_signoff_gate"
+        / "zcu104_board_wrapper_axi_bridge_implementation_report.json"
+    )
+    wrapper_report = _load_json(wrapper_report_path)
+    wrapper_failures: list[str] = []
+    if wrapper_report is not None:
+        wrapper_failures = _board_wrapper_report_failures(
+            wrapper_report,
+            dispatch_plan,
+            wrapper_report_path.parent,
+        )
+        for failure in wrapper_failures:
+            if failure not in evidence_failures:
+                evidence_failures.append(failure)
+    target_scale_blocked = any(
+        failure
+        in {
+            "target_scale_accelerator_bitstream must be true",
+            "accelerator_scope must be full_target_llama_accelerator",
+            "board-wrapper target_scale_accelerator_bitstream must be true",
+            "board-wrapper accelerator_scope must be full_target_llama_accelerator",
+        }
+        for failure in evidence_failures
+    )
     status = "passed" if not evidence_failures else (
         "blocked_by_full_llama_execution"
         if full_execution_readiness.get("status") != "passed"
@@ -2475,11 +2730,17 @@ def build_board_zcu104_signoff_readiness_report(
         "full_execution_status": full_execution_readiness.get("status"),
         "required_evidence_file": str(collection_root / "board_zcu104_signoff_evidence.json"),
         "board_signoff_evidence": evidence if isinstance(evidence, dict) and not evidence.get("_load_error") else None,
+        "board_wrapper_report": wrapper_report
+        if isinstance(wrapper_report, dict) and not wrapper_report.get("_load_error")
+        else None,
+        "board_wrapper_failures": wrapper_failures,
         "evidence_failures": evidence_failures,
         "safe_to_clear_board_level_zcu104_signoff_blocker": status == "passed",
         "next_action": (
             "pass full_llama_execution_readiness before board signoff"
             if full_execution_readiness.get("status") != "passed"
+            else "run target-scale ZCU104 board-wrapper implementation before board signoff"
+            if target_scale_blocked
             else "write board_zcu104_signoff_evidence.json with Vivado board constraints, timing, resource, and report evidence"
             if evidence_failures
             else "board-level ZCU104 signoff readiness passed"
@@ -2526,6 +2787,9 @@ def build_board_zcu104_signoff_evidence_template(
             "timing",
             "resource_utilization",
             "reports",
+            "bitstream",
+            "target_scale_accelerator_bitstream",
+            "accelerator_scope",
             "fixture_only",
         ],
         "template": {
@@ -2534,6 +2798,8 @@ def build_board_zcu104_signoff_evidence_template(
             "board": "ZCU104",
             "fpga_part": hardware.get("fpga_part"),
             "full_llama_execution_status": "<passed>",
+            "target_scale_accelerator_bitstream": "<true>",
+            "accelerator_scope": "full_target_llama_accelerator",
             "constraints": {
                 "clock": "<true>",
                 "reset": "<true>",
@@ -2553,6 +2819,16 @@ def build_board_zcu104_signoff_evidence_template(
                 "utilization": "<path to utilization.rpt>",
                 "constraints": "<path to ZCU104 XDC/TCL constraints>",
                 "vivado_log": "<path to Vivado log>",
+                "drc": "<path to drc.rpt>",
+                "methodology": "<path to methodology.rpt>",
+                "clocks": "<path to clocks.rpt>",
+                "checkpoint": "<path to post-route checkpoint>",
+                "bitstream": "<path to generated .bit>",
+            },
+            "bitstream": {
+                "generated": "<true>",
+                "path": "<path to generated .bit>",
+                "size_bytes": "<positive integer>",
             },
             "fixture_only": False,
         },
@@ -2560,6 +2836,277 @@ def build_board_zcu104_signoff_evidence_template(
             "real_time_LLaMA_inference_performance",
             "hardware_lab_runtime_validation",
         ],
+    }
+
+
+def _resolve_existing_path(path_value: Any, base_dir: Path) -> Path | None:
+    if not path_value:
+        return None
+    candidate = Path(str(path_value))
+    candidates = [candidate] if candidate.is_absolute() else [candidate, base_dir / candidate, base_dir / candidate.name]
+    for item in candidates:
+        if item.exists():
+            return item
+    return None
+
+
+def _parse_total_user_io(report_text: str) -> int | None:
+    match = re.search(r"Total User IO\s*\|\s*\+[-+]+\+\s*\|\s*(\d+)\s*\|", report_text, re.S)
+    if match:
+        return int(match.group(1))
+    fallback = re.search(r"Total User IO[^\n]*\n(?:.*\n){0,4}?\|\s*(\d+)\s*\|", report_text)
+    return int(fallback.group(1)) if fallback else None
+
+
+def _parse_bonded_iob_from_utilization(report_text: str) -> int | None:
+    match = re.search(r"\|\s*Bonded IOB\s*\|\s*([0-9]+(?:\.[0-9]+)?)\s*\|", report_text)
+    return int(float(match.group(1))) if match else None
+
+
+def _board_signoff_io_count(
+    evidence_files: dict[str, Any],
+    board_wrapper_dir: Path,
+    route_utilization: dict[str, Any],
+) -> int | None:
+    io_report = _resolve_existing_path("zcu104_io.rpt", board_wrapper_dir)
+    if io_report is not None:
+        parsed = _parse_total_user_io(io_report.read_text(encoding="utf-8", errors="ignore"))
+        if parsed is not None:
+            return parsed
+
+    utilization_report = _resolve_existing_path(evidence_files.get("utilization"), board_wrapper_dir)
+    if utilization_report is not None:
+        parsed = _parse_bonded_iob_from_utilization(
+            utilization_report.read_text(encoding="utf-8", errors="ignore")
+        )
+        if parsed is not None:
+            return parsed
+
+    for key in ("io", "bonded_iob", "bonded_iob_used"):
+        value = route_utilization.get(key)
+        if isinstance(value, (int, float)):
+            return int(value)
+    return None
+
+
+def _board_wrapper_report_failures(
+    wrapper_report: dict[str, Any] | None,
+    dispatch_plan: dict[str, Any],
+    wrapper_dir: Path,
+) -> list[str]:
+    if wrapper_report is None:
+        return ["zcu104_board_wrapper_axi_bridge_implementation_report.json not found"]
+    if wrapper_report.get("_load_error"):
+        return [str(wrapper_report["_load_error"])]
+    failures: list[str] = []
+    if wrapper_report.get("status") != "passed":
+        failures.append("board-wrapper implementation report status must be passed")
+    if wrapper_report.get("fpga_part") != dispatch_plan.get("hardware", {}).get("fpga_part"):
+        failures.append("board-wrapper fpga_part must match dispatch plan")
+    if wrapper_report.get("target_scale_accelerator_bitstream") is not True:
+        failures.append("board-wrapper target_scale_accelerator_bitstream must be true")
+    if wrapper_report.get("accelerator_scope") != "full_target_llama_accelerator":
+        failures.append("board-wrapper accelerator_scope must be full_target_llama_accelerator")
+    for field in ("route_completed", "route_check_command_passed", "vivado_available", "bitstream_generated"):
+        if wrapper_report.get(field) is not True:
+            failures.append(f"board-wrapper {field} must be true")
+    if not isinstance(wrapper_report.get("bitstream_size_bytes"), (int, float)) or wrapper_report.get("bitstream_size_bytes") <= 0:
+        failures.append("board-wrapper bitstream_size_bytes must be positive")
+    static = wrapper_report.get("static_integration_evidence", {})
+    for field in (
+        "routed_top_instantiates_generated_bd_wrapper",
+        "ps_fclk_reset_drive_accelerator",
+        "ps_axi_reaches_control_registers",
+        "ddr_address_map_declared",
+        "board_visible_ports_are_compact",
+    ):
+        if not isinstance(static, dict) or static.get(field) is not True:
+            failures.append(f"static board-wrapper evidence missing: {field}")
+    route = wrapper_report.get("route_report_analysis", {})
+    if not isinstance(route, dict):
+        failures.append("route_report_analysis must be an object")
+        return failures
+    if route.get("gate_failures"):
+        failures.append("route_report_analysis.gate_failures must be empty")
+    timing = route.get("timing", {})
+    if not isinstance(timing, dict) or timing.get("constraints_met") is not True:
+        failures.append("route timing constraints must be met")
+    else:
+        for field in TIMING_FIELDS:
+            if not _nonnegative_number(timing.get(field)):
+                failures.append(f"route timing.{field} must be non-negative")
+    clock = route.get("clock", {})
+    if not isinstance(clock, dict):
+        failures.append("route clock evidence must be present")
+    else:
+        target_period = clock.get("target_period_ns")
+        observed = clock.get("observed_period_ns")
+        implemented = clock.get("implemented_xdc_period_ns")
+        if not isinstance(target_period, (int, float)):
+            failures.append("route clock target_period_ns must be numeric")
+        if not isinstance(observed, (int, float)) or (
+            isinstance(target_period, (int, float)) and observed > target_period + 1e-6
+        ):
+            failures.append("route observed clock period must satisfy target")
+        if not isinstance(implemented, (int, float)) or (
+            isinstance(target_period, (int, float)) and implemented > target_period + 1e-6
+        ):
+            failures.append("implemented XDC clock period must satisfy target")
+    if route.get("utilization_budget", {}).get("passes") is not True:
+        failures.append("route utilization budget must pass")
+    reports_present = route.get("reports_present", {})
+    for field in ("timing_summary", "utilization", "drc", "clocks", "implemented_constraints", "checkpoint", "bitstream"):
+        if not isinstance(reports_present, dict) or reports_present.get(field) is not True:
+            failures.append(f"route reports_present.{field} must be true")
+    evidence_files = wrapper_report.get("evidence_files", {})
+    if not isinstance(evidence_files, dict):
+        failures.append("board-wrapper evidence_files must be an object")
+    else:
+        for field in (
+            "vivado_log",
+            "timing_summary",
+            "utilization",
+            "drc",
+            "methodology",
+            "clocks",
+            "implemented_constraints",
+            "checkpoint",
+            "bitstream",
+        ):
+            if _resolve_existing_path(evidence_files.get(field), wrapper_dir) is None:
+                failures.append(f"board-wrapper evidence file missing: {field}")
+    return failures
+
+
+def run_board_zcu104_signoff_evidence_agent(
+    dispatch_plan: dict[str, Any],
+    full_execution_readiness: dict[str, Any],
+    collection_root: Path,
+    *,
+    board_wrapper_dir: Path | None = None,
+    out_dir: Path | None = None,
+) -> dict[str, Any]:
+    """Run the local read-only board signoff evidence sub-agent backend."""
+
+    board_wrapper_dir = board_wrapper_dir or (collection_root / "board_zcu104_signoff_gate")
+    out_dir = out_dir or (collection_root / "board_zcu104_signoff_gate")
+    out_dir.mkdir(parents=True, exist_ok=True)
+    evidence_path = collection_root / "board_zcu104_signoff_evidence.json"
+    subagent_result_path = out_dir / "subagent_result.json"
+    wrapper_report_path = board_wrapper_dir / "zcu104_board_wrapper_axi_bridge_implementation_report.json"
+    wrapper_report = _load_json(wrapper_report_path)
+    failures: list[str] = []
+    if full_execution_readiness.get("status") != "passed":
+        failures.append("full_llama_execution_readiness must be passed before board signoff")
+    failures.extend(_board_wrapper_report_failures(wrapper_report, dispatch_plan, board_wrapper_dir))
+
+    evidence_written = False
+    if failures:
+        status = "blocked_by_missing_or_incomplete_board_signoff_evidence"
+    else:
+        route = wrapper_report["route_report_analysis"]
+        timing = route["timing"]
+        utilization = route["utilization"]
+        evidence_files = wrapper_report["evidence_files"]
+        bitstream_path = _resolve_existing_path(evidence_files.get("bitstream"), board_wrapper_dir)
+        io_count = _board_signoff_io_count(evidence_files, board_wrapper_dir, utilization)
+        resource_utilization = {
+            "lut": utilization.get("lut"),
+            "dsp": utilization.get("dsp"),
+            "bram": utilization.get("bram"),
+            "ff": utilization.get("ff"),
+            "uram": utilization.get("uram"),
+            "io": io_count,
+        }
+        evidence = {
+            "artifact": "board_zcu104_signoff_evidence",
+            "status": "passed",
+            "board": "ZCU104",
+            "fpga_part": dispatch_plan.get("hardware", {}).get("fpga_part"),
+            "full_llama_execution_status": "passed",
+            "target_scale_accelerator_bitstream": True,
+            "accelerator_scope": "full_target_llama_accelerator",
+            "constraints": {
+                "clock": True,
+                "reset": True,
+                "board_io": True,
+                "ps_pl_interface": True,
+                "ddr_interface": True,
+            },
+            "timing": {
+                "constraints_met": timing.get("constraints_met"),
+                "setup_worst_slack_ns": timing.get("setup_worst_slack_ns"),
+                "hold_worst_slack_ns": timing.get("hold_worst_slack_ns"),
+                "pulse_width_worst_slack_ns": timing.get("pulse_width_worst_slack_ns"),
+            },
+            "resource_utilization": resource_utilization,
+            "reports": {
+                "timing_summary": str(_resolve_existing_path(evidence_files.get("timing_summary"), board_wrapper_dir)),
+                "utilization": str(_resolve_existing_path(evidence_files.get("utilization"), board_wrapper_dir)),
+                "constraints": str(_resolve_existing_path(evidence_files.get("implemented_constraints"), board_wrapper_dir)),
+                "vivado_log": str(_resolve_existing_path(evidence_files.get("vivado_log"), board_wrapper_dir)),
+                "drc": str(_resolve_existing_path(evidence_files.get("drc"), board_wrapper_dir)),
+                "methodology": str(_resolve_existing_path(evidence_files.get("methodology"), board_wrapper_dir)),
+                "clocks": str(_resolve_existing_path(evidence_files.get("clocks"), board_wrapper_dir)),
+                "checkpoint": str(_resolve_existing_path(evidence_files.get("checkpoint"), board_wrapper_dir)),
+                "bitstream": str(bitstream_path),
+            },
+            "bitstream": {
+                "generated": True,
+                "path": str(bitstream_path),
+                "size_bytes": int(wrapper_report.get("bitstream_size_bytes")),
+            },
+            "fixture_only": False,
+        }
+        validation_failures = _board_signoff_evidence_failures(evidence, dispatch_plan, full_execution_readiness)
+        if validation_failures:
+            status = "failed_internal_evidence_validation"
+            failures.extend(validation_failures)
+        else:
+            evidence_path.write_text(json.dumps(evidence, indent=2), encoding="utf-8")
+            evidence_written = True
+            status = "passed"
+
+    readiness_after = build_board_zcu104_signoff_readiness_report(
+        dispatch_plan,
+        full_execution_readiness,
+        collection_root,
+    )
+    subagent_result = {
+        "artifact": "board_zcu104_signoff_evidence_subagent_result",
+        "task_id": "board_zcu104_signoff_evidence",
+        "status": status,
+        "changed_files": [str(evidence_path)] if evidence_written else [str(subagent_result_path)],
+        "commands_run": ["local board signoff evidence backend"],
+        "evidence_paths": {
+            "board_zcu104_signoff_evidence": str(evidence_path) if evidence_written else None,
+            "board_wrapper_report": str(wrapper_report_path),
+            "subagent_result": str(subagent_result_path),
+        },
+        "failures": failures,
+        "readiness_after": readiness_after.get("status"),
+        "remaining_risks": [
+            "Board signoff uses routed Vivado evidence, not hardware lab runtime validation.",
+            "Real-time LLaMA inference performance is not claimed.",
+        ],
+    }
+    if status != "passed":
+        subagent_result["skill_update_candidate"] = {
+            "failing_command": "local board signoff evidence backend",
+            "symptom": "; ".join(failures) if failures else "board signoff evidence was not written",
+            "root_cause_hypothesis": "Full execution readiness or board-wrapper routed evidence is incomplete.",
+            "prevention_rule": "Require passed full execution readiness and passed board-wrapper route/bitstream evidence that explicitly proves target_scale_accelerator_bitstream=true before writing board_zcu104_signoff_evidence.json.",
+            "minimal_regression_check": "Call run_board_zcu104_signoff_evidence_agent with missing board-wrapper report and assert evidence is not written.",
+        }
+    subagent_result_path.write_text(json.dumps(subagent_result, indent=2), encoding="utf-8")
+    return {
+        "artifact": "board_zcu104_signoff_evidence_agent_report",
+        "status": status,
+        "evidence_written": evidence_written,
+        "evidence_file": str(evidence_path),
+        "subagent_result": str(subagent_result_path),
+        "failures": failures,
+        "readiness": readiness_after,
     }
 
 
@@ -2577,6 +3124,16 @@ def build_board_zcu104_signoff_evidence_agent_task(
         precondition_failures.append("full_llama_execution_readiness must be passed before board signoff")
     if board_signoff_readiness.get("status") == "passed":
         precondition_failures.append("board_zcu104_signoff_readiness already passed")
+    target_scale_blockers = {
+        "target_scale_accelerator_bitstream must be true",
+        "accelerator_scope must be full_target_llama_accelerator",
+        "board-wrapper target_scale_accelerator_bitstream must be true",
+        "board-wrapper accelerator_scope must be full_target_llama_accelerator",
+    }
+    if any(failure in target_scale_blockers for failure in evidence_failures):
+        precondition_failures.append(
+            "target-scale accelerator board-wrapper evidence must pass before board signoff"
+        )
     if "board_zcu104_signoff_evidence.json not found" not in evidence_failures and board_signoff_readiness.get(
         "status"
     ) != "blocked_by_missing_or_incomplete_board_signoff_evidence":
@@ -2649,6 +3206,8 @@ def build_board_zcu104_signoff_evidence_agent_task(
         "- Implemented `report_clocks`, timing summary, and XDC prove the accelerator/PS PL clock period is at or below the configured target period.",
         "- Resource utilization reports numeric LUT/DSP/BRAM usage under configured budgets.",
         "- Reports include timing summary, utilization, constraints, and Vivado log paths.",
+        "- A generated bitstream exists, has a positive file size, and is listed in both `reports.bitstream` and the `bitstream` object.",
+        "- The routed wrapper report explicitly proves `target_scale_accelerator_bitstream == true` and `accelerator_scope == full_target_llama_accelerator`.",
         "- Existing bounded fixture synthesis reports are insufficient unless they include the required board I/O, PS/PL, and DDR constraints.",
         "",
         "## Allowed Write Scope",
@@ -2705,6 +3264,768 @@ def build_board_zcu104_signoff_evidence_agent_task(
             "real_time_LLaMA_inference_performance",
             "hardware_lab_runtime_validation_without_hardware_evidence",
             "board_level_signoff_from_fixture_only_synthesis",
+            "board_level_signoff_from_control_scaffold_bitstream",
+        ],
+    }
+
+
+def _full_target_accelerator_artifact_report(collection_root: Path) -> dict[str, Any] | None:
+    report = _load_json(collection_root / "full_target_llama_accelerator_gate" / "kernel_report.json")
+    if not isinstance(report, dict):
+        return None
+    return report
+
+
+def _full_target_accelerator_artifact_is_ready(collection_root: Path) -> bool:
+    report = _full_target_accelerator_artifact_report(collection_root)
+    if not isinstance(report, dict) or report.get("_load_error"):
+        return False
+    gate_dir = collection_root / "full_target_llama_accelerator_gate"
+    top_module = str(report.get("kernel") or "").strip()
+    numeric_policy = report.get("numeric_policy", {})
+    if not isinstance(numeric_policy, dict):
+        numeric_policy = {}
+    return bool(
+        report.get("status") == "passed"
+        and top_module
+        and (gate_dir / f"{top_module}.sv").exists()
+        and numeric_policy.get("full_llama_model") is True
+        and numeric_policy.get("board_level_signoff") is True
+        and "fixture" not in str(report.get("coverage_level") or "")
+    )
+
+
+def _target_scale_accelerator_artifact_needed(board_signoff_readiness: dict[str, Any]) -> bool:
+    wrapper_failures = board_signoff_readiness.get("board_wrapper_failures", [])
+    if not isinstance(wrapper_failures, list):
+        wrapper_failures = []
+    evidence_failures = board_signoff_readiness.get("evidence_failures", [])
+    if not isinstance(evidence_failures, list):
+        evidence_failures = []
+    return any(
+        failure
+        in {
+            "board-wrapper target_scale_accelerator_bitstream must be true",
+            "board-wrapper accelerator_scope must be full_target_llama_accelerator",
+        }
+        for failure in wrapper_failures
+    ) or any(
+        failure
+        in {
+            "target_scale_accelerator_bitstream must be true",
+            "accelerator_scope must be full_target_llama_accelerator",
+        }
+        for failure in evidence_failures
+    )
+
+
+TARGET_SCALE_CHILD_PACKET_TASKS: tuple[dict[str, Any], ...] = (
+    {
+        "task_id": "target_gptq_projection_datapath_packets",
+        "artifact_dir": "target_gptq_projection_datapath_packets_gate",
+        "subagent_type": "target_scale_projection_hdl_subagent",
+        "mode": "read_write_target_projection_rtl",
+        "title": "Target GPTQ INT4 Projection Datapath Packets",
+        "objective": (
+            "Implement or honestly block checkpoint-backed GPTQ INT4 projection datapaths for "
+            "q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, and down_proj."
+        ),
+        "required_scope": [
+            "packed INT4 DDR stream consumption",
+            "groupwise scale/zero metadata handling",
+            "true parallel datapath lane evidence",
+            "simulation or golden-vector evidence",
+            "Vivado OOC/resource evidence for real datapath RTL",
+        ],
+        "depends_on": [],
+    },
+    {
+        "task_id": "target_non_gemm_datapath_packets",
+        "artifact_dir": "target_non_gemm_datapath_packets_gate",
+        "subagent_type": "target_scale_non_gemm_hdl_subagent",
+        "mode": "read_write_target_non_gemm_rtl",
+        "title": "Target Non-GEMM Datapath Packets",
+        "objective": (
+            "Implement or honestly block non-fixture RTL datapaths or scheduled hardware kernels "
+            "for RMSNorm, RoPE, attention score/softmax/control, KV-cache movement, residual, "
+            "SiLU, and SwiGLU."
+        ),
+        "required_scope": [
+            "RMSNorm reduction and reciprocal approximation policy",
+            "RoPE table or frequency source policy",
+            "attention score/softmax/control approximation policy",
+            "KV-cache movement and residual datapath contracts",
+            "simulation or golden-vector evidence",
+            "Vivado OOC/resource evidence for real datapath RTL",
+        ],
+        "depends_on": [],
+    },
+    {
+        "task_id": "target_ddr_weight_stream_scheduler_packet",
+        "artifact_dir": "target_ddr_weight_stream_scheduler_packet_gate",
+        "subagent_type": "target_scale_memory_scheduler_hdl_subagent",
+        "mode": "read_write_target_ddr_scheduler_rtl",
+        "title": "Target DDR Packed-Weight Stream Scheduler Packet",
+        "objective": (
+            "Implement or honestly block a DDR packed-weight stream scheduler contract that can feed "
+            "target GPTQ projection datapaths without pretending to instantiate a real PS/PL DDR IP."
+        ),
+        "required_scope": [
+            "AXI/stream command and data channel contract",
+            "packed-weight burst ordering",
+            "backpressure behavior",
+            "weight group metadata addressing",
+            "simulation evidence",
+            "Vivado OOC/resource evidence when RTL is generated",
+        ],
+        "depends_on": [],
+    },
+    {
+        "task_id": "target_decoder_block_integration_packet",
+        "artifact_dir": "target_decoder_block_integration_packet_gate",
+        "subagent_type": "target_scale_decoder_block_integration_subagent",
+        "mode": "read_write_target_decoder_block_integration",
+        "title": "Target Decoder-Block Integration Packet",
+        "objective": (
+            "Compose only target-scale eligible projection, non-GEMM, and DDR scheduler children into "
+            "a decoder-block integration packet, or block if any prerequisite remains fixture coverage."
+        ),
+        "required_scope": [
+            "streaming child handshake compatibility",
+            "attention and MLP projection sequencing",
+            "residual path ordering",
+            "single-token decode path control",
+            "integration simulation evidence",
+            "integration synthesis/resource evidence",
+        ],
+        "depends_on": [
+            "target_gptq_projection_datapath_packets",
+            "target_non_gemm_datapath_packets",
+            "target_ddr_weight_stream_scheduler_packet",
+        ],
+    },
+    {
+        "task_id": "target_token_loop_16_layer_model_fsm_packet",
+        "artifact_dir": "target_token_loop_16_layer_model_fsm_packet_gate",
+        "subagent_type": "target_scale_model_fsm_integration_subagent",
+        "mode": "read_write_target_model_fsm_rtl",
+        "title": "Target Token-Loop and 16-Layer Model FSM Packet",
+        "objective": (
+            "Compose target decoder-block integration into token-loop and 16-layer model FSM RTL that "
+            "preserves the board-wrapper start/done/status contract."
+        ),
+        "required_scope": [
+            "16 decoder layer scheduling",
+            "token-loop state control",
+            "board-wrapper-compatible start/done/status bridge",
+            "only target-scale eligible child reports consumed",
+            "model-level simulation evidence",
+            "model-level synthesis/resource evidence",
+        ],
+        "depends_on": ["target_decoder_block_integration_packet"],
+    },
+)
+
+
+def _target_scale_child_task_specs_by_id() -> dict[str, dict[str, Any]]:
+    return {str(spec["task_id"]): spec for spec in TARGET_SCALE_CHILD_PACKET_TASKS}
+
+
+def _target_scale_child_packet_report(collection_root: Path, task_id: str) -> dict[str, Any] | None:
+    spec = _target_scale_child_task_specs_by_id().get(task_id)
+    if spec is None:
+        return None
+    report = _load_json(collection_root / str(spec["artifact_dir"]) / "kernel_report.json")
+    if not isinstance(report, dict):
+        return None
+    return report
+
+
+def _target_scale_child_packet_blocker(collection_root: Path, task_id: str) -> dict[str, Any] | None:
+    report = _target_scale_child_packet_report(collection_root, task_id)
+    if not isinstance(report, dict) or report.get("_load_error"):
+        return None
+    if _target_scale_child_packet_is_ready(collection_root, task_id):
+        return None
+    if _target_scale_child_failure_stale_after_dependency_update(collection_root, task_id, report):
+        return None
+    status = str(report.get("status") or "unknown")
+    candidate = _candidate_payload(report.get("skill_update_candidate"))
+    result = _load_json(collection_root / str(_target_scale_child_task_specs_by_id()[task_id]["artifact_dir"]) / "subagent_result.json")
+    if candidate is None and isinstance(result, dict) and not result.get("_load_error"):
+        candidate = _candidate_payload(result.get("skill_update_candidate"))
+    return {
+        "status": status,
+        "coverage_level": report.get("coverage_level"),
+        "target_scale_child_eligible": report.get("target_scale_child_eligible"),
+        "skill_update_candidate_complete": candidate is not None,
+        "next_action": (
+            "run_subagents_skill_draft_and_update_skill_before_retry"
+            if candidate is not None
+            else "collect_complete_skill_update_candidate_before_retry"
+        ),
+    }
+
+
+def _target_scale_child_failure_stale_after_dependency_update(
+    collection_root: Path,
+    task_id: str,
+    report: dict[str, Any],
+) -> bool:
+    if str(report.get("status") or "") not in {"blocked", "failed", "failed_timing"}:
+        return False
+    specs = _target_scale_child_task_specs_by_id()
+    spec = specs.get(task_id)
+    if not spec:
+        return False
+    report_path = collection_root / str(spec["artifact_dir"]) / "kernel_report.json"
+    if not report_path.exists():
+        return False
+    try:
+        report_mtime = report_path.stat().st_mtime
+    except OSError:
+        return False
+    for dependency in spec.get("depends_on", []):
+        dependency_id = str(dependency)
+        dependency_spec = specs.get(dependency_id)
+        if not dependency_spec:
+            continue
+        if not _target_scale_child_packet_is_ready(collection_root, dependency_id):
+            continue
+        dependency_report_path = collection_root / str(dependency_spec["artifact_dir"]) / "kernel_report.json"
+        if not dependency_report_path.exists():
+            continue
+        try:
+            if dependency_report_path.stat().st_mtime > report_mtime:
+                return True
+        except OSError:
+            continue
+    return False
+
+
+def _decoder_integration_timing_blocker_for_child(collection_root: Path, task_id: str) -> dict[str, Any] | None:
+    if task_id != "target_non_gemm_datapath_packets":
+        return None
+    decoder_report_path = collection_root / "target_decoder_block_integration_packet_gate" / "kernel_report.json"
+    child_report_path = collection_root / "target_non_gemm_datapath_packets_gate" / "kernel_report.json"
+    if child_report_path.exists() and decoder_report_path.exists():
+        try:
+            if child_report_path.stat().st_mtime > decoder_report_path.stat().st_mtime:
+                return None
+        except OSError:
+            pass
+    report = _load_json(decoder_report_path)
+    if not isinstance(report, dict) or report.get("_load_error"):
+        return None
+    if report.get("status") not in {"blocked", "failed", "failed_timing"}:
+        return None
+    ooc = report.get("ooc_synthesis", {})
+    if not isinstance(ooc, dict) or ooc.get("status") != "failed_timing":
+        return None
+    candidate = _candidate_payload(report.get("skill_update_candidate"))
+    result = _load_json(collection_root / "target_decoder_block_integration_packet_gate" / "subagent_result.json")
+    if candidate is None and isinstance(result, dict) and not result.get("_load_error"):
+        candidate = _candidate_payload(result.get("skill_update_candidate"))
+    blocking_reason = str(report.get("blocking_reason") or "")
+    if "non-GEMM" not in blocking_reason and "non_gemm" not in blocking_reason:
+        return None
+    return {
+        "status": "failed_timing",
+        "coverage_level": report.get("coverage_level"),
+        "target_scale_child_eligible": False,
+        "source_task": "target_decoder_block_integration_packet",
+        "skill_update_candidate_complete": candidate is not None,
+        "next_action": (
+            "run_subagents_skill_draft_and_update_skill_before_retry"
+            if candidate is not None
+            else "collect_complete_skill_update_candidate_before_retry"
+        ),
+    }
+
+
+def _target_scale_child_packet_is_ready(collection_root: Path, task_id: str) -> bool:
+    report = _target_scale_child_packet_report(collection_root, task_id)
+    if not isinstance(report, dict) or report.get("_load_error"):
+        return False
+    numeric_policy = report.get("numeric_policy", {})
+    if not isinstance(numeric_policy, dict):
+        numeric_policy = {}
+    coverage_level = str(report.get("coverage_level") or "")
+    base_ready = bool(
+        report.get("status") == "passed"
+        and report.get("target_scale_child_eligible") is True
+        and numeric_policy.get("fixture_only") is False
+        and "fixture" not in coverage_level
+        and "planning" not in coverage_level
+    )
+    if not base_ready:
+        return False
+    if task_id == "target_non_gemm_datapath_packets":
+        return _target_non_gemm_payload_stream_contract_ready(report)
+    return True
+
+
+def _target_non_gemm_payload_stream_contract_ready(report: dict[str, Any]) -> bool:
+    interface_contract = report.get("interface_contract", {})
+    if not isinstance(interface_contract, dict):
+        return False
+    if interface_contract.get("tensor_payload_streams_present") is not True:
+        return False
+    payload_streams = interface_contract.get("payload_streams", {})
+    if not isinstance(payload_streams, dict):
+        return False
+    required_streams = ("rmsnorm", "rope", "softmax", "kv_cache", "residual", "swiglu")
+    for stream_name in required_streams:
+        stream = payload_streams.get(stream_name)
+        if isinstance(stream, dict):
+            if stream.get("present") is not True:
+                return False
+        elif stream is not True:
+            return False
+    return True
+
+
+def _target_scale_child_readiness(collection_root: Path) -> dict[str, Any]:
+    task_status: dict[str, dict[str, Any]] = {}
+    for spec in TARGET_SCALE_CHILD_PACKET_TASKS:
+        task_id = str(spec["task_id"])
+        report = _target_scale_child_packet_report(collection_root, task_id)
+        ready = _target_scale_child_packet_is_ready(collection_root, task_id)
+        task_status[task_id] = {
+            "ready": ready,
+            "artifact_dir": str(collection_root / str(spec["artifact_dir"])),
+            "status": report.get("status") if isinstance(report, dict) else None,
+            "coverage_level": report.get("coverage_level") if isinstance(report, dict) else None,
+            "target_scale_child_eligible": report.get("target_scale_child_eligible")
+            if isinstance(report, dict)
+            else None,
+        }
+    missing = [task_id for task_id, status in task_status.items() if status["ready"] is not True]
+    return {
+        "all_ready": not missing,
+        "missing_task_ids": missing,
+        "task_status": task_status,
+    }
+
+
+def build_target_scale_child_packet_agent_task(
+    dispatch_plan: dict[str, Any],
+    full_execution_readiness: dict[str, Any],
+    board_signoff_readiness: dict[str, Any],
+    collection_root: Path,
+    task_id: str,
+    dispatch_plan_path: str | None = None,
+) -> dict[str, Any]:
+    specs = _target_scale_child_task_specs_by_id()
+    if task_id not in specs:
+        raise ValueError(f"unknown target-scale child packet task: {task_id}")
+    spec = specs[task_id]
+    artifact_dir = collection_root / str(spec["artifact_dir"])
+    expected_report = artifact_dir / "kernel_report.json"
+    expected_subagent_result = artifact_dir / "subagent_result.json"
+    target_scale_needed = _target_scale_accelerator_artifact_needed(board_signoff_readiness)
+    artifact_ready = _full_target_accelerator_artifact_is_ready(collection_root)
+    child_ready = _target_scale_child_packet_is_ready(collection_root, task_id)
+    child_status = _target_scale_child_readiness(collection_root)
+    precondition_failures: list[str] = []
+    if full_execution_readiness.get("status") != "passed":
+        precondition_failures.append("full_llama_execution_readiness must be passed before target-scale child RTL generation")
+    if board_signoff_readiness.get("status") == "passed":
+        precondition_failures.append("board_zcu104_signoff_readiness already passed")
+    if artifact_ready:
+        precondition_failures.append("full_target_llama_accelerator artifact already exists and is target-scale eligible")
+    if child_ready:
+        precondition_failures.append(f"{task_id} already has target-scale eligible child evidence")
+    child_blocker = _target_scale_child_packet_blocker(collection_root, task_id)
+    integration_blocker = _decoder_integration_timing_blocker_for_child(collection_root, task_id)
+    if child_blocker is None:
+        child_blocker = integration_blocker
+    if child_blocker is not None:
+        precondition_failures.append(
+            f"{task_id} has existing non-passed target-scale child evidence; {child_blocker['next_action']}"
+        )
+    if not target_scale_needed:
+        precondition_failures.append("board signoff is not blocked on target-scale accelerator artifact evidence")
+    for dependency in spec.get("depends_on", []):
+        if not _target_scale_child_packet_is_ready(collection_root, str(dependency)):
+            precondition_failures.append(f"{dependency} must pass before {task_id}")
+    ready_to_spawn = not precondition_failures
+
+    model = dispatch_plan.get("model", {})
+    hardware = dispatch_plan.get("hardware", {})
+    optimization = dispatch_plan.get("optimization", {})
+    dispatch_arg = dispatch_plan_path or "<path to hdl_subagent_dispatch_plan.json>"
+    status_command = (
+        "python3 -m nl2hdl subagents status "
+        f"--dispatch-plan {shlex.quote(str(dispatch_arg))} "
+        f"--evidence-root {shlex.quote(str(collection_root))} "
+        f"--out build/{_slug(task_id)}_gate/status_after"
+    )
+    prompt_lines = [
+        f"# Implementation Sub-Agent Task: {task_id}",
+        "",
+        f"You are the Codex implementation sub-agent for `{spec['title']}`.",
+        "The parent agent must not hand-write HDL. You own any RTL/SystemVerilog or generator changes for this child packet.",
+        "Do not spawn other sub-agents. If this packet cannot honestly pass, preserve blocker evidence and return a complete `skill_update_candidate`.",
+        "",
+        "## Target Context",
+        "",
+        f"- Model: `{model.get('name')}`",
+        f"- Decoder layers: `{model.get('decoder_layers')}`",
+        f"- Hidden size: `{model.get('hidden_size')}`",
+        f"- Intermediate size: `{model.get('intermediate_size')}`",
+        f"- FPGA part: `{hardware.get('fpga_part')}`",
+        f"- Target clock MHz: `{hardware.get('target_clock_mhz')}`",
+        f"- Quantization: `{optimization.get('quantization')}`",
+        f"- Design style: `{optimization.get('design_style')}`",
+        f"- Compute style: `{optimization.get('compute_style')}`",
+        f"- Execution style: `{optimization.get('execution_style')}`",
+        f"- Memory style: `{optimization.get('memory_style')}`",
+        f"- Control style: `{optimization.get('control_style')}`",
+        f"- Collection root: `{collection_root}`",
+        f"- Dispatch plan: `{dispatch_arg}`",
+        f"- Expected artifact directory: `{artifact_dir}`",
+        "",
+        "## Objective",
+        "",
+        f"- {spec['objective']}",
+        "",
+        "## Required Scope",
+        "",
+    ]
+    prompt_lines.extend(f"- {item}" for item in spec.get("required_scope", []))
+    prompt_lines.extend(
+        [
+            "",
+            "## Preconditions",
+            "",
+            f"- Ready to spawn: `{ready_to_spawn}`",
+            f"- Dependencies: `{spec.get('depends_on', [])}`",
+            f"- Target child readiness: `{child_status}`",
+            f"- Spawn precondition failures: `{precondition_failures}`",
+            "",
+            "If `Ready to spawn` is false, do not force implementation. Write a blocked result with the missing preconditions and a `skill_update_candidate` if the failure pattern is reusable.",
+            "",
+            "## Required Output",
+            "",
+            f"- Write RTL/generator artifacts for this child packet under `{artifact_dir}` when honestly implementable.",
+            f"- Write `{expected_report}`.",
+            f"- Write `{expected_subagent_result}`.",
+            "- Use `status: passed` only when the child packet is non-fixture target-scale evidence.",
+            "- A passed report must include `target_scale_child_eligible: true`, `coverage_level` without fixture/planning wording, and `numeric_policy.fixture_only: false`.",
+            "",
+            "## Required Commands",
+            "",
+            "- `python3 -m compileall nl2hdl/llm_kernels.py nl2hdl/subagent_tasks.py nl2hdl/cli.py`",
+            "- `python3 -m pytest -q tests/test_llm_kernels.py tests/test_parent_loop.py`",
+            f"- `{status_command}`",
+            "",
+            "## Do Not Claim",
+            "",
+            "- Full target-scale accelerator top.",
+            "- Board-level ZCU104 signoff.",
+            "- Hardware lab runtime validation.",
+            "- Full target-scale coverage from fixture-only or planning-only RTL.",
+            "",
+        ]
+    )
+    return {
+        "artifact": f"{task_id}_agent_task",
+        "task_id": task_id,
+        "target_wave": "target_scale_child_rtl_wave",
+        "spawn_kind": "target_evidence_implementation_agent",
+        "subagent_type": spec["subagent_type"],
+        "agent": "Codex",
+        "mode": spec["mode"],
+        "ready_to_spawn": ready_to_spawn,
+        "spawn_precondition_failures": precondition_failures,
+        "prompt_file": f"target_implementation_prompts/{task_id}_agent.md",
+        "expected_evidence_file": str(expected_report),
+        "expected_subagent_result": str(expected_subagent_result),
+        "source_readiness_status": board_signoff_readiness.get("status"),
+        "artifact_dir": str(artifact_dir),
+        "artifact_ready": child_ready,
+        "existing_child_blocker": child_blocker,
+        "integration_blocker": integration_blocker,
+        "depends_on": list(spec.get("depends_on", [])),
+        "required_commands": [
+            "python3 -m compileall nl2hdl/llm_kernels.py nl2hdl/subagent_tasks.py nl2hdl/cli.py",
+            "python3 -m pytest -q tests/test_llm_kernels.py tests/test_parent_loop.py",
+            status_command,
+        ],
+        "parent_must_not_write_hdl": True,
+        "failure_to_skill_required": True,
+        "prompt": "\n".join(prompt_lines),
+        "does_not_claim": [
+            "full_target_scale_accelerator_top",
+            "board_level_ZCU104_signoff",
+            "hardware_lab_runtime_validation",
+            "full_target_scale_coverage_from_fixture_only_RTL",
+        ],
+    }
+
+
+def build_full_model_target_rtl_generator_agent_task(
+    dispatch_plan: dict[str, Any],
+    full_execution_readiness: dict[str, Any],
+    board_signoff_readiness: dict[str, Any],
+    collection_root: Path,
+    dispatch_plan_path: str | None = None,
+) -> dict[str, Any]:
+    artifact_dir = collection_root / "full_target_llama_accelerator_gate"
+    expected_report = artifact_dir / "kernel_report.json"
+    expected_subagent_result = artifact_dir / "subagent_result.json"
+    artifact_ready = _full_target_accelerator_artifact_is_ready(collection_root)
+    target_scale_needed = _target_scale_accelerator_artifact_needed(board_signoff_readiness)
+    child_readiness = _target_scale_child_readiness(collection_root)
+    precondition_failures: list[str] = []
+    if full_execution_readiness.get("status") != "passed":
+        precondition_failures.append("full_llama_execution_readiness must be passed before full-model target RTL generation")
+    if board_signoff_readiness.get("status") == "passed":
+        precondition_failures.append("board_zcu104_signoff_readiness already passed")
+    if artifact_ready:
+        precondition_failures.append("full_target_llama_accelerator artifact already exists and is target-scale eligible")
+    if not target_scale_needed:
+        precondition_failures.append("board signoff is not blocked on target-scale accelerator artifact evidence")
+    if target_scale_needed and child_readiness["all_ready"] is not True:
+        missing = ", ".join(child_readiness["missing_task_ids"])
+        precondition_failures.append(f"target_scale_child_rtl_wave must pass before full-model target RTL generation: {missing}")
+    ready_to_spawn = not precondition_failures
+
+    model = dispatch_plan.get("model", {})
+    hardware = dispatch_plan.get("hardware", {})
+    optimization = dispatch_plan.get("optimization", {})
+    dispatch_arg = dispatch_plan_path or "<path to hdl_subagent_dispatch_plan.json>"
+    status_command = (
+        "python3 -m nl2hdl subagents status "
+        f"--dispatch-plan {shlex.quote(str(dispatch_arg))} "
+        f"--evidence-root {shlex.quote(str(collection_root))} "
+        "--out build/full_model_target_rtl_generator_gate/status_after"
+    )
+    prompt_lines = [
+        "# Implementation Sub-Agent Task: full_model_target_rtl_generator",
+        "",
+        "You are the Codex implementation sub-agent for the missing non-fixture full-model RTL generator wave.",
+        "The parent agent must not hand-write HDL. Your job is to create, or honestly block, the target-scale model RTL artifact that later board-wrapper and signoff sub-agents can consume.",
+        "",
+        "## Target Context",
+        "",
+        f"- Model: `{model.get('name')}`",
+        f"- Decoder layers: `{model.get('decoder_layers')}`",
+        f"- Hidden size: `{model.get('hidden_size')}`",
+        f"- Intermediate size: `{model.get('intermediate_size')}`",
+        f"- FPGA part: `{hardware.get('fpga_part')}`",
+        f"- Target clock MHz: `{hardware.get('target_clock_mhz')}`",
+        f"- Quantization: `{optimization.get('quantization')}`",
+        f"- Design style: `{optimization.get('design_style')}`",
+        f"- Compute style: `{optimization.get('compute_style')}`",
+        f"- Execution style: `{optimization.get('execution_style')}`",
+        f"- Memory style: `{optimization.get('memory_style')}`",
+        f"- Control style: `{optimization.get('control_style')}`",
+        f"- Collection root: `{collection_root}`",
+        f"- Dispatch plan: `{dispatch_arg}`",
+        f"- Expected artifact directory: `{artifact_dir}`",
+        "",
+        "## Preconditions",
+        "",
+        f"- Ready to spawn: `{ready_to_spawn}`",
+        f"- Full execution readiness status: `{full_execution_readiness.get('status')}`",
+        f"- Board readiness status: `{board_signoff_readiness.get('status')}`",
+        f"- Target-scale artifact needed: `{target_scale_needed}`",
+        f"- Target child readiness: `{child_readiness}`",
+        f"- Spawn precondition failures: `{precondition_failures}`",
+        "",
+        "If `Ready to spawn` is false, do not force implementation. Write a sub-agent result with the missing preconditions and a `skill_update_candidate` if the failure pattern is reusable.",
+        "",
+        "## Required Implementation Scope",
+        "",
+        "- Generate a synthesizable, non-fixture model-level accelerator top with the board-wrapper-compatible interface: `aclk`, `aresetn`, `start_i`, `done_o`, and `status_o[31:0]`.",
+        "- Upgrade fixture/planning coverage into target-scale child packets before the final top can pass: GPTQ INT4 projection datapaths, non-GEMM datapaths, DDR packed-weight stream scheduling, token-loop control, and the 16-layer model FSM.",
+        "- Compose verified target-scale child reports only. If any child remains fixture coverage, write `status: blocked` instead of a target-scale pass.",
+        "- Preserve the board-wrapper contract so a later ZCU104 wrapper sub-agent can wrap the generated top without rewriting model RTL.",
+        "",
+        "## Required Output",
+        "",
+        f"- Write the generated top RTL and any needed local support files under `{artifact_dir}`.",
+        f"- Write `{expected_report}`.",
+        f"- Write `{expected_subagent_result}`.",
+        "- Use `status: passed` only when the RTL exists, local checks pass, and every consumed child report is target-scale eligible.",
+        "- The passed report must include `kernel: <top_module_name>`, `coverage_level: full_target_llama_accelerator`, `numeric_policy.full_llama_model: true`, `numeric_policy.board_level_signoff: true`, and `numeric_policy.fixture_only: false`.",
+        "- If blocked, preserve complete blocker evidence and include `skill_update_candidate` with a prevention rule.",
+        "",
+        "## Required Commands",
+        "",
+        "- `python3 -m compileall nl2hdl/llm_kernels.py nl2hdl/subagent_tasks.py nl2hdl/cli.py`",
+        "- `python3 -m pytest -q tests/test_llm_kernels.py tests/test_parent_loop.py`",
+        f"- `{status_command}`",
+        "",
+        "## Do Not Claim",
+        "",
+        "- Board-level ZCU104 signoff; that belongs to the later board-signoff evidence agent.",
+        "- Hardware lab runtime validation.",
+        "- Real-time LLaMA inference performance.",
+        "- Full target-scale coverage from fixture-only or planning-only RTL.",
+        "",
+    ]
+    return {
+        "artifact": "full_model_target_rtl_generator_agent_task",
+        "task_id": "full_model_target_rtl_generator",
+        "spawn_kind": "target_evidence_implementation_agent",
+        "subagent_type": "target_scale_model_rtl_generator_subagent",
+        "agent": "Codex",
+        "mode": "read_write_full_model_target_rtl",
+        "ready_to_spawn": ready_to_spawn,
+        "spawn_precondition_failures": precondition_failures,
+        "prompt_file": "target_implementation_prompts/full_model_target_rtl_generator_agent.md",
+        "expected_evidence_file": str(expected_report),
+        "expected_subagent_result": str(expected_subagent_result),
+        "source_readiness_status": board_signoff_readiness.get("status"),
+        "artifact_dir": str(artifact_dir),
+        "artifact_ready": artifact_ready,
+        "required_commands": [
+            "python3 -m compileall nl2hdl/llm_kernels.py nl2hdl/subagent_tasks.py nl2hdl/cli.py",
+            "python3 -m pytest -q tests/test_llm_kernels.py tests/test_parent_loop.py",
+            status_command,
+        ],
+        "parent_must_not_write_hdl": True,
+        "failure_to_skill_required": True,
+        "prompt": "\n".join(prompt_lines),
+        "does_not_claim": [
+            "board_level_ZCU104_signoff",
+            "hardware_lab_runtime_validation",
+            "real_time_LLaMA_inference_performance",
+            "full_target_scale_coverage_from_fixture_only_RTL",
+        ],
+    }
+
+
+def build_full_target_llama_accelerator_artifact_agent_task(
+    dispatch_plan: dict[str, Any],
+    full_execution_readiness: dict[str, Any],
+    board_signoff_readiness: dict[str, Any],
+    collection_root: Path,
+    dispatch_plan_path: str | None = None,
+) -> dict[str, Any]:
+    artifact_dir = collection_root / "full_target_llama_accelerator_gate"
+    expected_report = artifact_dir / "kernel_report.json"
+    expected_subagent_result = artifact_dir / "subagent_result.json"
+    artifact_ready = _full_target_accelerator_artifact_is_ready(collection_root)
+    precondition_failures: list[str] = []
+    if full_execution_readiness.get("status") != "passed":
+        precondition_failures.append("full_llama_execution_readiness must be passed before target-scale accelerator artifact generation")
+    if board_signoff_readiness.get("status") == "passed":
+        precondition_failures.append("board_zcu104_signoff_readiness already passed")
+    if artifact_ready:
+        precondition_failures.append("full_target_llama_accelerator artifact already exists and is target-scale eligible")
+    target_scale_needed = _target_scale_accelerator_artifact_needed(board_signoff_readiness)
+    if not target_scale_needed:
+        precondition_failures.append("board signoff is not blocked on target-scale accelerator artifact evidence")
+    if target_scale_needed and not artifact_ready:
+        precondition_failures.append("full_model_target_rtl_generator must pass before target-scale accelerator artifact validation")
+    ready_to_spawn = not precondition_failures
+
+    model = dispatch_plan.get("model", {})
+    hardware = dispatch_plan.get("hardware", {})
+    optimization = dispatch_plan.get("optimization", {})
+    dispatch_arg = dispatch_plan_path or "<path to hdl_subagent_dispatch_plan.json>"
+    status_command = (
+        "python3 -m nl2hdl subagents status "
+        f"--dispatch-plan {shlex.quote(str(dispatch_arg))} "
+        f"--evidence-root {shlex.quote(str(collection_root))} "
+        "--out build/full_target_llama_accelerator_gate/status_after"
+    )
+    prompt_lines = [
+        "# Implementation Sub-Agent Task: full_target_llama_accelerator_artifact",
+        "",
+        "You are the Codex implementation sub-agent for the missing target-scale accelerator top artifact.",
+        "The parent agent must not hand-write HDL. Your job is to produce or revise the target-scale, non-fixture accelerator RTL artifact that the ZCU104 board-wrapper sub-agent can wrap and route.",
+        "",
+        "## Target Context",
+        "",
+        f"- Model: `{model.get('name')}`",
+        f"- Decoder layers: `{model.get('decoder_layers')}`",
+        f"- Hidden size: `{model.get('hidden_size')}`",
+        f"- Intermediate size: `{model.get('intermediate_size')}`",
+        f"- FPGA part: `{hardware.get('fpga_part')}`",
+        f"- Target clock MHz: `{hardware.get('target_clock_mhz')}`",
+        f"- Quantization: `{optimization.get('quantization')}`",
+        f"- Design style: `{optimization.get('design_style')}`",
+        f"- Compute style: `{optimization.get('compute_style')}`",
+        f"- Execution style: `{optimization.get('execution_style')}`",
+        f"- Memory style: `{optimization.get('memory_style')}`",
+        f"- Control style: `{optimization.get('control_style')}`",
+        f"- Collection root: `{collection_root}`",
+        f"- Dispatch plan: `{dispatch_arg}`",
+        f"- Expected artifact directory: `{artifact_dir}`",
+        "",
+        "## Preconditions",
+        "",
+        f"- Ready to spawn: `{ready_to_spawn}`",
+        f"- Full execution readiness status: `{full_execution_readiness.get('status')}`",
+        f"- Board readiness status: `{board_signoff_readiness.get('status')}`",
+        f"- Target-scale artifact needed: `{target_scale_needed}`",
+        f"- Spawn precondition failures: `{precondition_failures}`",
+        "",
+        "If `Ready to spawn` is false, do not force implementation. Write the sub-agent result with the missing preconditions and a `skill_update_candidate` if the failure pattern is reusable.",
+        "",
+        "## Required Implementation",
+        "",
+        "- Create or revise a target-scale accelerator top module with the board-wrapper-compatible interface: `aclk`, `aresetn`, `start_i`, `done_o`, and `status_o[31:0]`.",
+        "- The artifact must be non-fixture: do not mark bounded decoder-block, token-loop, model-FSM, or DDR/AXI fixture RTL as full target-scale coverage.",
+        "- Compose verified child RTL or generator outputs rather than rewriting already-passed child kernels by hand.",
+        "- Preserve target LLaMA metadata in the artifact report, including decoder layer count, hidden size, projection coverage, GPTQ INT4 weight-streaming assumptions, and external-memory limits.",
+        "- If the target cannot be implemented in this run, write a failed or blocked `kernel_report.json` and a complete `skill_update_candidate` instead of claiming target-scale readiness.",
+        "",
+        "## Required Output",
+        "",
+        f"- Write the accelerator top RTL under `{artifact_dir}`.",
+        f"- Write `{expected_report}`.",
+        f"- Write `{expected_subagent_result}`.",
+        "- Use `status: passed` only when the RTL exists, local checks pass, and the report proves non-fixture full target-scale coverage.",
+        "- The passed report must include `kernel: <top_module_name>`, `coverage_level: full_target_llama_accelerator`, and `numeric_policy.full_llama_model: true` plus `numeric_policy.board_level_signoff: true`.",
+        "",
+        "## Required Commands",
+        "",
+        "- `python3 -m compileall nl2hdl/llm_kernels.py nl2hdl/subagent_tasks.py nl2hdl/cli.py`",
+        "- `python3 -m pytest -q tests/test_llm_kernels.py tests/test_parent_loop.py`",
+        f"- `{status_command}`",
+        "",
+        "## Do Not Claim",
+        "",
+        "- Board-level ZCU104 signoff; that belongs to the later board-signoff evidence agent.",
+        "- Hardware lab runtime validation.",
+        "- Real-time LLaMA inference performance.",
+        "- Full target-scale coverage from fixture-only RTL.",
+        "",
+    ]
+    return {
+        "artifact": "full_target_llama_accelerator_artifact_agent_task",
+        "task_id": "full_target_llama_accelerator_artifact",
+        "spawn_kind": "target_evidence_implementation_agent",
+        "subagent_type": "target_scale_accelerator_implementation_subagent",
+        "agent": "Codex",
+        "mode": "read_write_target_scale_accelerator_artifact",
+        "ready_to_spawn": ready_to_spawn,
+        "spawn_precondition_failures": precondition_failures,
+        "prompt_file": "target_implementation_prompts/full_target_llama_accelerator_artifact_agent.md",
+        "expected_evidence_file": str(expected_report),
+        "expected_subagent_result": str(expected_subagent_result),
+        "source_readiness_status": board_signoff_readiness.get("status"),
+        "artifact_dir": str(artifact_dir),
+        "artifact_ready": artifact_ready,
+        "required_commands": [
+            "python3 -m compileall nl2hdl/llm_kernels.py nl2hdl/subagent_tasks.py nl2hdl/cli.py",
+            "python3 -m pytest -q tests/test_llm_kernels.py tests/test_parent_loop.py",
+            status_command,
+        ],
+        "parent_must_not_write_hdl": True,
+        "failure_to_skill_required": True,
+        "prompt": "\n".join(prompt_lines),
+        "does_not_claim": [
+            "board_level_ZCU104_signoff",
+            "hardware_lab_runtime_validation",
+            "real_time_LLaMA_inference_performance",
+            "full_target_scale_coverage_from_fixture_only_RTL",
         ],
     }
 
@@ -2722,10 +4043,15 @@ def build_zcu104_board_wrapper_axi_bridge_agent_task(
     expected_report = board_gate_dir / "zcu104_board_wrapper_axi_bridge_implementation_report.json"
     expected_subagent_result = board_gate_dir / "zcu104_board_wrapper_axi_bridge_subagent_result.json"
     pre_signoff = _load_json(pre_signoff_report) if pre_signoff_report.exists() else None
+    existing_wrapper_report = _load_json(expected_report) if expected_report.exists() else None
     signoff_gap = _load_json(signoff_gap_report) if signoff_gap_report.exists() else None
     signoff_gap_status = signoff_gap.get("status") if isinstance(signoff_gap, dict) else None
     signoff_gap_candidate = (
         signoff_gap.get("skill_update_candidate") if isinstance(signoff_gap, dict) else None
+    )
+    pre_signoff_missing = (
+        not isinstance(pre_signoff, dict)
+        or pre_signoff.get("status") != "blocked_pending_vivado_board_integration_run"
     )
     precondition_failures = []
     if full_execution_readiness.get("status") != "passed":
@@ -2734,8 +4060,17 @@ def build_zcu104_board_wrapper_axi_bridge_agent_task(
         precondition_failures.append("board_zcu104_signoff_readiness already passed")
     if board_signoff_readiness.get("status") != "blocked_by_missing_or_incomplete_board_signoff_evidence":
         precondition_failures.append("board signoff readiness must still be blocked on board evidence")
-    if not isinstance(pre_signoff, dict) or pre_signoff.get("status") != "blocked_pending_vivado_board_integration_run":
-        precondition_failures.append("zcu104 pre-signoff constraints package must exist before board-wrapper implementation")
+    if (
+        isinstance(existing_wrapper_report, dict)
+        and not existing_wrapper_report.get("_load_error")
+        and existing_wrapper_report.get("status") == "passed"
+        and existing_wrapper_report.get("bitstream_generated") is True
+        and existing_wrapper_report.get("target_scale_accelerator_bitstream") is not True
+        and not _full_target_accelerator_artifact_is_ready(collection_root)
+    ):
+        precondition_failures.append(
+            "full_target_llama_accelerator artifact must pass before rerouting board wrapper"
+        )
     ready_to_spawn = not precondition_failures
     model = dispatch_plan.get("model", {})
     hardware = dispatch_plan.get("hardware", {})
@@ -2776,6 +4111,9 @@ def build_zcu104_board_wrapper_axi_bridge_agent_task(
         f"- Pre-signoff report: `{pre_signoff_report}`",
         f"- Prior board-signoff gap report: `{signoff_gap_report}`",
         f"- Prior board-signoff gap status: `{signoff_gap_status}`",
+        f"- Pre-signoff package missing: `{pre_signoff_missing}`",
+        f"- Existing wrapper report status: `{existing_wrapper_report.get('status') if isinstance(existing_wrapper_report, dict) else None}`",
+        f"- Existing wrapper target-scale bitstream: `{existing_wrapper_report.get('target_scale_accelerator_bitstream') if isinstance(existing_wrapper_report, dict) else None}`",
         "",
         "## Preconditions",
         "",
@@ -2789,6 +4127,7 @@ def build_zcu104_board_wrapper_axi_bridge_agent_task(
         "## Required Implementation",
         "",
         "- Generate or update a compact PL subsystem such as `zcu104_board_shell_top` with board-visible status and a child accelerator start/done path; do not require this direct PL shell to be the final routed board-signoff top.",
+        "- If the pre-signoff constraint package is missing, generate it as part of this board-wrapper implementation attempt before Vivado route/check.",
         "- Add an accelerator AXI-lite or AXI-stream bridge stub that exposes a realistic PS-controlled register/address-map path without widening board-level ports.",
         "- Update the ZCU104 BD TCL so the Zynq UltraScale+ PS, reset block, wrapper, and AXI interconnect/address map are generated and validated.",
         "- Update the Vivado route-check TCL so it reads all generated HDL/BD/XDC inputs, runs synth/place/route, and writes timing, utilization, methodology/constraints, checkpoint, and Vivado log artifacts.",
@@ -2861,6 +4200,7 @@ def build_zcu104_board_wrapper_axi_bridge_agent_task(
         "prior_board_signoff_gap_report": str(signoff_gap_report),
         "prior_board_signoff_gap_status": signoff_gap_status,
         "prior_board_signoff_skill_update_candidate": signoff_gap_candidate,
+        "pre_signoff_package_missing": pre_signoff_missing,
         "required_commands": [
             "python3 -m compileall nl2hdl/llm_kernels.py nl2hdl/subagent_tasks.py nl2hdl/cli.py",
             "python3 -m pytest -q tests/test_llm_kernels.py",
@@ -2946,6 +4286,16 @@ def build_hdl_subagent_skill_update_draft(
                         "candidate": candidate_entry["candidate"],
                     }
                 )
+    target_evidence_candidates = _target_evidence_skill_update_candidates(collection_root, target_skill)
+    existing_candidate_keys = {
+        (entry.get("task_id"), entry.get("evidence_file") or entry.get("evidence_dir"))
+        for entry in candidates
+    }
+    for entry in target_evidence_candidates:
+        key = (entry.get("task_id"), entry.get("evidence_file") or entry.get("evidence_dir"))
+        if key not in existing_candidate_keys:
+            candidates.append(entry)
+            existing_candidate_keys.add(key)
     return {
         "artifact": "hdl_subagent_skill_update_draft",
         "coverage_level": "failed_subagent_candidate_to_skill_update_draft",
@@ -3143,6 +4493,19 @@ def _execution_entry_for_verification(wave: dict[str, Any]) -> dict[str, Any]:
         "source_replay": wave.get("source_replay", {}),
         "wave_blocked_target_dependencies": wave.get("blocked_target_dependencies", []),
         "wave_global_blocked_target_dependencies": wave.get("global_blocked_target_dependencies", []),
+        "implementation_tasks": [
+            {
+                "task_id": task.get("task_id"),
+                "agent_role": task.get("agent_role"),
+                "task_group": task.get("task_group"),
+                "current_regression_kernel": task.get("current_regression_kernel"),
+                "expected_evidence_dir": task.get("expected_evidence_dir"),
+                "expected_kernel_report": task.get("expected_kernel_report"),
+                "expected_module_ooc_synthesis_report": task.get("expected_module_ooc_synthesis_report"),
+                "requires_module_ooc_synthesis": bool(task.get("requires_module_ooc_synthesis")),
+            }
+            for task in wave.get("implementation_tasks", [])
+        ],
         "must_not_edit_source_files": True,
         "may_write_generated_evidence": runs_integration_synthesis,
         "runs_integration_synthesis": runs_integration_synthesis,
@@ -3860,6 +5223,7 @@ def build_codex_spawn_instructions(execution_manifest: dict[str, Any]) -> str:
                     lines.append(f"- Replay model name: `{source_replay.get('model_name') or 'not_configured'}`")
                     lines.append(f"- Replay GPTQ checkpoint: `{source_replay.get('gptq_checkpoint') or 'not_configured'}`")
                     lines.append(f"- Replay MLIR graph: `{source_replay.get('mlir_graph') or 'not_configured'}`")
+                    lines.append(f"- Replay model structure source: `{source_replay.get('model_structure_source') or 'mlir'}`")
                 required_commands = entry.get("required_commands", [])
                 if required_commands:
                     lines.extend(["", "Required commands:"])

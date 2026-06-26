@@ -62,6 +62,18 @@ A kernel is not integration-ready unless all are true:
 - For parallel projection fixtures, distinguish true same-stage arithmetic lanes
   from sequential lane-index scheduling. A report should name the parallel stage
   and products per cycle.
+- For OOC resource tuning, prove the tuned knob changes true RTL structure.
+  If `pe_count`, tile lanes, or buffering depth changes but Vivado LUT/FF/DSP/
+  BRAM/URAM/IO utilization is unchanged, report the tuning as ineffective and
+  stop repeating the same knob until the generator connects it to real datapath
+  parallelism or memory allocation.
+- For target-scale child packets, `target_scale_child_eligible: true` requires
+  downstream-consumable payload contracts, not only target-dimension checksums,
+  summary words, counters, or scheduling traces. For
+  `target_non_gemm_datapath_packets`, require
+  `interface_contract.tensor_payload_streams_present: true` plus per-kernel
+  payload stream fields for RMSNorm, RoPE, softmax/control, KV-cache, residual,
+  and SwiGLU before reporting a pass.
 
 ## Known Failure Patterns
 
@@ -106,6 +118,18 @@ A kernel is not integration-ready unless all are true:
 - A projection parallel-streaming fixture can prove more than one arithmetic
   lane, but it must report `true_parallel_datapath_lanes`,
   `parallel_products_per_cycle`, and the stage where the lanes are active.
+- A target-dimension non-GEMM RTL prototype can pass simulation and OOC
+  synthesis while still being integration-blocked if it emits only checksum or
+  summary streams. Do not mark it as a target-scale child pass until the report
+  proves decoder-consumable tensor payload streams and per-kernel payload
+  contracts, including RMSNorm apply output, RoPE payload output, softmax
+  weight/payload output, KV payload/address contract, residual payload output,
+  and SwiGLU payload output.
+- Parent OOC auto-tuning can double a requested `pe_count` while resource
+  utilization remains unchanged if the projection generator only records the
+  requested value as metadata. Treat this as a generator/contract gap: compare
+  requested lanes, true parallel datapath lanes, and Vivado resource deltas
+  before recommending another `pe_count` retry.
 - Toy RMSNorm or RoPE kernels should not be treated as target LLaMA kernels
   unless the report explicitly labels them as fixtures.
 - Integration fixtures that expose wide deterministic metadata, such as full

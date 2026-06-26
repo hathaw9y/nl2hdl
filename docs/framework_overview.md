@@ -38,6 +38,8 @@ The long-term target is:
 The framework accepts:
 
 - model name or model metadata;
+- model-structure proof source: provided/exported MLIR by default, or resolved
+  Hugging Face `AutoConfig` semantic structure when explicitly selected;
 - hardware spec, including FPGA part, target clock, and resource budgets;
 - quantization and optimization settings;
 - hardware design taxonomy, split into compute, execution, memory, and control
@@ -124,6 +126,27 @@ should be focused on details that change hardware generation, such as:
 If no clarification is needed, the report status is `clear` and the parent
 continues to model inspection, module packet generation, and sub-agent
 dispatch.
+
+## Target Preflight Sources
+
+Target preflight is stricter than planning. It must prove that the generated
+sub-agent packets are tied to the requested target instead of to a toy fixture.
+The model-structure source is controlled by `model.model_structure_source` or
+`--model-structure-source`:
+
+- `mlir`: default. The parent requires `model.mlir_graph` / `--mlir-graph` to
+  point at a provided or exported MLIR graph with full semantic LLaMA op
+  coverage. The synthetic inspect fixture remains blocked for target claims.
+- `hf_config`: the parent accepts a resolved Hugging Face LLaMA `AutoConfig`
+  semantic graph as model-structure evidence. This clears model-structure
+  preflight without claiming exported MLIR coverage.
+
+GPTQ checkpoint preflight is separate. Local checkpoint directories are used
+when provided. For Hugging Face repos, set
+`NL2HDL_ALLOW_HF_REMOTE_PREFLIGHT=1` to allow lightweight remote inspection:
+the parent lists repo files, reads small config/index JSONs, range-reads
+safetensors headers, and samples bounded qweight/qzeros/scales payload prefixes.
+It does not download or materialize full checkpoint tensors.
 
 ## Hardware Resource Schema
 
@@ -310,6 +333,7 @@ Sub-agents write evidence artifacts such as:
 - Vivado timing reports;
 - Vivado utilization reports;
 - DRC and methodology reports;
+- routed checkpoint and generated bitstream;
 - target evidence JSON files.
 
 The parent refreshes global status with:
@@ -372,7 +396,9 @@ The LLaMA/ZCU104 path is split into small gates:
 13. DDR/AXI board-shell fixture.
 14. Board-shell integration verification with simulation and Vivado synthesis.
 15. ZCU104 PS/PL/DDR board-wrapper flow.
-16. Target evidence and readiness gates.
+16. Optional import of an existing routed board-wrapper evidence bundle into
+    the current Parent evidence root.
+17. Target evidence and readiness gates.
 
 Each gate must produce evidence before dependent gates can advance.
 
@@ -382,6 +408,12 @@ After a minimal module passes simulation, the parent requires module-level
 out-of-context synthesis before integration. This gives the parent a resource
 and timing profile for each child module before a decoder-block, Layer FSM, Top
 FSM, or board wrapper hides the source of a bottleneck.
+
+If an OOC report passes timing but reports `resource_assessment:
+underutilized`, the Parent treats that as a tuning gate rather than silently
+advancing integration. The report records resource ratios and suggested next
+knobs, and a resumed Parent Loop queues the module for a tuned sub-agent retry
+instead of repeating the same local run.
 
 For real datapath modules, the OOC report must include:
 
@@ -458,24 +490,34 @@ captured include:
 - target evidence `task_id` mismatch with the manifest;
 - ZCU104 PS PL clock resolving to `5.625 ns / 177.778 MHz` instead of the
   requested `5.000 ns / 200 MHz`.
+- ZCU104 PS PL clock resolving to `5.333 ns / 187.512 MHz` when the board
+  wrapper used the IOPLL PL0 path; the retry uses the RPLL PL0 path and proves
+  200 MHz from routed reports.
 
 ## Current ZCU104 Board Evidence
 
-The current board-wrapper evidence proves that the generated ZCU104 PS/PL/DDR
-wrapper and control-plane path can route at the target clock.
+The current board-wrapper evidence proves that a generated ZCU104 PS/PL/DDR
+wrapper and control-plane scaffold can route at the target clock. It does not
+clear target-scale board signoff because the implementation report does not
+prove `target_scale_accelerator_bitstream: true` or
+`accelerator_scope: full_target_llama_accelerator`.
 
 Current raw evidence includes:
 
 - `clk_pl_0`: `5.000 ns / 200.000 MHz`
-- setup WNS: `2.193 ns`
-- hold WHS: `0.011 ns`
+- setup WNS: `1.773 ns`
+- hold WHS: `0.010 ns`
 - pulse-width WPWS: `1.000 ns`
 - DRC violations: `0`
 - methodology violations: `0`
-- utilization for this wrapper build: LUT `449`, DSP `0`, BRAM `0`
+- utilization for this wrapper build: LUT `464`, FF `706`, DSP `0`, BRAM `0`, URAM `0`
+- generated bitstream: `zcu104_board_wrapper.bit`, `19,311,223` bytes
 
 Important distinction: these resource numbers are for the current board-wrapper
-and control-plane scaffold, not for a full LLaMA INT4 compute datapath.
+and control-plane scaffold, not for a full LLaMA INT4 compute datapath. The
+Parent therefore keeps `board_signoff_readiness` blocked and queues the
+ZCU104 board-wrapper implementation sub-agent until a routed target-scale
+accelerator bitstream report exists.
 
 The current routed child accelerator is a small placeholder/control stub. It is
 not the full INT4 projection engine, decoder block, Layer FSM, Top FSM, KV-cache
@@ -493,7 +535,17 @@ The framework currently has:
 - failure-to-Skill retry discipline;
 - multiple kernel and integration fixture contracts;
 - full-model execution readiness evidence for the bounded framework path;
-- ZCU104 PS/PL/DDR board-wrapper evidence at 200 MHz.
+- local target-evidence backends for model harness, full execution evidence,
+  ZCU104 board wrapper, and board signoff evidence gates;
+- Parent import of existing routed board-wrapper reports/checkpoint/bitstream
+  into a new `evidence/board_zcu104_signoff_gate/`;
+- ZCU104 PS/PL/DDR board-wrapper scaffold evidence at 200 MHz with generated
+  bitstream, explicitly separated from target-scale accelerator signoff;
+- projection target-stream module OOC evidence where `pe_count: 64` drives
+  `64` true MAC lanes, with post-route Vivado evidence of DSP `128`, LUT
+  `6085`, FF `3199`, setup WNS `0.060 ns`, hold WHS `0.020 ns`, and
+  pulse-width WPWS `2.225 ns` for `projection_q_proj`/`projection_k_proj`
+  bounded module packets.
 
 ## What Is Not Yet Claimed
 
@@ -506,23 +558,46 @@ The current framework does not claim:
 - XSA export success;
 - real-time LLaMA inference performance;
 - final resource use of the real INT4 compute datapath.
+- board-level signoff from a control-scaffold bitstream.
 
-The `449 LUT / 0 DSP / 0 BRAM` report must not be interpreted as the resource
-cost of the final LLaMA accelerator.
+The small board-wrapper scaffold report, for example LUT `464`, DSP `0`, and
+BRAM `0`, must not be interpreted as the resource cost of the final LLaMA
+accelerator. Module OOC reports now carry separate child-datapath resource
+evidence.
 
 ## Next Engineering Step
 
-The next major step is to replace the placeholder `zcu104_accelerator_core`
-inside the ZCU104 board wrapper with the generated accelerator top from the
-verified integration chain.
+The ZCU104 board-wrapper sub-agent can now replace the internal control
+scaffold with a generated accelerator artifact and route it through the PS/PL
+wrapper. The current proven run wraps `ddr_axi_board_shell_fixture`, producing a
+real routed bitstream and nonzero datapath utilization, but it is still
+fixture-scope. The next major step is to provide a generated accelerator top
+whose kernel report proves target-scale, non-fixture full-model coverage, then
+route that top and emit a wrapper report with
+`target_scale_accelerator_bitstream: true` and
+`accelerator_scope: full_target_llama_accelerator`.
+
+The Parent now exposes that missing path as a prerequisite chain. When the
+current board-wrapper report is passed but fixture-scoped, the Parent blocks
+`full_model_target_rtl_generator`, `zcu104_board_wrapper_axi_bridge`,
+`full_target_llama_accelerator_artifact` validation, and board signoff. It
+first queues the ready `target_scale_child_rtl_wave` packets: GPTQ projection
+datapaths, non-GEMM datapaths, and the DDR packed-weight stream scheduler.
+Decoder-block integration waits for those three packets, and the
+token-loop/16-layer model FSM waits for decoder-block integration. Only after
+the child reports are target-scale eligible does the Parent retry
+`full_model_target_rtl_generator`.
 
 That should be delegated to sub-agents in this order:
 
-1. Confirm the accelerator-top interface contract.
-2. Connect the verified Top FSM or model FSM child to the board wrapper.
-3. Preserve PS AXI control, reset, status, and compact board IO.
-4. Re-run simulation and Vivado route.
-5. Produce a new resource/timing evidence file that clearly distinguishes:
+1. Generate target-scale child packets for projection, non-GEMM, and DDR streaming.
+2. Integrate those children into a target decoder-block packet.
+3. Integrate decoder blocks into token-loop and 16-layer model FSM packets.
+4. Retry the full-model target RTL generator and confirm the top interface contract.
+5. Connect the target-scale verified model top to the board wrapper.
+4. Preserve PS AXI control, reset, status, and compact board IO.
+5. Re-run simulation and Vivado route.
+6. Produce a new resource/timing evidence file that clearly distinguishes:
    - board wrapper/control-plane resources;
    - actual LLaMA accelerator datapath resources;
    - remaining fixture-only limitations.

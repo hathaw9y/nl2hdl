@@ -267,8 +267,12 @@ def _read_safetensors_header_and_data_start(path: Path) -> tuple[dict[str, Any],
 
 
 def _safetensors_tensor_summary(path: Path, key: str, raw: Any) -> dict[str, Any]:
+    return _safetensors_tensor_summary_from_file_name(path.name, key, raw)
+
+
+def _safetensors_tensor_summary_from_file_name(file_name: str, key: str, raw: Any) -> dict[str, Any]:
     if not isinstance(raw, dict):
-        return {"file": path.name, "key": key, "metadata_status": "non_object_header_entry"}
+        return {"file": file_name, "key": key, "metadata_status": "non_object_header_entry"}
     offsets = raw.get("data_offsets")
     byte_count = None
     if (
@@ -280,7 +284,7 @@ def _safetensors_tensor_summary(path: Path, key: str, raw: Any) -> dict[str, Any
     ):
         byte_count = offsets[1] - offsets[0]
     return {
-        "file": path.name,
+        "file": file_name,
         "key": key,
         "dtype": raw.get("dtype"),
         "shape": raw.get("shape") if isinstance(raw.get("shape"), list) else None,
@@ -542,8 +546,316 @@ def _artifact_inventory(model_dir: Path) -> dict[str, Any]:
     }
 
 
+def _artifact_inventory_from_names(source: str, names: list[str]) -> dict[str, Any]:
+    files: list[str] = []
+    matched_patterns: set[str] = set()
+    for name in sorted(names):
+        file_name = Path(name).name
+        for pattern in GPTQ_CHECKPOINT_ALLOW_PATTERNS:
+            if fnmatch.fnmatch(file_name, pattern):
+                files.append(name)
+                matched_patterns.add(pattern)
+                break
+    metadata_names = {
+        "config.json",
+        "quantize_config.json",
+        "quant_config.json",
+        "gptq_config.json",
+        "quantization_config.json",
+    }
+    return {
+        "source": source,
+        "file_count": len(files),
+        "files": files,
+        "matched_patterns": sorted(matched_patterns),
+        "missing_metadata_json": not any(Path(name).name in metadata_names for name in files),
+        "has_weight_index": any(name.endswith(".safetensors.index.json") or name.endswith(".bin.index.json") for name in files),
+        "has_safetensors": any(name.endswith(".safetensors") for name in files),
+    }
+
+
+def _inventory_has_checkpoint_payload(inventory: dict[str, Any]) -> bool:
+    return (
+        int(inventory.get("file_count", 0) or 0) > 0
+        and inventory.get("missing_metadata_json") is False
+        and (inventory.get("has_weight_index") is True or inventory.get("has_safetensors") is True)
+    )
+
+
+def _remote_preflight_allowed() -> bool:
+    return os.environ.get("NL2HDL_ALLOW_HF_REMOTE_PREFLIGHT") == "1"
+
+
+def _hf_token() -> str | None:
+    token = os.environ.get("HF_TOKEN") or os.environ.get("HUGGING_FACE_HUB_TOKEN")
+    if token:
+        return token
+    try:
+        from huggingface_hub import get_token
+
+        return get_token()
+    except Exception:
+        return None
+
+
+def _hf_auth_headers() -> dict[str, str]:
+    token = _hf_token()
+    return {"Authorization": f"Bearer {token}"} if token else {}
+
+
+def _hf_remote_list_repo_files(repo_id: str, revision: str | None = None) -> list[str]:
+    from huggingface_hub import HfApi
+
+    return list(HfApi().list_repo_files(repo_id=repo_id, revision=revision))
+
+
+def _hf_remote_read_json(repo_id: str, filename: str, revision: str | None = None) -> dict[str, Any]:
+    from huggingface_hub import hf_hub_download
+
+    path = hf_hub_download(
+        repo_id=repo_id,
+        filename=filename,
+        revision=revision,
+        local_files_only=False,
+    )
+    return _read_json(Path(path))
+
+
+def _hf_remote_get_bytes(
+    repo_id: str,
+    filename: str,
+    start: int,
+    end_inclusive: int,
+    revision: str | None = None,
+) -> bytes:
+    if start < 0 or end_inclusive < start:
+        raise ValueError("invalid remote byte range")
+    try:
+        import requests
+        from huggingface_hub import hf_hub_url
+    except Exception as exc:
+        raise RuntimeError(f"remote range read requires requests and huggingface_hub: {exc}") from exc
+
+    url = hf_hub_url(repo_id=repo_id, filename=filename, revision=revision)
+    headers = {"Range": f"bytes={start}-{end_inclusive}", **_hf_auth_headers()}
+    expected = end_inclusive - start + 1
+    with requests.get(url, headers=headers, timeout=30, stream=True) as response:
+        if response.status_code not in {200, 206}:
+            raise RuntimeError(f"HTTP {response.status_code} while reading {filename}")
+        if start > 0 and response.status_code != 206:
+            raise RuntimeError(f"remote host did not honor Range for {filename}")
+        chunks: list[bytes] = []
+        remaining = expected
+        for chunk in response.iter_content(chunk_size=min(65536, expected)):
+            if not chunk:
+                continue
+            if len(chunk) > remaining:
+                chunks.append(chunk[:remaining])
+                remaining = 0
+                break
+            chunks.append(chunk)
+            remaining -= len(chunk)
+            if remaining == 0:
+                break
+    payload = b"".join(chunks)
+    if len(payload) != expected:
+        raise RuntimeError(
+            f"short remote range read for {filename}: requested {expected} bytes, observed {len(payload)}"
+        )
+    return payload
+
+
+def _read_remote_safetensors_header(repo_id: str, filename: str, revision: str | None = None) -> dict[str, Any]:
+    header_len_raw = _hf_remote_get_bytes(repo_id, filename, 0, 7, revision=revision)
+    header_len = struct.unpack("<Q", header_len_raw)[0]
+    if header_len <= 0 or header_len > 256 * 1024 * 1024:
+        raise ValueError(f"{filename} has an invalid safetensors header length")
+    header = _hf_remote_get_bytes(repo_id, filename, 8, 8 + int(header_len) - 1, revision=revision)
+    data = json.loads(header.decode("utf-8"))
+    if not isinstance(data, dict):
+        raise ValueError(f"{filename} safetensors header must contain a JSON object")
+    return data
+
+
+def _read_remote_safetensors_header_and_data_start(
+    repo_id: str,
+    filename: str,
+    revision: str | None = None,
+) -> tuple[dict[str, Any], int]:
+    header_len_raw = _hf_remote_get_bytes(repo_id, filename, 0, 7, revision=revision)
+    header_len = struct.unpack("<Q", header_len_raw)[0]
+    if header_len <= 0 or header_len > 256 * 1024 * 1024:
+        raise ValueError(f"{filename} has an invalid safetensors header length")
+    header = _hf_remote_get_bytes(repo_id, filename, 8, 8 + int(header_len) - 1, revision=revision)
+    data = json.loads(header.decode("utf-8"))
+    if not isinstance(data, dict):
+        raise ValueError(f"{filename} safetensors header must contain a JSON object")
+    return data, 8 + int(header_len)
+
+
+def _candidate_remote_metadata_files(files: list[str]) -> list[str]:
+    names = [
+        "quantize_config.json",
+        "quant_config.json",
+        "gptq_config.json",
+        "quantization_config.json",
+        "config.json",
+    ]
+    available = {Path(name).name: name for name in files}
+    return [available[name] for name in names if name in available]
+
+
+def _inspect_remote_weight_index(
+    repo_id: str,
+    files: list[str],
+    revision: str | None = None,
+) -> dict[str, Any]:
+    index_paths = sorted(name for name in files if name.endswith(".safetensors.index.json")) + sorted(
+        name for name in files if name.endswith(".bin.index.json")
+    )
+    projection_keys: dict[str, dict[str, Any]] = {}
+    files_seen: set[str] = set()
+    header_cache: dict[str, dict[str, Any] | None] = {}
+    indexed_safetensors_files: list[str] = []
+    indexed_safetensors_errors: list[dict[str, str]] = []
+    direct_safetensors_files: list[str] = []
+    direct_safetensors_errors: list[dict[str, str]] = []
+    index_errors: list[dict[str, str]] = []
+    file_set = set(files)
+
+    def summary_from_index_reference(filename: str, key: str) -> dict[str, Any] | None:
+        if not filename.endswith(".safetensors"):
+            return None
+        if filename not in file_set:
+            header_cache[filename] = None
+            indexed_safetensors_errors.append(
+                {
+                    "file": filename,
+                    "error": "referenced safetensors shard was not found in remote repo file list",
+                }
+            )
+            return None
+        if filename not in header_cache:
+            try:
+                header_cache[filename] = _read_remote_safetensors_header(repo_id, filename, revision=revision)
+                indexed_safetensors_files.append(filename)
+            except Exception as exc:
+                header_cache[filename] = None
+                indexed_safetensors_errors.append(
+                    {
+                        "file": filename,
+                        "error": f"{type(exc).__name__}: {exc}",
+                    }
+                )
+                return None
+        header = header_cache[filename]
+        if header is None:
+            return None
+        raw_tensor_metadata = header.get(key)
+        if raw_tensor_metadata is None:
+            indexed_safetensors_errors.append(
+                {
+                    "file": filename,
+                    "key": key,
+                    "error": "referenced tensor key was not found in safetensors header",
+                }
+            )
+            return None
+        return _safetensors_tensor_summary_from_file_name(filename, key, raw_tensor_metadata)
+
+    for index_path in index_paths:
+        try:
+            data = _hf_remote_read_json(repo_id, index_path, revision=revision)
+        except Exception as exc:
+            index_errors.append({"file": index_path, "error": f"{type(exc).__name__}: {exc}"})
+            continue
+        weight_map = data.get("weight_map", {})
+        if not isinstance(weight_map, dict):
+            continue
+        for key, filename in weight_map.items():
+            if isinstance(filename, str):
+                files_seen.add(filename)
+            projection = _projection_name_from_key(str(key))
+            if projection is None:
+                continue
+            tensor_summary = summary_from_index_reference(filename, str(key)) if isinstance(filename, str) else None
+            _record_projection_key(projection_keys, str(key), tensor_summary)
+    if not index_paths:
+        limit = _int_or_none(os.environ.get("NL2HDL_HF_REMOTE_HEADER_FILE_LIMIT")) or 32
+        for filename in sorted(name for name in files if name.endswith(".safetensors"))[:limit]:
+            direct_safetensors_files.append(filename)
+            try:
+                header = _read_remote_safetensors_header(repo_id, filename, revision=revision)
+                for key, raw_tensor_metadata in header.items():
+                    if key == "__metadata__":
+                        continue
+                    _record_projection_key(
+                        projection_keys,
+                        str(key),
+                        _safetensors_tensor_summary_from_file_name(filename, str(key), raw_tensor_metadata),
+                    )
+            except Exception as exc:
+                direct_safetensors_errors.append(
+                    {
+                        "file": filename,
+                        "error": f"{type(exc).__name__}: {exc}",
+                    }
+                )
+
+    projections = []
+    tensor_summary_count = 0
+    for name, keys in sorted(projection_keys.items()):
+        tensor_summary_count += len(keys["tensor_summaries"])
+        projections.append(
+            {
+                "name": name,
+                "has_qweight": bool(keys["qweight"]),
+                "has_qzeros": bool(keys["qzeros"]),
+                "has_scales": bool(keys["scales"]),
+                "has_g_idx": bool(keys["g_idx"]),
+                "keys": {
+                    "qweight": keys["qweight"],
+                    "qzeros": keys["qzeros"],
+                    "scales": keys["scales"],
+                    "g_idx": keys["g_idx"],
+                    "other": keys["other"],
+                },
+                "tensor_summaries": keys["tensor_summaries"],
+            }
+        )
+    quantized_projection_count = sum(1 for projection in projections if projection["has_qweight"])
+    complete_gptq_projection_count = sum(
+        1
+        for projection in projections
+        if projection["has_qweight"] and projection["has_qzeros"] and projection["has_scales"]
+    )
+    return {
+        "index_files": index_paths,
+        "index_file_errors": index_errors,
+        "indexed_safetensors_files_scanned": sorted(set(indexed_safetensors_files)),
+        "indexed_safetensors_header_errors": indexed_safetensors_errors,
+        "direct_safetensors_files_scanned": direct_safetensors_files,
+        "direct_safetensors_header_errors": direct_safetensors_errors,
+        "tensor_key_source": "weight_index" if index_paths else ("safetensors_header" if direct_safetensors_files else "not_observed"),
+        "shard_files_referenced": sorted(files_seen),
+        "projection_metadata": projections,
+        "projection_metadata_count": len(projections),
+        "quantized_projection_metadata_count": quantized_projection_count,
+        "complete_gptq_projection_metadata_count": complete_gptq_projection_count,
+        "tensor_summary_count": tensor_summary_count,
+        "tensor_summary_source": (
+            "remote_safetensors_header_from_weight_index"
+            if tensor_summary_count and index_paths
+            else ("remote_safetensors_header" if tensor_summary_count else "not_available")
+        ),
+        "remote_repo_id": repo_id,
+        "remote_revision": revision,
+    }
+
+
 def build_gptq_checkpoint_source_preflight_report(model_name: str) -> dict[str, Any]:
     allow_network_snapshot = os.environ.get("NL2HDL_ALLOW_HF_SNAPSHOT_DOWNLOAD") == "1"
+    allow_remote_lightweight = _remote_preflight_allowed()
     report: dict[str, Any] = {
         "artifact": "gptq_checkpoint_source_preflight",
         "model_name": model_name,
@@ -552,9 +864,15 @@ def build_gptq_checkpoint_source_preflight_report(model_name: str) -> dict[str, 
         "expected_file_patterns": GPTQ_CHECKPOINT_ALLOW_PATTERNS,
         "network_snapshot_download_allowed": allow_network_snapshot,
         "network_snapshot_download_env": "NL2HDL_ALLOW_HF_SNAPSHOT_DOWNLOAD",
+        "remote_lightweight_preflight_allowed": allow_remote_lightweight,
+        "remote_lightweight_preflight_env": "NL2HDL_ALLOW_HF_REMOTE_PREFLIGHT",
         "local_path_probe": {},
         "huggingface_hub_probe": {},
         "local_cache_probe": {},
+        "remote_lightweight_probe": {
+            "attempted": False,
+            "reason": "disabled_by_default",
+        },
         "network_download_probe": {
             "attempted": False,
             "reason": "disabled_by_default",
@@ -609,20 +927,62 @@ def build_gptq_checkpoint_source_preflight_report(model_name: str) -> dict[str, 
         report["status"] = "resolved_huggingface_local_cache"
         report["checkpoint_source_dependency"] = "satisfied_by_huggingface_local_cache"
         report["resolved_model_dir"] = str(model_dir)
+        inventory = _artifact_inventory(model_dir)
         report["local_cache_probe"] = {
             "attempted": True,
-            "status": "resolved",
+            "status": "resolved" if _inventory_has_checkpoint_payload(inventory) else "incomplete",
             "path": snapshot_path,
+            "artifact_inventory": inventory,
         }
-        report["artifact_inventory"] = _artifact_inventory(model_dir)
-        report["next_action"] = "run GPTQ metadata and payload probes against the resolved Hugging Face cache directory"
-        return report
+        if _inventory_has_checkpoint_payload(inventory):
+            report["artifact_inventory"] = inventory
+            report["next_action"] = "run GPTQ metadata and payload probes against the resolved Hugging Face cache directory"
+            return report
+        report["status"] = "unresolved"
+        report["checkpoint_source_dependency"] = "blocked_by_checkpoint_source_preflight"
+        report["blocking_reason"] = (
+            "Hugging Face local cache exists but lacks safetensors/index files required for GPTQ target preflight"
+        )
     except Exception as exc:
         report["local_cache_probe"] = {
             "attempted": True,
             "status": "unresolved",
             "error": f"{type(exc).__name__}: {exc}",
-        }
+            }
+
+    if allow_remote_lightweight:
+        try:
+            files = _hf_remote_list_repo_files(model_name)
+            inventory = _artifact_inventory_from_names(model_name, files)
+            report["remote_lightweight_probe"] = {
+                "attempted": True,
+                "status": "resolved",
+                "repo_id": model_name,
+                "file_count": len(files),
+                "files": files,
+                "artifact_inventory": inventory,
+            }
+            if inventory["file_count"] > 0 and not inventory["missing_metadata_json"] and (
+                inventory["has_weight_index"] or inventory["has_safetensors"]
+            ):
+                report["status"] = "resolved_huggingface_remote_lightweight"
+                report["checkpoint_source_dependency"] = "satisfied_by_huggingface_remote_lightweight_preflight"
+                report["resolved_remote_repo_id"] = model_name
+                report["artifact_inventory"] = inventory
+                report["next_action"] = (
+                    "run remote lightweight GPTQ metadata/header and bounded payload probes without full checkpoint download"
+                )
+                return report
+            report["remote_lightweight_probe"]["status"] = "incomplete"
+            report["remote_lightweight_probe"]["reason"] = (
+                "remote repo did not expose both quantization metadata and safetensors/index files"
+            )
+        except Exception as exc:
+            report["remote_lightweight_probe"] = {
+                "attempted": True,
+                "status": "unresolved",
+                "error": f"{type(exc).__name__}: {exc}",
+            }
 
     if allow_network_snapshot:
         try:
@@ -676,14 +1036,141 @@ def _resolve_local_model_dir(model_name: str) -> tuple[Path | None, dict[str, An
             local_files_only=True,
             allow_patterns=GPTQ_CHECKPOINT_ALLOW_PATTERNS,
         )
-        return Path(snapshot_path), {"source": "huggingface_local_cache", "path": snapshot_path}
+        model_dir = Path(snapshot_path)
+        inventory = _artifact_inventory(model_dir)
+        if _inventory_has_checkpoint_payload(inventory):
+            return model_dir, {
+                "source": "huggingface_local_cache",
+                "path": snapshot_path,
+                "artifact_inventory": inventory,
+            }
+        return None, {
+            "source": "unresolved",
+            "reason": "Hugging Face local cache is incomplete for GPTQ target preflight",
+            "path": snapshot_path,
+            "artifact_inventory": inventory,
+        }
     except Exception as exc:
         return None, {"source": "unresolved", "reason": f"{type(exc).__name__}: {exc}"}
+
+
+def _resolve_remote_checkpoint_from_preflight(source_preflight: dict[str, Any]) -> dict[str, Any] | None:
+    if source_preflight.get("status") != "resolved_huggingface_remote_lightweight":
+        return None
+    probe = source_preflight.get("remote_lightweight_probe")
+    if not isinstance(probe, dict):
+        return None
+    files = probe.get("files")
+    repo_id = source_preflight.get("resolved_remote_repo_id") or probe.get("repo_id")
+    if not isinstance(repo_id, str) or not isinstance(files, list):
+        return None
+    return {
+        "source": "huggingface_remote_lightweight",
+        "repo_id": repo_id,
+        "revision": probe.get("revision"),
+        "files": [str(item) for item in files],
+    }
+
+
+def _inspect_remote_gptq_checkpoint_metadata(
+    model_name: str,
+    source_preflight: dict[str, Any],
+    resolution: dict[str, Any],
+) -> dict[str, Any]:
+    repo_id = str(resolution["repo_id"])
+    revision = resolution.get("revision") if isinstance(resolution.get("revision"), str) else None
+    files = [str(item) for item in resolution.get("files", [])]
+    report: dict[str, Any] = {
+        "artifact": "gptq_checkpoint_metadata",
+        "model_name": model_name,
+        "status": "unavailable",
+        "checkpoint_source_preflight": source_preflight,
+        "metadata_resolution": resolution,
+        "network_download_allowed": source_preflight["network_snapshot_download_allowed"],
+        "remote_lightweight_preflight_allowed": source_preflight.get("remote_lightweight_preflight_allowed"),
+        "remote_repo_id": repo_id,
+        "remote_revision": revision,
+        "does_not_claim": [
+            "checkpoint_weight_loading",
+            "full_tensor_materialization",
+            "numeric_GPTQ_correctness",
+            "full_LLaMA_execution",
+        ],
+    }
+    metadata_files = _candidate_remote_metadata_files(files)
+    if not metadata_files:
+        report["reason"] = "no GPTQ quantization metadata JSON file found in remote repo file list"
+        index_report = _inspect_remote_weight_index(repo_id, files, revision=revision)
+        report.update(index_report)
+        report["checkpoint_quantization_artifact"] = _checkpoint_quantization_artifact_report(
+            status=report["status"],
+            index_report=index_report,
+            reason=report["reason"],
+        )
+        return report
+
+    parsed_configs = []
+    selected_quant: dict[str, Any] | None = None
+    metadata_errors: list[dict[str, str]] = []
+    for metadata_name in metadata_files:
+        try:
+            raw = _hf_remote_read_json(repo_id, metadata_name, revision=revision)
+        except Exception as exc:
+            metadata_errors.append({"file": metadata_name, "error": f"{type(exc).__name__}: {exc}"})
+            continue
+        quant = _extract_quant_config(raw)
+        parsed_configs.append({"file": Path(metadata_name).name, "remote_path": metadata_name, "quant_config": quant})
+        if selected_quant is None and (quant["bits"] is not None or quant["group_size"] is not None):
+            selected_quant = quant
+
+    index_report = _inspect_remote_weight_index(repo_id, files, revision=revision)
+    report.update(index_report)
+    report["metadata_files"] = [Path(name).name for name in metadata_files]
+    report["remote_metadata_files"] = metadata_files
+    report["metadata_file_errors"] = metadata_errors
+    report["parsed_configs"] = parsed_configs
+    if selected_quant is None:
+        report["status"] = "metadata_json_without_quant_fields"
+        report["reason"] = "remote metadata JSON files exist but did not expose bits or group_size"
+        if metadata_errors and not parsed_configs:
+            report["status"] = "unavailable"
+            report["reason"] = "remote metadata JSON files could not be read"
+        report["checkpoint_quantization_artifact"] = _checkpoint_quantization_artifact_report(
+            status=report["status"],
+            index_report=index_report,
+            reason=report["reason"],
+        )
+        return report
+
+    report["status"] = "parsed"
+    report["bits"] = selected_quant["bits"]
+    report["group_size"] = selected_quant["group_size"]
+    report["quant_method"] = selected_quant["quant_method"]
+    report["desc_act"] = selected_quant["desc_act"]
+    report["sym"] = selected_quant["sym"]
+    report["true_sequential"] = selected_quant["true_sequential"]
+    report["checkpoint_format"] = selected_quant["checkpoint_format"]
+    report["packing_order"] = "checkpoint_specific_qweight_layout_requires_loader_contract"
+    report["scales_and_zero_points"] = {
+        "source": "remote_tensor_key_presence" if index_report["projection_metadata"] else "not_observed_in_tensor_keys",
+        "requires_tensor_loader_for_values": True,
+    }
+    report["checkpoint_quantization_artifact"] = _checkpoint_quantization_artifact_report(
+        status=report["status"],
+        index_report=index_report,
+        bits=report["bits"],
+        group_size=report["group_size"],
+    )
+    return report
 
 
 def inspect_gptq_checkpoint_metadata(model_name: str) -> dict[str, Any]:
     source_preflight = build_gptq_checkpoint_source_preflight_report(model_name)
     model_dir, resolution = _resolve_local_model_dir(model_name)
+    if model_dir is None:
+        remote_resolution = _resolve_remote_checkpoint_from_preflight(source_preflight)
+        if remote_resolution is not None:
+            return _inspect_remote_gptq_checkpoint_metadata(model_name, source_preflight, remote_resolution)
     report: dict[str, Any] = {
         "artifact": "gptq_checkpoint_metadata",
         "model_name": model_name,
@@ -894,6 +1381,104 @@ def _read_safetensors_tensor_prefix(model_dir: Path, summary: dict[str, Any], sa
     }
 
 
+def _read_remote_safetensors_tensor_prefix(
+    repo_id: str,
+    summary: dict[str, Any],
+    sample_bytes: int,
+    revision: str | None = None,
+) -> dict[str, Any]:
+    file_name = summary.get("file")
+    key = summary.get("key")
+    offsets = summary.get("data_offsets")
+    byte_count = summary.get("byte_count")
+    if not isinstance(file_name, str) or not file_name.endswith(".safetensors"):
+        return {
+            "status": "unavailable",
+            "reason": "tensor summary does not identify a safetensors file",
+            "key": key,
+        }
+    if (
+        not isinstance(offsets, list)
+        or len(offsets) != 2
+        or not isinstance(offsets[0], int)
+        or not isinstance(offsets[1], int)
+        or offsets[1] < offsets[0]
+    ):
+        return {
+            "status": "unavailable",
+            "reason": "tensor summary does not contain valid safetensors data_offsets",
+            "file": file_name,
+            "key": key,
+        }
+    if not isinstance(byte_count, int):
+        byte_count = offsets[1] - offsets[0]
+    try:
+        header, data_start = _read_remote_safetensors_header_and_data_start(repo_id, file_name, revision=revision)
+    except Exception as exc:
+        return {
+            "status": "unavailable",
+            "reason": f"{type(exc).__name__}: {exc}",
+            "file": file_name,
+            "key": key,
+            "remote_repo_id": repo_id,
+        }
+    if isinstance(key, str) and key not in header:
+        return {
+            "status": "unavailable",
+            "reason": "tensor key was not found in safetensors header",
+            "file": file_name,
+            "key": key,
+            "remote_repo_id": repo_id,
+        }
+    read_count = min(max(int(sample_bytes), 0), byte_count)
+    absolute_start = data_start + offsets[0]
+    absolute_end = absolute_start + read_count - 1
+    try:
+        payload = (
+            b""
+            if read_count == 0
+            else _hf_remote_get_bytes(
+                repo_id,
+                file_name,
+                absolute_start,
+                absolute_end,
+                revision=revision,
+            )
+        )
+    except Exception as exc:
+        return {
+            "status": "unavailable",
+            "reason": f"{type(exc).__name__}: {exc}",
+            "file": file_name,
+            "key": key,
+            "remote_repo_id": repo_id,
+            "absolute_start": absolute_start,
+            "requested_bytes": read_count,
+        }
+    words32_le = [
+        int.from_bytes(payload[idx : idx + 4].ljust(4, b"\0"), "little")
+        for idx in range(0, len(payload), 4)
+    ]
+    return {
+        "status": "sampled",
+        "file": file_name,
+        "key": key,
+        "dtype": summary.get("dtype"),
+        "shape": summary.get("shape"),
+        "data_offsets": offsets,
+        "byte_count": byte_count,
+        "sample_start_offset": offsets[0],
+        "sample_absolute_start_offset": absolute_start,
+        "sample_byte_count": len(payload),
+        "sample_sha256": hashlib.sha256(payload).hexdigest(),
+        "sample_bytes_hex": payload.hex(),
+        "words32_le_hex": [f"0x{word:08x}" for word in words32_le],
+        "source": "remote_safetensors_payload_prefix",
+        "remote_repo_id": repo_id,
+        "remote_revision": revision,
+    }
+
+
 def _qweight_memory_beat_preview(
     words32_le_hex: list[str],
     sample_byte_count: int | None,
@@ -936,6 +1521,9 @@ def build_gptq_payload_probe_report(
 ) -> dict[str, Any]:
     metadata = inspect_gptq_checkpoint_metadata(model_name)
     model_dir_value = metadata.get("model_dir")
+    metadata_resolution = metadata.get("metadata_resolution")
+    remote_repo_id = metadata_resolution.get("repo_id") if isinstance(metadata_resolution, dict) else None
+    remote_revision = metadata_resolution.get("revision") if isinstance(metadata_resolution, dict) else None
     projection = _projection_from_metadata(metadata, projection_name)
     report: dict[str, Any] = {
         "artifact": "gptq_payload_probe",
@@ -961,13 +1549,19 @@ def build_gptq_payload_probe_report(
             "full_LLaMA_execution",
         ],
     }
-    if not isinstance(model_dir_value, str):
-        report["reason"] = "checkpoint metadata did not resolve a local model_dir"
+    local_payload_source = isinstance(model_dir_value, str)
+    remote_payload_source = (
+        isinstance(metadata_resolution, dict)
+        and metadata_resolution.get("source") == "huggingface_remote_lightweight"
+        and isinstance(remote_repo_id, str)
+    )
+    if not local_payload_source and not remote_payload_source:
+        report["reason"] = "checkpoint metadata did not resolve a local model_dir or remote lightweight repo"
         return report
     if projection is None:
         report["reason"] = "selected projection metadata was not found"
         return report
-    model_dir = Path(model_dir_value)
+    model_dir = Path(model_dir_value) if isinstance(model_dir_value, str) else None
     sampled = 0
     for kind in ("qweight", "qzeros", "scales"):
         summary = _first_summary_for_kind(projection, kind)
@@ -977,7 +1571,15 @@ def build_gptq_payload_probe_report(
                 "reason": f"{kind} tensor summary was not found",
             }
             continue
-        tensor_report = _read_safetensors_tensor_prefix(model_dir, summary, sample_bytes)
+        if model_dir is not None:
+            tensor_report = _read_safetensors_tensor_prefix(model_dir, summary, sample_bytes)
+        else:
+            tensor_report = _read_remote_safetensors_tensor_prefix(
+                remote_repo_id,
+                summary,
+                sample_bytes,
+                revision=remote_revision if isinstance(remote_revision, str) else None,
+            )
         report["tensors"][kind] = tensor_report
         if tensor_report["status"] == "sampled":
             sampled += 1

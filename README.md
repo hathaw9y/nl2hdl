@@ -89,11 +89,119 @@ python3 -m nl2hdl parent-loop \
 `parent-loop` creates inspect artifacts, refreshes `parent_loop_state.json`,
 dispatches local deterministic sub-agent backends where possible, collects
 `kernel_report.json` and `subagent_result.json`, and writes
-`parent_loop_run_report.json`. Codex-only verification/signoff work is preserved
-in `status/parent_loop_queue.json` unless `--local-verification` is explicitly
-used for deterministic smoke coverage. With `--skip-synth`, real datapath
-modules still require later module-level OOC synthesis before integration can
-advance.
+`parent_loop_run_report.json`. Local target-evidence backends are available for
+the model-level harness, full-execution evidence, ZCU104 board wrapper, and
+board-signoff evidence. Codex-only read-only verification work is preserved in
+`status/parent_loop_queue.json` unless `--local-verification` is explicitly used
+for deterministic smoke coverage. With `--skip-synth`, real datapath modules
+still require later module-level OOC synthesis before integration can advance.
+
+Target preflight can use either provided/exported MLIR or resolved Hugging Face
+model config. The conservative default is `model_structure_source: mlir`; use
+`--model-structure-source hf_config` when the parent should accept resolved
+`AutoConfig` semantic structure instead of requiring an MLIR graph. GPTQ
+checkpoint preflight can also inspect a Hugging Face GPTQ repo without
+downloading the full checkpoint by setting `NL2HDL_ALLOW_HF_REMOTE_PREFLIGHT=1`;
+it range-reads safetensors headers and bounded qweight/qzeros/scales payload
+prefixes only.
+
+Example target-preflight run:
+
+```bash
+NL2HDL_ALLOW_HF_REMOTE_PREFLIGHT=1 python3 -m nl2hdl agent \
+  --model meta-llama/Llama-3.2-1B \
+  --spec examples/zcu104_llama32_1b_gptq.yaml \
+  --model-structure-source hf_config \
+  --gptq-checkpoint Crusadersk/llama3.2-1b-gptq-4bit \
+  --mode inspect \
+  --out build/llama_target_preflight
+```
+
+This clears the target-preflight gates only when model-structure coverage,
+GPTQ INT4 metadata, GPTQ tensor layout, and projection payload probes all pass.
+It still does not claim full LLaMA execution or board-level signoff.
+
+The ZCU104 board-wrapper backend can be run directly when Vivado 2024.1 is
+available:
+
+```bash
+python3 -m nl2hdl subagents board-wrapper \
+  --spec examples/zcu104_llama32_1b_gptq.yaml \
+  --out build/zcu104_board_wrapper \
+  --vivado-executable /tools/Xilinx/Vivado/2024.1/bin/vivado
+```
+
+It emits routed Vivado reports, `zcu104_post_route.dcp`, and
+`zcu104_board_wrapper.bit`. The 200 MHz gate is checked from routed
+`report_clocks` and implemented XDC, not from requested BD clock properties.
+Board signoff remains a separate evidence-only step and requires passed full
+execution readiness plus passed board-wrapper route/bitstream evidence.
+The board-wrapper `.bit` is not enough by itself: board signoff also requires
+the wrapper implementation report to prove
+`target_scale_accelerator_bitstream: true` and
+`accelerator_scope: full_target_llama_accelerator`. A routed control scaffold
+or fixture bitstream is preserved as useful Vivado evidence, but the Parent
+keeps `board_signoff_readiness` blocked and queues the ZCU104 board-wrapper
+implementation sub-agent until a target-scale accelerator bitstream report is
+available.
+
+To attach an existing routed board-wrapper/bitstream bundle to a new Parent
+run, pass the previous evidence directory:
+
+```bash
+python3 -m nl2hdl parent-loop \
+  --model meta-llama/Llama-3.2-1B \
+  --spec examples/zcu104_llama32_1b_gptq.yaml \
+  --out build/parent_loop_with_bitstream \
+  --board-wrapper-evidence-dir build/zcu104_board_wrapper
+```
+
+The Parent copies the wrapper reports, checkpoint, and `.bit` into
+`evidence/board_zcu104_signoff_gate/` and records the bitstream evidence in
+`parent_loop_run_report.json`. This does not clear full LLaMA execution or
+board-level signoff by itself; imported reports that identify the bitstream as
+a board-wrapper/control scaffold or fixture remain blocked for target-scale
+board signoff. Importing a new board-wrapper bundle invalidates any older
+`board_zcu104_signoff_evidence.json` by moving it under
+`status/invalidated_evidence/`, because signoff evidence is only valid for the
+current routed wrapper.
+
+The board-wrapper sub-agent can also wrap a generated accelerator artifact
+instead of the internal control scaffold:
+
+```bash
+python3 -m nl2hdl subagents board-wrapper \
+  --spec examples/zcu104_llama32_1b_gptq.yaml \
+  --out build/zcu104_generated_artifact_board_wrapper \
+  --accelerator-artifact-dir build/parent_loop/evidence/ddr_axi_board_shell_fixture_gate \
+  --accelerator-top-module ddr_axi_board_shell_fixture \
+  --accelerator-kernel-report build/parent_loop/evidence/ddr_axi_board_shell_fixture_gate/kernel_report.json
+```
+
+The report marks `target_scale_accelerator_bitstream: true` only when the
+wrapped artifact's kernel report proves target-scale, non-fixture full-model
+coverage. A routed fixture bitstream is useful route evidence, but it still
+keeps board signoff blocked.
+
+When a fixture bitstream already exists, the Parent no longer repeats the same
+board-wrapper route. It first queues the ready `target_scale_child_rtl_wave`
+packets: GPTQ projection datapaths, non-GEMM datapaths, and the DDR
+packed-weight stream scheduler. Decoder-block integration waits for those
+three packets, and the token-loop/16-layer model FSM waits for decoder-block
+integration. Only after those child reports are target-scale eligible does the
+Parent queue `full_model_target_rtl_generator`, which must create the
+non-fixture accelerator artifact under
+`evidence/full_target_llama_accelerator_gate/`.
+
+When Vivado OOC synthesis is enabled, real datapath module reports also carry
+resource ratios, true datapath-lane evidence, and a tuning recommendation. The
+projection target-stream fixture now connects `pe_count: 64` to `64` true MAC
+lanes and records post-route Vivado evidence such as DSP `128`, LUT `6085`,
+FF `3199`, setup WNS `0.060 ns`, hold WHS `0.020 ns`, and pulse-width WPWS
+`2.225 ns` in `module_ooc_synthesis_report.json`. If a module is still
+resource-light but has exhausted the bounded fixture's true-lane headroom, the
+Parent stops doubling `pe_count` and routes the next improvement to tile or
+generator expansion.
 
 Small kernel examples:
 

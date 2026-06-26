@@ -57,6 +57,19 @@ Load the smallest role-specific skill that matches the current agent:
   the matching hardware profile skill, such as `zcu104-xczu7ev-hardware`,
   plus `hdl-board-wrapper-signoff`, `fpga-vivado-systemverilog`, and
   `hdl-vivado-timing-closure`.
+- Target-scale accelerator artifact generation:
+  if the current bitstream is fixture-scoped or control-scaffold scoped, first
+  check whether the target-scale child RTL packets exist. If projection,
+  non-GEMM, DDR stream scheduler, decoder-block integration, token-loop, or
+  16-layer model FSM child evidence is missing or fixture-scoped, route
+  `target_scale_child_rtl_wave` child packet implementation sub-agents before
+  `full_model_target_rtl_generator`. Only after the child wave produces
+  non-fixture target-scale child evidence may the parent route
+  `full_model_target_rtl_generator`. Only after that generator produces a
+  non-fixture
+  `full_target_llama_accelerator` artifact may the parent rerun the board-wrapper
+  route. The parent must not repeatedly route the same non-target artifact or
+  ask a target-artifact task to bless fixture-scoped child RTL.
 - Reusable failure lesson capture:
   `skill-creator`.
 
@@ -76,10 +89,25 @@ Load the smallest role-specific skill that matches the current agent:
 7. Integration sub-agents compose only verified/tuned children.
 8. Integration verification sub-agents audit the integration wave and run or
    inspect integration-level Vivado synthesis.
-9. Board wrapper and signoff sub-agents add the target hardware wrapper,
+9. If a board-wrapper bitstream is routed but fixture-scoped, the parent first
+   evaluates `target_scale_child_rtl_wave` readiness. The first ready child
+   packet wave should include independent target-scale sub-agents for GPTQ INT4
+   projection datapaths, non-GEMM datapaths, and DDR packed-weight stream
+   scheduling. Decoder-block integration waits for those three, and the
+   token-loop/16-layer model FSM waits for decoder-block integration.
+10. Only after all target-scale child packet reports are non-fixture and
+   target-scale eligible may the parent queue `full_model_target_rtl_generator`.
+   If any child is missing, the generator must be precondition-blocked rather
+   than asked to create a top from fixture coverage.
+11. A target-scale artifact validation task or the board-wrapper sub-agent may
+   consume the generated artifact only when its report proves
+   `coverage_level: full_target_llama_accelerator`,
+   `numeric_policy.full_llama_model: true`, and
+   `numeric_policy.board_level_signoff: true`.
+12. Board wrapper and signoff sub-agents add the target hardware wrapper,
    interconnect, external-memory, clock/reset, constraint, and routed evidence
    only after model-level integration evidence is sufficient.
-10. If a sub-agent fails and the lesson is reusable, preserve evidence and
+13. If a sub-agent fails and the lesson is reusable, preserve evidence and
     update the relevant skill before retrying.
 
 ## Parent Feedback Loop
